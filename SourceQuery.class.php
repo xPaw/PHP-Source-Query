@@ -62,18 +62,11 @@ class SourceQuery
 		$this->Disconnect( );
 	}
 	
-	public function Connect( $Ip, $Port, $Timeout = 3, $Engine = -1 )
+	public function Connect( $Ip, $Port, $Timeout = 3, $Engine = self :: SOURCE )
 	{
 		$this->Disconnect( );
 		$this->Buffer->Reset( );
 		$this->Challenge = 0;
-		
-		if( $Engine == -1 )
-		{
-			$Engine = self :: SOURCE;
-			
-			Trigger_Error( 'You should pass $Engine variable to Connect(), defaulting to Source.' );
-		}
 		
 		if( !$this->Socket->Open( $Ip, (int)$Port, (int)$Timeout, (int)$Engine ) )
 		{
