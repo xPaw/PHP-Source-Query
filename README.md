@@ -1,21 +1,17 @@
-PHP Source Query
-================
+# PHP Source Query
 
-### Description
+## Description
 This class was created to query game server which use the Source query protocol, this includes all source games, half-life 1 engine games and Call of Duty: Modern Warfare 3
 
 The class also allows you to query servers using RCON although this only works for half-life 1 and source engine games.
 
 [Minecraft](http://minecraft.net) also uses Source RCON protocol, and this means you can use this class to send commands to your minecraft server while having engine set to source.
 
-##### Protocol specifications can be found over at VDC
+### Protocol specifications can be found over at VDC
 * https://developer.valvesoftware.com/wiki/Server_queries
 * https://developer.valvesoftware.com/wiki/Source_RCON_Protocol
 
-### Usage
-You can find easy examples on how to use it in `View.php`
-
-### Example
+## Example
 ```php
 <?php
 	require 'SourceQuery.class.php';
@@ -42,7 +38,7 @@ You can find easy examples on how to use it in `View.php`
 ?>
 ```
 
-### Functions
+## Functions
 <table>
 	<tr>
 		<td>Connect( $Ip, $Port, $Timeout, $Engine )</td>
@@ -78,6 +74,6 @@ You can find easy examples on how to use it in `View.php`
 	</tr>
 </table>
 
-### License
+## License
 > *This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.<br>
 > To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/3.0/*
