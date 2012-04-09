@@ -21,11 +21,10 @@ class SourceQuery
 	const SOURCE     = 1;
 	
 	// Packets Ending
-	const A2S_PING         = 0x69;
-	const A2S_GETCHALLENGE = 0x57; // Doesn't work
-	const A2S_INFO         = 0x54;
-	const A2S_PLAYER       = 0x55;
-	const A2S_RULES        = 0x56;
+	const A2S_PING      = 0x69;
+	const A2S_INFO      = 0x54;
+	const A2S_PLAYER    = 0x55;
+	const A2S_RULES     = 0x56;
 	
 	// Packets Receiving
 	const S2A_PING      = 0x6A;
@@ -218,19 +217,22 @@ class SourceQuery
 	
 	public function GetPlayers( )
 	{
-		if( !$this->Connected || !$this->GetChallenge( ) )
+		if( !$this->Connected )
 		{
 			return false;
 		}
 		
-		$this->Socket->Write( self :: A2S_PLAYER, $this->GetChallenge( ) );
-		$this->Socket->Read( );
-		
-		$Type = $this->Buffer->GetByte( );
-		
-		if( $Type != self :: S2A_PLAYER )
+		if( $this->GetChallenge( self :: A2S_PLAYER, self :: S2A_PLAYER ) )
 		{
-			throw new SourceQueryException( 'GetPlayers: Packet header mismatch. (' . $Type . ')' );
+			$this->Socket->Write( self :: A2S_PLAYER, $this->Challenge );
+			$this->Socket->Read( );
+			
+			$Type = $this->Buffer->GetByte( );
+			
+			if( $Type != self :: S2A_PLAYER )
+			{
+				throw new SourceQueryException( 'GetPlayers: Packet header mismatch. (' . $Type . ')' );
+			}
 		}
 		
 		$Players = Array( );
@@ -252,19 +254,22 @@ class SourceQuery
 	
 	public function GetRules( )
 	{
-		if( !$this->Connected || !$this->GetChallenge( ) )
+		if( !$this->Connected )
 		{
 			return false;
 		}
 		
-		$this->Socket->Write( self :: A2S_RULES, $this->GetChallenge( ) );
-		$this->Socket->Read( );
-		
-		$Type = $this->Buffer->GetByte( );
-		
-		if( $Type != self :: S2A_RULES )
+		if( $this->GetChallenge( self :: A2S_RULES, self :: S2A_RULES ) )
 		{
-			throw new SourceQueryException( 'GetRules: Packet header mismatch. (' . $Type . ')' );
+			$this->Socket->Write( self :: A2S_RULES, $this->Challenge );
+			$this->Socket->Read( );
+			
+			$Type = $this->Buffer->GetByte( );
+			
+			if( $Type != self :: S2A_RULES )
+			{
+				throw new SourceQueryException( 'GetRules: Packet header mismatch. (' . $Type . ')' );
+			}
 		}
 		
 		$Rules = Array( );
@@ -284,29 +289,41 @@ class SourceQuery
 		return $Rules;
 	}
 	
-	private function GetChallenge( )
+	private function GetChallenge( $Header, $ExpectedResult )
 	{
 		if( $this->Challenge )
 		{
-			return $this->Challenge;
+			return true;
 		}
 		
-		// A2S_GETCHALLENGE is broken
-		
-		$this->Socket->Write( self :: A2S_PLAYER, 0xFFFFFFFF );
+		$this->Socket->Write( $Header, 0xFFFFFFFF );
 		$this->Socket->Read( );
 		
 		$Type = $this->Buffer->GetByte( );
 		
-		if( $Type != self :: S2A_CHALLENGE )
+		switch( $Type )
 		{
-			throw new SourceQueryException( 'GetChallenge: Packet header mismatch. (' . $Type . ')' );
+			case self :: S2A_CHALLENGE:
+			{
+				// All clear
+				
+				$this->Challenge = $this->Buffer->Get( 4 );
+				
+				return true;
+			}
+			case $ExpectedResult:
+			{
+				// Goldsource (HLTV)
+				
+				return false;
+			}
+			default:
+			{
+				throw new SourceQueryException( 'GetChallenge: Packet header mismatch. (' . $Type . ')' );
+			}
 		}
 		
-		// Let's keep it raw, instead of reading as long
-		$this->Challenge = $this->Buffer->Get( 4 );
-		
-		return $this->Challenge;
+		return true;
 	}
 	
 	public function SetRconPassword( $Password )
