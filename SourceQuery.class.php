@@ -4,29 +4,45 @@ class SourceQueryException extends Exception
 	// Exception thrown by SourceQuery class
 }
 
+
 class SourceQuery
 {
-	/*
+	/**
 	 * Class written by xPaw
 	 *
 	 * Website: http://xpaw.ru
 	 * GitHub: https://github.com/xPaw/PHP-Source-Query-Class
 	 *
 	 * Special thanks to koraktor for his awesome Steam Condenser class,
-	 * I used it as a refference at some points.
+	 * I used it as a reference at some points.
 	 */
 	
-	// Engines
+	/**
+	 * Values returned by GetChallenge()
+	 *
+	 * TODO: Get rid of this? Improve? Do something else?
+	 */
+	const GETCHALLENGE_FAILED          = 0;
+	const GETCHALLENGE_ALL_CLEAR       = 1;
+	const GETCHALLENGE_CONTAINS_ANSWER = 2;
+	
+	/**
+	 * Engines
+	 */
 	const GOLDSOURCE = 0;
 	const SOURCE     = 1;
 	
-	// Packets Ending
+	/**
+	 * Packets sent
+	 */
 	const A2S_PING      = 0x69;
 	const A2S_INFO      = 0x54;
 	const A2S_PLAYER    = 0x55;
 	const A2S_RULES     = 0x56;
 	
-	// Packets Receiving
+	/**
+	 * Packets received
+	 */
 	const S2A_PING      = 0x6A;
 	const S2A_CHALLENGE = 0x41;
 	const S2A_INFO      = 0x49;
@@ -35,18 +51,51 @@ class SourceQuery
 	const S2A_RULES     = 0x45;
 	const S2A_RCON      = 0x6C;
 	
-	// Source Rcon Sending
+	/**
+	 * Source rcon sent
+	 */
 	const SERVERDATA_EXECCOMMAND    = 2;
 	const SERVERDATA_AUTH           = 3;
 	
-	// Source Rcon Receiving
+	/**
+	 * Source rcon received
+	 */
 	const SERVERDATA_RESPONSE_VALUE = 0;
 	const SERVERDATA_AUTH_RESPONSE  = 2;
 	
+	/**
+	 * Points to rcon class
+	 * 
+	 * @var SourceQueryRcon
+	 */
 	private $Rcon;
+	
+	/**
+	 * Points to buffer class
+	 * 
+	 * @var SourceQueryBuffer
+	 */
 	private $Buffer;
+	
+	/**
+	 * Points to socket class
+	 * 
+	 * @var SourceQuerySocket
+	 */
 	private $Socket;
+	
+	/**
+	 * True if connection is open, false if not
+	 * 
+	 * @var bool
+	 */
 	private $Connected;
+	
+	/**
+	 * Contains challenge
+	 * 
+	 * @var string
+	 */
 	private $Challenge;
 	
 	public function __construct( )
@@ -61,13 +110,29 @@ class SourceQuery
 		$this->Disconnect( );
 	}
 	
+	/**
+	 * Opens connection to server
+	 *
+	 * @param string $Ip Server ip
+	 * @param int $Port Server port
+	 * @param int $Timeout Timeout period
+	 * @param int $Engine Engine the server runs on (goldsource, source)
+	 *
+	 * @throws SourceQueryException
+	 * @throws InvalidArgumentException If timeout is not an integer
+	 */
 	public function Connect( $Ip, $Port, $Timeout = 3, $Engine = self :: SOURCE )
 	{
 		$this->Disconnect( );
 		$this->Buffer->Reset( );
 		$this->Challenge = 0;
 		
-		if( !$this->Socket->Open( $Ip, (int)$Port, (int)$Timeout, (int)$Engine ) )
+		if( !is_int( $Timeout ) || $Timeout < 0 )
+		{
+			throw new InvalidArgumentException( 'Timeout must be an integer.' );
+		}
+		
+		if( !$this->Socket->Open( $Ip, (int)$Port, $Timeout, (int)$Engine ) )
 		{
 			throw new SourceQueryException( 'Can\'t connect to the server.' );
 		}
@@ -75,6 +140,9 @@ class SourceQuery
 		$this->Connected = true;
 	}
 	
+	/**
+	 * Closes all open connections
+	 */
 	public function Disconnect( )
 	{
 		$this->Connected = false;
@@ -83,6 +151,12 @@ class SourceQuery
 		$this->Rcon->Close( );
 	}
 	
+	/**
+	 * Sends ping packet to the server
+	 * NOTE: This may not work on some games (TF2 for example)
+	 *
+	 * @return bool True on success, false on failure
+	 */
 	public function Ping( )
 	{
 		if( !$this->Connected )
@@ -96,6 +170,13 @@ class SourceQuery
 		return $this->Buffer->GetByte( ) == self :: S2A_PING;
 	}
 	
+	/**
+	 * Get server information
+	 *
+	 * @throws SourceQueryException
+	 *
+	 * @return bool|array Returns array with information on success, false on failure
+	 */
 	public function GetInfo( )
 	{
 		if( !$this->Connected )
@@ -108,12 +189,19 @@ class SourceQuery
 		
 		$Type = $this->Buffer->GetByte( );
 		
+		if( $Type == 0 )
+		{
+			return false;
+		}
+		
 		// Old GoldSource protocol, HLTV still uses it
 		if( $Type == self :: S2A_INFO_OLD && $this->Socket->Engine == self :: GOLDSOURCE )
 		{
-			// If we try to read data again, and we get the result with type S2A_INFO (0x49)
-			// That means this server is running dproto,
-			// Because it sends answer for both protocols
+			/**
+			 * If we try to read data again, and we get the result with type S2A_INFO (0x49)
+			 * That means this server is running dproto,
+			 * Because it sends answer for both protocols
+			 */
 			
 			$Server[ 'Address' ]    = $this->Buffer->GetString( );
 			$Server[ 'HostName' ]   = $this->Buffer->GetString( );
@@ -215,6 +303,13 @@ class SourceQuery
 		return $Server;
 	}
 	
+	/**
+	 * Get players on the server
+	 *
+	 * @throws SourceQueryException
+	 *
+	 * @return bool|array Returns array with players on success, false on failure
+	 */
 	public function GetPlayers( )
 	{
 		if( !$this->Connected )
@@ -222,16 +317,29 @@ class SourceQuery
 			return false;
 		}
 		
-		if( $this->GetChallenge( self :: A2S_PLAYER, self :: S2A_PLAYER ) )
+		switch( $this->GetChallenge( self :: A2S_PLAYER, self :: S2A_PLAYER ) )
 		{
-			$this->Socket->Write( self :: A2S_PLAYER, $this->Challenge );
-			$this->Socket->Read( );
-			
-			$Type = $this->Buffer->GetByte( );
-			
-			if( $Type != self :: S2A_PLAYER )
+			case self :: GETCHALLENGE_FAILED:
 			{
-				throw new SourceQueryException( 'GetPlayers: Packet header mismatch. (' . $Type . ')' );
+				return false;
+			}
+			case self :: GETCHALLENGE_ALL_CLEAR:
+			{
+				$this->Socket->Write( self :: A2S_PLAYER, $this->Challenge );
+				$this->Socket->Read( );
+				
+				$Type = $this->Buffer->GetByte( );
+				
+				if( $Type == 0 )
+				{
+					return false;
+				}
+				else if( $Type != self :: S2A_PLAYER )
+				{
+					throw new SourceQueryException( 'GetPlayers: Packet header mismatch. (' . $Type . ')' );
+				}
+				
+				break;
 			}
 		}
 		
@@ -252,6 +360,13 @@ class SourceQuery
 		return $Players;
 	}
 	
+	/**
+	 * Get rules (cvars) from the server
+	 *
+	 * @throws SourceQueryException
+	 *
+	 * @return bool|array Returns array with rules on success, false on failure
+	 */
 	public function GetRules( )
 	{
 		if( !$this->Connected )
@@ -259,16 +374,29 @@ class SourceQuery
 			return false;
 		}
 		
-		if( $this->GetChallenge( self :: A2S_RULES, self :: S2A_RULES ) )
+		switch( $this->GetChallenge( self :: A2S_RULES, self :: S2A_RULES ) )
 		{
-			$this->Socket->Write( self :: A2S_RULES, $this->Challenge );
-			$this->Socket->Read( );
-			
-			$Type = $this->Buffer->GetByte( );
-			
-			if( $Type != self :: S2A_RULES )
+			case self :: GETCHALLENGE_FAILED:
 			{
-				throw new SourceQueryException( 'GetRules: Packet header mismatch. (' . $Type . ')' );
+				return false;
+			}
+			case self :: GETCHALLENGE_ALL_CLEAR:
+			{
+				$this->Socket->Write( self :: A2S_RULES, $this->Challenge );
+				$this->Socket->Read( );
+				
+				$Type = $this->Buffer->GetByte( );
+				
+				if( $Type == 0 )
+				{
+					return false;
+				}
+				else if( $Type != self :: S2A_RULES )
+				{
+					throw new SourceQueryException( 'GetRules: Packet header mismatch. (' . $Type . ')' );
+				}
+				
+				break;
 			}
 		}
 		
@@ -289,11 +417,16 @@ class SourceQuery
 		return $Rules;
 	}
 	
+	/**
+	 * Get challenge (used for players/rules packets)
+	 *
+	 * @return bool True if all went well, false if server uses old GoldSource protocol, and it already contains answer
+	 */
 	private function GetChallenge( $Header, $ExpectedResult )
 	{
 		if( $this->Challenge )
 		{
-			return true;
+			return self :: GETCHALLENGE_ALL_CLEAR;
 		}
 		
 		$this->Socket->Write( $Header, 0xFFFFFFFF );
@@ -305,27 +438,34 @@ class SourceQuery
 		{
 			case self :: S2A_CHALLENGE:
 			{
-				// All clear
-				
 				$this->Challenge = $this->Buffer->Get( 4 );
 				
-				return true;
+				return self :: GETCHALLENGE_ALL_CLEAR;
 			}
 			case $ExpectedResult:
 			{
 				// Goldsource (HLTV)
 				
-				return false;
+				return self :: GETCHALLENGE_CONTAINS_ANSWER;
+			}
+			case 0:
+			{
+				return self :: GETCHALLENGE_FAILED;
 			}
 			default:
 			{
 				throw new SourceQueryException( 'GetChallenge: Packet header mismatch. (' . $Type . ')' );
 			}
 		}
-		
-		return true;
 	}
 	
+	/**
+	 * Sets rcon password, for future use in Rcon()
+	 *
+	 * @param string $Password Rcon Password
+	 *
+	 * @return bool True on success, false on failure
+	 */
 	public function SetRconPassword( $Password )
 	{
 		if( !$this->Connected )
@@ -338,6 +478,13 @@ class SourceQuery
 		return $this->Rcon->Authorize( $Password );
 	}
 	
+	/**
+	 * Sets rcon password, for future use in Rcon()
+	 *
+	 * @param string $Command Command to execute on the server
+	 *
+	 * @return bool|string Answer from server in string, false on failure
+	 */
 	public function Rcon( $Command )
 	{
 		if( !$this->Connected )
@@ -358,6 +505,11 @@ class SourceQuerySocket
 	public $Port;
 	public $Timeout;
 	
+	/**
+	 * Points to buffer class
+	 * 
+	 * @var SourceQueryBuffer
+	 */
 	private $Buffer;
 	
 	public function __construct( $Buffer )
@@ -382,12 +534,15 @@ class SourceQuerySocket
 		$this->Port    = $Port;
 		$this->Ip      = $Ip;
 		
-		if( !( $this->Socket = FSockOpen( 'udp://' . $Ip, $Port ) ) )
+		$this->Socket = FSockOpen( 'udp://' . $Ip, $Port, $ErrNo, $ErrStr, $Timeout );
+		
+		if( $ErrNo || !$this->Socket )
 		{
-			return false;
+			throw new Exception( 'Could not create socket: ' . $ErrStr );
 		}
 		
-		Socket_Set_TimeOut( $this->Socket, $Timeout );
+		Stream_Set_Timeout( $this->Socket, $Timeout );
+		Stream_Set_Blocking( $this->Socket, true );
 		
 		return true;
 	}
@@ -456,6 +611,12 @@ class SourceQuerySocket
 			// TODO: Test this
 			if( $IsCompressed )
 			{
+				// Let's make sure this function exists, it's not included in PHP by default
+				if( !Function_Exists( 'bzdecompress' ) )
+				{
+					throw new RuntimeException( 'Received compressed packet, PHP doesn\'t have Bzip2 library installed, can\'t decompress.' );
+				}
+				
 				$Data = bzdecompress( $Data );
 				
 				if( CRC32( $Data ) != $PacketChecksum )
@@ -485,7 +646,18 @@ class SourceQuerySocket
 
 class SourceQueryRcon
 {
+	/**
+	 * Points to buffer class
+	 * 
+	 * @var SourceQueryBuffer
+	 */
 	private $Buffer;
+	
+	/**
+	 * Points to socket class
+	 * 
+	 * @var SourceQuerySocket
+	 */
 	private $Socket;
 	
 	private $RconSocket;
@@ -517,12 +689,15 @@ class SourceQueryRcon
 	{
 		if( !$this->RconSocket && $this->Socket->Engine == SourceQuery :: SOURCE )
 		{
-			if( !( $this->RconSocket = FSockOpen( $this->Socket->Ip, $this->Socket->Port, $ErrNo, $ErrStr, $this->Socket->Timeout ) ) )
+			$this->RconSocket = FSockOpen( $this->Socket->Ip, $this->Socket->Port, $ErrNo, $ErrStr, $this->Socket->Timeout );
+			
+			if( $ErrNo || !$this->RconSocket )
 			{
 				throw new SourceQueryException( 'Can\'t connect to RCON server: ' . $ErrStr );
 			}
 			
-			Socket_Set_TimeOut( $this->RconSocket, $this->Socket->Timeout );
+			Stream_Set_Timeout( $this->RconSocket, $this->Socket->Timeout );
+			Stream_Set_Blocking( $this->RconSocket, true );
 		}
 	}
 	
@@ -722,19 +897,42 @@ class SourceQueryRcon
 
 class SourceQueryBuffer
 {
+	/**
+	 * Buffer
+	 * 
+	 * @var string
+	 */
 	private $Buffer;
+	
+	/**
+	 * Buffer length
+	 * 
+	 * @var int
+	 */
 	private $Length;
+	
+	/**
+	 * Current position in buffer
+	 * 
+	 * @var int
+	 */
 	private $Position;
 	
+	/**
+	 * Sets buffer
+	 *
+	 * @param string $Buffer Buffer
+	 */
 	public function Set( $Buffer )
 	{
 		$this->Buffer   = $Buffer;
 		$this->Length   = StrLen( $Buffer );
 		$this->Position = 0;
-		
-		return true;
 	}
 	
+	/**
+	 * Resets buffer
+	 */
 	public function Reset( )
 	{
 		$this->Buffer   = "";
@@ -742,11 +940,23 @@ class SourceQueryBuffer
 		$this->Position = 0;
 	}
 	
+	/**
+	 * Get remaining bytes
+	 *
+	 * @return int Remaining bytes in buffer
+	 */
 	public function Remaining( )
 	{
 		return $this->Length - $this->Position;
 	}
 	
+	/**
+	 * Gets data from buffer
+	 *
+	 * @param int $Length Bytes to read
+	 *
+	 * @return string
+	 */
 	public function Get( $Length = -1 )
 	{
 		if( $Length == 0 )
@@ -763,7 +973,7 @@ class SourceQueryBuffer
 		}
 		else if( $Length > $Remaining )
 		{
-			return false;
+			return "";
 		}
 		
 		$Data = SubStr( $this->Buffer, $this->Position, $Length );
@@ -773,6 +983,11 @@ class SourceQueryBuffer
 		return $Data;
 	}
 	
+	/**
+	 * Get byte from buffer
+	 *
+	 * @return int
+	 */
 	public function GetByte( )
 	{
 		return Ord( $this->Get( 1 ) );
@@ -806,6 +1021,11 @@ class SourceQueryBuffer
 		return $Data[ 1 ];
 	}
 	
+	/**
+	 * Read one string from buffer ending with null byte
+	 *
+	 * @return string String
+	 */
 	public function GetString( )
 	{
 		$ZeroBytePosition = StrPos( $this->Buffer, "\0", $this->Position );
