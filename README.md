@@ -5,11 +5,21 @@ This class was created to query game server which use the Source query protocol,
 
 The class also allows you to query servers using RCON although this only works for half-life 1 and source engine games.
 
-[Minecraft](http://minecraft.net) also uses Source RCON protocol, and this means you can use this class to send commands to your minecraft server while having engine set to source.
+[Minecraft](http://www.minecraft.net) also uses Source RCON protocol, and this means you can use this class to send commands to your minecraft server while having engine set to source.
 
 ### Protocol specifications can be found over at VDC
 * https://developer.valvesoftware.com/wiki/Server_queries
 * https://developer.valvesoftware.com/wiki/Source_RCON_Protocol
+
+## Supported Games
+* All multiplayer games released by Valve: *[Counter-Strike 1.6](http://store.steampowered.com/app/10/), [Counter-Strike: Global Offensive](http://store.steampowered.com/app/730/), [Team Fortress 2](http://store.steampowered.com/app/440/), etc...*
+* [Rag Doll Kung Fu](http://store.steampowered.com/app/1002/)
+* [The Ship](http://store.steampowered.com/app/2400/)
+* [Dino D-Day](http://store.steampowered.com/app/70000/)
+* [Nuclear Dawn](http://store.steampowered.com/app/17710/)
+* [Call of Duty: Modern Warfare 3](http://store.steampowered.com/app/115300/)
+* [Minecraft](http://www.minecraft.net/) **(RCON ONLY!)**
+* *and many other games that implement Source Query Protocol*
 
 ## Example
 ```php
