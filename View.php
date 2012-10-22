@@ -2,7 +2,7 @@
 	require __DIR__ . '/SourceQuery/SourceQuery.class.php';
 	
 	// Edit this ->
-	define( 'SQ_SERVER_ADDR', 'tf.animuservers.ru' );
+	define( 'SQ_SERVER_ADDR', 'gs2.my-run.de' );
 	define( 'SQ_SERVER_PORT', 27015 );
 	define( 'SQ_TIMEOUT',     1 );
 	define( 'SQ_ENGINE',      SourceQuery :: SOURCE );
@@ -39,13 +39,20 @@
 	<link rel="stylesheet" href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css">
 	<style type="text/css">
 		footer {
-			margin-top: 45px;
-			padding: 35px 0 36px;
-			border-top: 1px solid #e5e5e5;
+			padding: 30px 0;
+			margin-top: 60px;
+			border-top: 1px solid #E5E5E5;
+			background-color: whiteSmoke;
 		}
 		footer p {
 			margin-bottom: 0;
-			color: #555;
+			color: #777;
+		}
+		.page-header h1 {
+			font-size: 60px;
+			font-weight: 200;
+			line-height: 1;
+			letter-spacing: -1px;
 		}
 	</style>
 </head>
@@ -141,13 +148,15 @@
 			</div>
 		</div>
 <?php endif; ?>
-		<footer>
+	</div>
+	
+	<footer>
+		<div class="container">
 			<p class="pull-right">Generated in <span class="badge badge-success"><?php echo Number_Format( ( MicroTime( true ) - $Timer ), 4, '.', '' ); ?>s</span></p>
 			
-			<p>Written by <a href="http://xpaw.ru" target="_blank">xPaw</a></p>
+			<p>Made by <a href="http://xpaw.ru" target="_blank">xPaw</a>, source code available on <a href="https://github.com/xPaw/PHP-Source-Query-Class" target="_blank">GitHub</a></p>
 			<p>Code licensed under the <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/" target="_blank">CC BY-NC-SA 3.0</a></p>
-			<p>Sourcecode available on <a href="https://github.com/xPaw/PHP-Source-Query-Class" target="_blank">GitHub</a></p>
-		</footer>
-	</div>
+		</div>
+	</footer>
 </body>
 </html>
