@@ -21,33 +21,6 @@ The class also allows you to query servers using RCON although this only works f
 * [Minecraft](http://www.minecraft.net/) **(RCON ONLY!)**
 * *and many other games that implement Source Query Protocol*
 
-## Example
-```php
-<?php
-	require 'SourceQuery.class.php';
-	
-	$Query = new SourceQuery( );
-	
-	try
-	{
-		$Query->Connect( 'localhost', 27015, 3, SourceQuery :: GOLDSOURCE );
-		
-		print_r( $Query->GetInfo( ) );
-		print_r( $Query->GetPlayers( ) );
-		print_r( $Query->GetRules( ) );
-		
-		$Query->SetRconPassword( 'this_is_your_leet_rcon_password' );
-		echo $Query->Rcon( 'status' );
-	}
-	catch( SQueryException $e )
-	{
-		echo $e->getMessage( );
-	}
-	
-	$Query->Disconnect( );
-?>
-```
-
 ## Functions
 <table>
 	<tr>
