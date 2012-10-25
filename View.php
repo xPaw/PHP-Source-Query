@@ -31,7 +31,7 @@
 	$Query->Disconnect( );
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 	<meta charset="utf-8">
 	<title>Source Query PHP Class</title>

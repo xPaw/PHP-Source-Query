@@ -1,16 +1,4 @@
 <?php
-if( !defined( '__DIR__' ) ) // PHP < 5.3
-{
-	define( '__DIR__', dirname( __FILE__ ) );
-}
-
-require __DIR__ . '/Exception.class.php';
-require __DIR__ . '/Buffer.class.php';
-require __DIR__ . '/Socket.class.php';
-require __DIR__ . '/Rcon.class.php';
-
-class SourceQuery
-{
 	/**
 	 * Class written by xPaw
 	 *
@@ -21,481 +9,493 @@ class SourceQuery
 	 * I used it as a reference at some points.
 	 */
 	
-	/**
-	 * Values returned by GetChallenge()
-	 *
-	 * TODO: Get rid of this? Improve? Do something else?
-	 */
-	const GETCHALLENGE_FAILED          = 0;
-	const GETCHALLENGE_ALL_CLEAR       = 1;
-	const GETCHALLENGE_CONTAINS_ANSWER = 2;
-	
-	/**
-	 * Engines
-	 */
-	const GOLDSOURCE = 0;
-	const SOURCE     = 1;
-	
-	/**
-	 * Packets sent
-	 */
-	const A2S_PING      = 0x69;
-	const A2S_INFO      = 0x54;
-	const A2S_PLAYER    = 0x55;
-	const A2S_RULES     = 0x56;
-	
-	/**
-	 * Packets received
-	 */
-	const S2A_PING      = 0x6A;
-	const S2A_CHALLENGE = 0x41;
-	const S2A_INFO      = 0x49;
-	const S2A_INFO_OLD  = 0x6D; // Old GoldSource, HLTV uses it
-	const S2A_PLAYER    = 0x44;
-	const S2A_RULES     = 0x45;
-	const S2A_RCON      = 0x6C;
-	
-	/**
-	 * Source rcon sent
-	 */
-	const SERVERDATA_EXECCOMMAND    = 2;
-	const SERVERDATA_AUTH           = 3;
-	
-	/**
-	 * Source rcon received
-	 */
-	const SERVERDATA_RESPONSE_VALUE = 0;
-	const SERVERDATA_AUTH_RESPONSE  = 2;
-	
-	/**
-	 * Points to rcon class
-	 * 
-	 * @var SourceQueryRcon
-	 */
-	private $Rcon;
-	
-	/**
-	 * Points to buffer class
-	 * 
-	 * @var SourceQueryBuffer
-	 */
-	private $Buffer;
-	
-	/**
-	 * Points to socket class
-	 * 
-	 * @var SourceQuerySocket
-	 */
-	private $Socket;
-	
-	/**
-	 * True if connection is open, false if not
-	 * 
-	 * @var bool
-	 */
-	private $Connected;
-	
-	/**
-	 * Contains challenge
-	 * 
-	 * @var string
-	 */
-	private $Challenge;
-	
-	public function __construct( )
+	if( !defined( '__DIR__' ) ) // PHP < 5.3
 	{
-		$this->Buffer = new SourceQueryBuffer( );
-		$this->Socket = new SourceQuerySocket( $this->Buffer );
-		$this->Rcon   = new SourceQueryRcon( $this->Buffer, $this->Socket );
+		define( '__DIR__', dirname( __FILE__ ) );
 	}
 	
-	public function __destruct( )
-	{
-		$this->Disconnect( );
-	}
+	require __DIR__ . '/Exception.class.php';
+	require __DIR__ . '/Buffer.class.php';
+	require __DIR__ . '/Socket.class.php';
+	require __DIR__ . '/Rcon.class.php';
 	
-	/**
-	 * Opens connection to server
-	 *
-	 * @param string $Ip Server ip
-	 * @param int $Port Server port
-	 * @param int $Timeout Timeout period
-	 * @param int $Engine Engine the server runs on (goldsource, source)
-	 *
-	 * @throws SourceQueryException
-	 * @throws InvalidArgumentException If timeout is not an integer
-	 */
-	public function Connect( $Ip, $Port, $Timeout = 3, $Engine = self :: SOURCE )
+	class SourceQuery
 	{
-		$this->Disconnect( );
-		$this->Buffer->Reset( );
-		$this->Challenge = 0;
+		/**
+		 * Values returned by GetChallenge()
+		 *
+		 * TODO: Get rid of this? Improve? Do something else?
+		 */
+		const GETCHALLENGE_FAILED          = 0;
+		const GETCHALLENGE_ALL_CLEAR       = 1;
+		const GETCHALLENGE_CONTAINS_ANSWER = 2;
 		
-		if( !is_int( $Timeout ) || $Timeout < 0 )
+		/**
+		 * Engines
+		 */
+		const GOLDSOURCE = 0;
+		const SOURCE     = 1;
+		
+		/**
+		 * Packets sent
+		 */
+		const A2S_PING      = 0x69;
+		const A2S_INFO      = 0x54;
+		const A2S_PLAYER    = 0x55;
+		const A2S_RULES     = 0x56;
+		
+		/**
+		 * Packets received
+		 */
+		const S2A_PING      = 0x6A;
+		const S2A_CHALLENGE = 0x41;
+		const S2A_INFO      = 0x49;
+		const S2A_INFO_OLD  = 0x6D; // Old GoldSource, HLTV uses it
+		const S2A_PLAYER    = 0x44;
+		const S2A_RULES     = 0x45;
+		const S2A_RCON      = 0x6C;
+		
+		/**
+		 * Source rcon sent
+		 */
+		const SERVERDATA_EXECCOMMAND    = 2;
+		const SERVERDATA_AUTH           = 3;
+		
+		/**
+		 * Source rcon received
+		 */
+		const SERVERDATA_RESPONSE_VALUE = 0;
+		const SERVERDATA_AUTH_RESPONSE  = 2;
+		
+		/**
+		 * Points to rcon class
+		 * 
+		 * @var SourceQueryRcon
+		 */
+		private $Rcon;
+		
+		/**
+		 * Points to buffer class
+		 * 
+		 * @var SourceQueryBuffer
+		 */
+		private $Buffer;
+		
+		/**
+		 * Points to socket class
+		 * 
+		 * @var SourceQuerySocket
+		 */
+		private $Socket;
+		
+		/**
+		 * True if connection is open, false if not
+		 * 
+		 * @var bool
+		 */
+		private $Connected;
+		
+		/**
+		 * Contains challenge
+		 * 
+		 * @var string
+		 */
+		private $Challenge;
+		
+		public function __construct( )
 		{
-			throw new InvalidArgumentException( 'Timeout must be an integer.' );
+			$this->Buffer = new SourceQueryBuffer( );
+			$this->Socket = new SourceQuerySocket( $this->Buffer );
+			$this->Rcon   = new SourceQueryRcon( $this->Buffer, $this->Socket );
 		}
 		
-		if( !$this->Socket->Open( $Ip, (int)$Port, $Timeout, (int)$Engine ) )
+		public function __destruct( )
 		{
-			throw new SourceQueryException( 'Can\'t connect to the server.' );
+			$this->Disconnect( );
 		}
 		
-		$this->Connected = true;
-	}
-	
-	/**
-	 * Closes all open connections
-	 */
-	public function Disconnect( )
-	{
-		$this->Connected = false;
-		
-		$this->Socket->Close( );
-		$this->Rcon->Close( );
-	}
-	
-	/**
-	 * Sends ping packet to the server
-	 * NOTE: This may not work on some games (TF2 for example)
-	 *
-	 * @return bool True on success, false on failure
-	 */
-	public function Ping( )
-	{
-		if( !$this->Connected )
+		/**
+		 * Opens connection to server
+		 *
+		 * @param string $Ip Server ip
+		 * @param int $Port Server port
+		 * @param int $Timeout Timeout period
+		 * @param int $Engine Engine the server runs on (goldsource, source)
+		 *
+		 * @throws SourceQueryException
+		 * @throws InvalidArgumentException If timeout is not an integer
+		 */
+		public function Connect( $Ip, $Port, $Timeout = 3, $Engine = self :: SOURCE )
 		{
-			return false;
-		}
-		
-		$this->Socket->Write( self :: A2S_PING );
-		$this->Socket->Read( );
-		
-		return $this->Buffer->GetByte( ) == self :: S2A_PING;
-	}
-	
-	/**
-	 * Get server information
-	 *
-	 * @throws SourceQueryException
-	 *
-	 * @return bool|array Returns array with information on success, false on failure
-	 */
-	public function GetInfo( )
-	{
-		if( !$this->Connected )
-		{
-			return false;
-		}
-		
-		$this->Socket->Write( self :: A2S_INFO, "Source Engine Query\0" );
-		$this->Socket->Read( );
-		
-		$Type = $this->Buffer->GetByte( );
-		
-		if( $Type == 0 )
-		{
-			return false;
-		}
-		
-		// Old GoldSource protocol, HLTV still uses it
-		if( $Type == self :: S2A_INFO_OLD && $this->Socket->Engine == self :: GOLDSOURCE )
-		{
-			/**
-			 * If we try to read data again, and we get the result with type S2A_INFO (0x49)
-			 * That means this server is running dproto,
-			 * Because it sends answer for both protocols
-			 */
+			$this->Disconnect( );
+			$this->Buffer->Reset( );
+			$this->Challenge = 0;
 			
-			$Server[ 'Address' ]    = $this->Buffer->GetString( );
+			if( !is_int( $Timeout ) || $Timeout < 0 )
+			{
+				throw new InvalidArgumentException( 'Timeout must be an integer.' );
+			}
+			
+			if( !$this->Socket->Open( $Ip, (int)$Port, $Timeout, (int)$Engine ) )
+			{
+				throw new SourceQueryException( 'Can\'t connect to the server.' );
+			}
+			
+			$this->Connected = true;
+		}
+		
+		/**
+		 * Closes all open connections
+		 */
+		public function Disconnect( )
+		{
+			$this->Connected = false;
+			
+			$this->Socket->Close( );
+			$this->Rcon->Close( );
+		}
+		
+		/**
+		 * Sends ping packet to the server
+		 * NOTE: This may not work on some games (TF2 for example)
+		 *
+		 * @return bool True on success, false on failure
+		 */
+		public function Ping( )
+		{
+			if( !$this->Connected )
+			{
+				return false;
+			}
+			
+			$this->Socket->Write( self :: A2S_PING );
+			$this->Socket->Read( );
+			
+			return $this->Buffer->GetByte( ) == self :: S2A_PING;
+		}
+		
+		/**
+		 * Get server information
+		 *
+		 * @throws SourceQueryException
+		 *
+		 * @return bool|array Returns array with information on success, false on failure
+		 */
+		public function GetInfo( )
+		{
+			if( !$this->Connected )
+			{
+				return false;
+			}
+			
+			$this->Socket->Write( self :: A2S_INFO, "Source Engine Query\0" );
+			$this->Socket->Read( );
+			
+			$Type = $this->Buffer->GetByte( );
+			
+			if( $Type == 0 )
+			{
+				return false;
+			}
+			
+			// Old GoldSource protocol, HLTV still uses it
+			if( $Type == self :: S2A_INFO_OLD && $this->Socket->Engine == self :: GOLDSOURCE )
+			{
+				/**
+				 * If we try to read data again, and we get the result with type S2A_INFO (0x49)
+				 * That means this server is running dproto,
+				 * Because it sends answer for both protocols
+				 */
+				
+				$Server[ 'Address' ]    = $this->Buffer->GetString( );
+				$Server[ 'HostName' ]   = $this->Buffer->GetString( );
+				$Server[ 'Map' ]        = $this->Buffer->GetString( );
+				$Server[ 'ModDir' ]     = $this->Buffer->GetString( );
+				$Server[ 'ModDesc' ]    = $this->Buffer->GetString( );
+				$Server[ 'Players' ]    = $this->Buffer->GetByte( );
+				$Server[ 'MaxPlayers' ] = $this->Buffer->GetByte( );
+				$Server[ 'Protocol' ]   = $this->Buffer->GetByte( );
+				$Server[ 'Dedicated' ]  = Chr( $this->Buffer->GetByte( ) );
+				$Server[ 'Os' ]         = Chr( $this->Buffer->GetByte( ) );
+				$Server[ 'Password' ]   = $this->Buffer->GetByte( ) == 1;
+				$Server[ 'IsMod' ]      = $this->Buffer->GetByte( ) == 1;
+				
+				if( $Server[ 'IsMod' ] )
+				{
+					$Mod[ 'Url' ]        = $this->Buffer->GetString( );
+					$Mod[ 'Download' ]   = $this->Buffer->GetString( );
+					$this->Buffer->Get( 1 ); // NULL byte
+					$Mod[ 'Version' ]    = $this->Buffer->GetLong( );
+					$Mod[ 'Size' ]       = $this->Buffer->GetLong( );
+					$Mod[ 'ServerSide' ] = $this->Buffer->GetByte( ) == 1;
+					$Mod[ 'CustomDLL' ]  = $this->Buffer->GetByte( ) == 1;
+				}
+				
+				$Server[ 'Secure' ]   = $this->Buffer->GetByte( ) == 1;
+				$Server[ 'Bots' ]     = $this->Buffer->GetByte( );
+				
+				if( isset( $Mod ) )
+				{
+					$Server[ 'Mod' ] = $Mod;
+				}
+				
+				return $Server;
+			}
+			
+			if( $Type != self :: S2A_INFO )
+			{
+				throw new SourceQueryException( 'GetInfo: Packet header mismatch. (0x' . DecHex( $Type ) . ')' );
+			}
+			
+			$Server[ 'Protocol' ]   = $this->Buffer->GetByte( );
 			$Server[ 'HostName' ]   = $this->Buffer->GetString( );
 			$Server[ 'Map' ]        = $this->Buffer->GetString( );
 			$Server[ 'ModDir' ]     = $this->Buffer->GetString( );
 			$Server[ 'ModDesc' ]    = $this->Buffer->GetString( );
+			$Server[ 'AppID' ]      = $this->Buffer->GetShort( );
 			$Server[ 'Players' ]    = $this->Buffer->GetByte( );
 			$Server[ 'MaxPlayers' ] = $this->Buffer->GetByte( );
-			$Server[ 'Protocol' ]   = $this->Buffer->GetByte( );
+			$Server[ 'Bots' ]       = $this->Buffer->GetByte( );
 			$Server[ 'Dedicated' ]  = Chr( $this->Buffer->GetByte( ) );
 			$Server[ 'Os' ]         = Chr( $this->Buffer->GetByte( ) );
 			$Server[ 'Password' ]   = $this->Buffer->GetByte( ) == 1;
-			$Server[ 'IsMod' ]      = $this->Buffer->GetByte( ) == 1;
+			$Server[ 'Secure' ]     = $this->Buffer->GetByte( ) == 1;
 			
-			if( $Server[ 'IsMod' ] )
+			// The Ship
+			if( $Server[ 'AppID' ] == 2400 )
 			{
-				$Mod[ 'Url' ]        = $this->Buffer->GetString( );
-				$Mod[ 'Download' ]   = $this->Buffer->GetString( );
-				$this->Buffer->Get( 1 ); // NULL byte
-				$Mod[ 'Version' ]    = $this->Buffer->GetLong( );
-				$Mod[ 'Size' ]       = $this->Buffer->GetLong( );
-				$Mod[ 'ServerSide' ] = $this->Buffer->GetByte( ) == 1;
-				$Mod[ 'CustomDLL' ]  = $this->Buffer->GetByte( ) == 1;
+				$Server[ 'GameMode' ]     = $this->Buffer->GetByte( );
+				$Server[ 'WitnessCount' ] = $this->Buffer->GetByte( );
+				$Server[ 'WitnessTime' ]  = $this->Buffer->GetByte( );
 			}
 			
-			$Server[ 'Secure' ]   = $this->Buffer->GetByte( ) == 1;
-			$Server[ 'Bots' ]     = $this->Buffer->GetByte( );
+			$Server[ 'Version' ] = $this->Buffer->GetString( );
 			
-			if( isset( $Mod ) )
+			// Extra Data Flags
+			if( $this->Buffer->Remaining( ) > 0 )
 			{
-				$Server[ 'Mod' ] = $Mod;
+				$Flags = $this->Buffer->GetByte( );
+				
+				// The server's game port
+				if( $Flags & 0x80 )
+				{
+					$Server[ 'GamePort' ] = $this->Buffer->GetShort( );
+				}
+				
+				// The server's SteamID - does this serve any purpose?
+				if( $Flags & 0x10 )
+				{
+					$Server[ 'ServerID' ] = $this->Buffer->GetUnsignedLong( ) | ( $this->Buffer->GetUnsignedLong( ) << 32 );
+				}
+				
+				// The spectator port and then the spectator server name
+				if( $Flags & 0x40 )
+				{
+					$Server[ 'SpecPort' ] = $this->Buffer->GetShort( );
+					$Server[ 'SpecName' ] = $this->Buffer->GetString( );
+				}
+				
+				// The game tag data string for the server
+				if( $Flags & 0x20 )
+				{
+					$Server[ 'GameTags' ] = $this->Buffer->GetString( );
+				}
+				
+				// 0x01 - The server's 64-bit GameID
 			}
 			
 			return $Server;
 		}
 		
-		if( $Type != self :: S2A_INFO )
+		/**
+		 * Get players on the server
+		 *
+		 * @throws SourceQueryException
+		 *
+		 * @return bool|array Returns array with players on success, false on failure
+		 */
+		public function GetPlayers( )
 		{
-			throw new SourceQueryException( 'GetInfo: Packet header mismatch. (0x' . DecHex( $Type ) . ')' );
-		}
-		
-		$Server[ 'Protocol' ]   = $this->Buffer->GetByte( );
-		$Server[ 'HostName' ]   = $this->Buffer->GetString( );
-		$Server[ 'Map' ]        = $this->Buffer->GetString( );
-		$Server[ 'ModDir' ]     = $this->Buffer->GetString( );
-		$Server[ 'ModDesc' ]    = $this->Buffer->GetString( );
-		$Server[ 'AppID' ]      = $this->Buffer->GetShort( );
-		$Server[ 'Players' ]    = $this->Buffer->GetByte( );
-		$Server[ 'MaxPlayers' ] = $this->Buffer->GetByte( );
-		$Server[ 'Bots' ]       = $this->Buffer->GetByte( );
-		$Server[ 'Dedicated' ]  = Chr( $this->Buffer->GetByte( ) );
-		$Server[ 'Os' ]         = Chr( $this->Buffer->GetByte( ) );
-		$Server[ 'Password' ]   = $this->Buffer->GetByte( ) == 1;
-		$Server[ 'Secure' ]     = $this->Buffer->GetByte( ) == 1;
-		
-		// The Ship
-		if( $Server[ 'AppID' ] == 2400 )
-		{
-			$Server[ 'GameMode' ]     = $this->Buffer->GetByte( );
-			$Server[ 'WitnessCount' ] = $this->Buffer->GetByte( );
-			$Server[ 'WitnessTime' ]  = $this->Buffer->GetByte( );
-		}
-		
-		$Server[ 'Version' ] = $this->Buffer->GetString( );
-		
-		// Extra Data Flags
-		if( $this->Buffer->Remaining( ) > 0 )
-		{
-			$Flags = $this->Buffer->GetByte( );
-			
-			// The server's game port
-			if( $Flags & 0x80 )
-			{
-				$Server[ 'GamePort' ] = $this->Buffer->GetShort( );
-			}
-			
-			// The server's SteamID - does this serve any purpose?
-			if( $Flags & 0x10 )
-			{
-				$Server[ 'ServerID' ] = $this->Buffer->GetUnsignedLong( ) | ( $this->Buffer->GetUnsignedLong( ) << 32 );
-			}
-			
-			// The spectator port and then the spectator server name
-			if( $Flags & 0x40 )
-			{
-				$Server[ 'SpecPort' ] = $this->Buffer->GetShort( );
-				$Server[ 'SpecName' ] = $this->Buffer->GetString( );
-			}
-			
-			// The game tag data string for the server
-			if( $Flags & 0x20 )
-			{
-				$Server[ 'GameTags' ] = $this->Buffer->GetString( );
-			}
-			
-			// 0x01 - The server's 64-bit GameID
-		}
-		
-		return $Server;
-	}
-	
-	/**
-	 * Get players on the server
-	 *
-	 * @throws SourceQueryException
-	 *
-	 * @return bool|array Returns array with players on success, false on failure
-	 */
-	public function GetPlayers( )
-	{
-		if( !$this->Connected )
-		{
-			return false;
-		}
-		
-		switch( $this->GetChallenge( self :: A2S_PLAYER, self :: S2A_PLAYER ) )
-		{
-			case self :: GETCHALLENGE_FAILED:
+			if( !$this->Connected )
 			{
 				return false;
 			}
-			case self :: GETCHALLENGE_ALL_CLEAR:
+			
+			switch( $this->GetChallenge( self :: A2S_PLAYER, self :: S2A_PLAYER ) )
 			{
-				$this->Socket->Write( self :: A2S_PLAYER, $this->Challenge );
-				$this->Socket->Read( );
-				
-				$Type = $this->Buffer->GetByte( );
-				
-				if( $Type == 0 )
+				case self :: GETCHALLENGE_FAILED:
 				{
 					return false;
 				}
-				else if( $Type != self :: S2A_PLAYER )
+				case self :: GETCHALLENGE_ALL_CLEAR:
 				{
-					throw new SourceQueryException( 'GetPlayers: Packet header mismatch. (0x' . DecHex( $Type ) . ')' );
+					$this->Socket->Write( self :: A2S_PLAYER, $this->Challenge );
+					$this->Socket->Read( );
+					
+					$Type = $this->Buffer->GetByte( );
+					
+					if( $Type == 0 )
+					{
+						return false;
+					}
+					else if( $Type != self :: S2A_PLAYER )
+					{
+						throw new SourceQueryException( 'GetPlayers: Packet header mismatch. (0x' . DecHex( $Type ) . ')' );
+					}
+					
+					break;
 				}
-				
-				break;
 			}
-		}
-		
-		$Players = Array( );
-		$Count   = $this->Buffer->GetByte( );
-		
-		while( $Count-- > 0 && $this->Buffer->Remaining( ) > 0 )
-		{
-			$Player[ 'Id' ]    = $this->Buffer->GetByte( ); // PlayerID, is it just always 0?
-			$Player[ 'Name' ]  = $this->Buffer->GetString( );
-			$Player[ 'Frags' ] = $this->Buffer->GetLong( );
-			$Player[ 'Time' ]  = (int)$this->Buffer->GetFloat( );
-			$Player[ 'TimeF' ] = GMDate( ( $Player[ 'Time' ] > 3600 ? "H:i:s" : "i:s" ), $Player[ 'Time' ] );
 			
-			$Players[ ] = $Player;
+			$Players = Array( );
+			$Count   = $this->Buffer->GetByte( );
+			
+			while( $Count-- > 0 && $this->Buffer->Remaining( ) > 0 )
+			{
+				$Player[ 'Id' ]    = $this->Buffer->GetByte( ); // PlayerID, is it just always 0?
+				$Player[ 'Name' ]  = $this->Buffer->GetString( );
+				$Player[ 'Frags' ] = $this->Buffer->GetLong( );
+				$Player[ 'Time' ]  = (int)$this->Buffer->GetFloat( );
+				$Player[ 'TimeF' ] = GMDate( ( $Player[ 'Time' ] > 3600 ? "H:i:s" : "i:s" ), $Player[ 'Time' ] );
+				
+				$Players[ ] = $Player;
+			}
+			
+			return $Players;
 		}
 		
-		return $Players;
-	}
-	
-	/**
-	 * Get rules (cvars) from the server
-	 *
-	 * @throws SourceQueryException
-	 *
-	 * @return bool|array Returns array with rules on success, false on failure
-	 */
-	public function GetRules( )
-	{
-		if( !$this->Connected )
+		/**
+		 * Get rules (cvars) from the server
+		 *
+		 * @throws SourceQueryException
+		 *
+		 * @return bool|array Returns array with rules on success, false on failure
+		 */
+		public function GetRules( )
 		{
-			return false;
-		}
-		
-		switch( $this->GetChallenge( self :: A2S_RULES, self :: S2A_RULES ) )
-		{
-			case self :: GETCHALLENGE_FAILED:
+			if( !$this->Connected )
 			{
 				return false;
 			}
-			case self :: GETCHALLENGE_ALL_CLEAR:
+			
+			switch( $this->GetChallenge( self :: A2S_RULES, self :: S2A_RULES ) )
 			{
-				$this->Socket->Write( self :: A2S_RULES, $this->Challenge );
-				$this->Socket->Read( );
-				
-				$Type = $this->Buffer->GetByte( );
-				
-				if( $Type == 0 )
+				case self :: GETCHALLENGE_FAILED:
 				{
 					return false;
 				}
-				else if( $Type != self :: S2A_RULES )
+				case self :: GETCHALLENGE_ALL_CLEAR:
 				{
-					throw new SourceQueryException( 'GetRules: Packet header mismatch. (0x' . DecHex( $Type ) . ')' );
+					$this->Socket->Write( self :: A2S_RULES, $this->Challenge );
+					$this->Socket->Read( );
+					
+					$Type = $this->Buffer->GetByte( );
+					
+					if( $Type == 0 )
+					{
+						return false;
+					}
+					else if( $Type != self :: S2A_RULES )
+					{
+						throw new SourceQueryException( 'GetRules: Packet header mismatch. (0x' . DecHex( $Type ) . ')' );
+					}
+					
+					break;
 				}
-				
-				break;
 			}
-		}
-		
-		$Rules = Array( );
-		$Count = $this->Buffer->GetShort( );
-		
-		while( $Count-- > 0 && $this->Buffer->Remaining( ) > 0 )
-		{
-			$Rule  = $this->Buffer->GetString( );
-			$Value = $this->Buffer->GetString( );
 			
-			if( !Empty( $Rule ) )
+			$Rules = Array( );
+			$Count = $this->Buffer->GetShort( );
+			
+			while( $Count-- > 0 && $this->Buffer->Remaining( ) > 0 )
 			{
-				$Rules[ $Rule ] = $Value;
-			}
-		}
-		
-		return $Rules;
-	}
-	
-	/**
-	 * Get challenge (used for players/rules packets)
-	 *
-	 * @return bool True if all went well, false if server uses old GoldSource protocol, and it already contains answer
-	 */
-	private function GetChallenge( $Header, $ExpectedResult )
-	{
-		if( $this->Challenge )
-		{
-			return self :: GETCHALLENGE_ALL_CLEAR;
-		}
-		
-		$this->Socket->Write( $Header, 0xFFFFFFFF );
-		$this->Socket->Read( );
-		
-		$Type = $this->Buffer->GetByte( );
-		
-		switch( $Type )
-		{
-			case self :: S2A_CHALLENGE:
-			{
-				$this->Challenge = $this->Buffer->Get( 4 );
+				$Rule  = $this->Buffer->GetString( );
+				$Value = $this->Buffer->GetString( );
 				
+				if( !Empty( $Rule ) )
+				{
+					$Rules[ $Rule ] = $Value;
+				}
+			}
+			
+			return $Rules;
+		}
+		
+		/**
+		 * Get challenge (used for players/rules packets)
+		 *
+		 * @return bool True if all went well, false if server uses old GoldSource protocol, and it already contains answer
+		 */
+		private function GetChallenge( $Header, $ExpectedResult )
+		{
+			if( $this->Challenge )
+			{
 				return self :: GETCHALLENGE_ALL_CLEAR;
 			}
-			case $ExpectedResult:
+			
+			$this->Socket->Write( $Header, 0xFFFFFFFF );
+			$this->Socket->Read( );
+			
+			$Type = $this->Buffer->GetByte( );
+			
+			switch( $Type )
 			{
-				// Goldsource (HLTV)
-				
-				return self :: GETCHALLENGE_CONTAINS_ANSWER;
-			}
-			case 0:
-			{
-				return self :: GETCHALLENGE_FAILED;
-			}
-			default:
-			{
-				throw new SourceQueryException( 'GetChallenge: Packet header mismatch. (0x' . DecHex( $Type ) . ')' );
+				case self :: S2A_CHALLENGE:
+				{
+					$this->Challenge = $this->Buffer->Get( 4 );
+					
+					return self :: GETCHALLENGE_ALL_CLEAR;
+				}
+				case $ExpectedResult:
+				{
+					// Goldsource (HLTV)
+					
+					return self :: GETCHALLENGE_CONTAINS_ANSWER;
+				}
+				case 0:
+				{
+					return self :: GETCHALLENGE_FAILED;
+				}
+				default:
+				{
+					throw new SourceQueryException( 'GetChallenge: Packet header mismatch. (0x' . DecHex( $Type ) . ')' );
+				}
 			}
 		}
-	}
-	
-	/**
-	 * Sets rcon password, for future use in Rcon()
-	 *
-	 * @param string $Password Rcon Password
-	 *
-	 * @return bool True on success, false on failure
-	 */
-	public function SetRconPassword( $Password )
-	{
-		if( !$this->Connected )
+		
+		/**
+		 * Sets rcon password, for future use in Rcon()
+		 *
+		 * @param string $Password Rcon Password
+		 *
+		 * @return bool True on success, false on failure
+		 */
+		public function SetRconPassword( $Password )
 		{
-			return false;
+			if( !$this->Connected )
+			{
+				return false;
+			}
+			
+			$this->Rcon->Open( );
+			
+			return $this->Rcon->Authorize( $Password );
 		}
 		
-		$this->Rcon->Open( );
-		
-		return $this->Rcon->Authorize( $Password );
-	}
-	
-	/**
-	 * Sets rcon password, for future use in Rcon()
-	 *
-	 * @param string $Command Command to execute on the server
-	 *
-	 * @return bool|string Answer from server in string, false on failure
-	 */
-	public function Rcon( $Command )
-	{
-		if( !$this->Connected )
+		/**
+		 * Sets rcon password, for future use in Rcon()
+		 *
+		 * @param string $Command Command to execute on the server
+		 *
+		 * @return bool|string Answer from server in string, false on failure
+		 */
+		public function Rcon( $Command )
 		{
-			return false;
+			if( !$this->Connected )
+			{
+				return false;
+			}
+			
+			return $this->Rcon->Command( $Command );
 		}
-		
-		return $this->Rcon->Command( $Command );
 	}
-}
