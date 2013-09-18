@@ -77,7 +77,7 @@
 				case SourceQuery :: SOURCE:
 				{
 					// Pack the packet together
-					$Command = Pack( 'VV', ++$this->RequestId, $Header ) . $String . "\x00\x00\x00"; 
+					$Command = Pack( 'VV', ++$this->RconRequestId, $Header ) . $String . "\x00\x00\x00"; 
 					
 					// Prepend packet length
 					$Command = Pack( 'V', StrLen( $Command ) ) . $Command;
