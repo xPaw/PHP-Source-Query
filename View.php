@@ -84,7 +84,7 @@
 						</tr>
 					</thead>
 					<tbody>
-<?php if( Is_Array( $Rules ) ): ?>
+<?php if( Is_Array( $Info ) ): ?>
 <?php foreach( $Info as $InfoKey => $InfoValue ): ?>
 						<tr>
 							<td><?php echo htmlspecialchars( $InfoKey ); ?></td>
