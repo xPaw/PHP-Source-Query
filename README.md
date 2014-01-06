@@ -17,6 +17,7 @@ The class also allows you to query servers using RCON although this only works f
 * [The Ship](http://store.steampowered.com/app/2400/)
 * [Dino D-Day](http://store.steampowered.com/app/70000/)
 * [Nuclear Dawn](http://store.steampowered.com/app/17710/)
+* [Just Cause 2: Multiplayer Mod](http://store.steampowered.com/app/259080/)
 * [Call of Duty: Modern Warfare 3](http://store.steampowered.com/app/115300/)
 * [Minecraft](http://www.minecraft.net/) **(RCON ONLY!)**
 * *and many other games that implement Source Query Protocol*
