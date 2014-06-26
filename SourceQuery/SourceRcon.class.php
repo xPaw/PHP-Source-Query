@@ -75,13 +75,19 @@
 		{
 			$this->Buffer->Set( FRead( $this->RconSocket, $Length ) );
 			
-			$Buffer = "";
-			
 			$PacketSize = $this->Buffer->GetLong( );
 			
-			$Buffer .= $this->Buffer->Get( );
+			$Buffer = $this->Buffer->Get( );
 			
-			// TODO: multi packet reading
+			$Remaining = $PacketSize - StrLen( $Buffer );
+			
+			while( $Remaining > 0 )
+			{
+				$Buffer2 = FRead( $this->RconSocket, $Length );
+				$Buffer .= $Buffer2;
+				
+				$Remaining -= StrLen( $Buffer2 );
+			}
 			
 			$this->Buffer->Set( $Buffer );
 		}
@@ -89,9 +95,10 @@
 		public function Command( $Command )
 		{
 			$this->Write( SourceQuery :: SERVERDATA_EXECCOMMAND, $Command );
+			
 			$this->Read( );
 			
-			$RequestID = $this->Buffer->GetLong( );
+			$this->Buffer->GetLong( ); // RequestID
 			$Type      = $this->Buffer->GetLong( );
 			
 			if( $Type === SourceQuery :: SERVERDATA_AUTH_RESPONSE )
@@ -103,9 +110,33 @@
 				return false;
 			}
 			
+			$Buffer = $this->Buffer->Get( );
+			
+			// We do this stupid hack to handle split packets
+			// See https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Multiple-packet_Responses
+			if( StrLen( $Buffer ) >= 4000 )
+			{
+				do
+				{
+					$this->Write( SourceQuery :: SERVERDATA_RESPONSE_VALUE );
+					
+					$this->Read( );
+					
+					$this->Buffer->GetLong( ); // RequestID
+					
+					if( $this->Buffer->GetLong( ) !== SourceQuery :: SERVERDATA_RESPONSE_VALUE )
+					{
+						break;
+					}
+					
+					$Buffer .= $this->Buffer->Get( );
+				}
+				while( false ); // TODO: This is so broken that we don't even try to read multiple times, needs to be revised
+			}
+			
 			// TODO: It should use GetString, but there are no null bytes at the end, why?
 			// $Buffer = $this->Buffer->GetString( );
-			return $this->Buffer->Get( );
+			return $Buffer;
 		}
 		
 		public function Authorize( $Password )
