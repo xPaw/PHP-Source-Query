@@ -17,7 +17,8 @@
 	require __DIR__ . '/Exception.class.php';
 	require __DIR__ . '/Buffer.class.php';
 	require __DIR__ . '/Socket.class.php';
-	require __DIR__ . '/Rcon.class.php';
+	require __DIR__ . '/SourceRcon.class.php';
+	require __DIR__ . '/GoldSourceRcon.class.php';
 	
 	class SourceQuery
 	{
@@ -106,7 +107,6 @@
 		{
 			$this->Buffer = new SourceQueryBuffer( );
 			$this->Socket = new SourceQuerySocket( $this->Buffer );
-			$this->Rcon   = new SourceQueryRcon( $this->Buffer, $this->Socket );
 		}
 		
 		public function __destruct( )
@@ -142,6 +142,22 @@
 			}
 			
 			$this->Connected = true;
+			
+			switch( $this->Socket->Engine )
+			{
+				case SourceQuery :: GOLDSOURCE:
+				{
+					$this->Rcon = new SourceQueryGoldSourceRcon( $this->Buffer, $this->Socket );
+					
+					break;
+				}
+				case SourceQuery :: SOURCE:
+				{
+					$this->Rcon = new SourceQuerySourceRcon( $this->Buffer, $this->Socket );
+					
+					break;
+				}
+			}
 		}
 		
 		/**
@@ -152,7 +168,11 @@
 			$this->Connected = false;
 			
 			$this->Socket->Close( );
-			$this->Rcon->Close( );
+			
+			if( $this->Rcon )
+			{
+				$this->Rcon->Close( );
+			}
 		}
 		
 		/**
