@@ -2,7 +2,7 @@
 	/**
 	 * Class written by xPaw
 	 *
-	 * Website: http://xpaw.ru
+	 * Website: http://xpaw.me
 	 * GitHub: https://github.com/xPaw/PHP-Source-Query-Class
 	 */
 	
