@@ -59,7 +59,7 @@
 		<div class="jumbotron">
 			<h1>Source Query PHP Class</h1>
 			
-			<p>This class was created to query game server which use the Source query protocol, this includes all source games, half-life 1 engine games and Call of Duty: Modern Warfare 3</p>
+			<p>This class was created to query game server which use the Source (Steamworks) query protocol.</p>
 			
 			<p>
 				<a class="btn btn-large btn-primary" href="http://xpaw.me">Made by xPaw</a>
@@ -114,7 +114,9 @@
 				<table class="table table-bordered table-striped">
 					<thead>
 						<tr>
-							<th>Players</th>
+							<th>Player</th>
+							<th>Frags</th>
+							<th>Time</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -122,6 +124,8 @@
 <?php foreach( $Players as $Player ): ?>
 						<tr>
 							<td><?php echo htmlspecialchars( $Player[ 'Name' ] ); ?></td>
+							<td><?php echo $Player[ 'Frags' ]; ?></td>
+							<td><?php echo $Player[ 'TimeF' ]; ?></td>
 						</tr>
 <?php endforeach; ?>
 <?php else: ?>

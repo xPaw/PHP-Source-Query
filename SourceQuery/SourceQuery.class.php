@@ -350,7 +350,8 @@
 				case self :: GETCHALLENGE_ALL_CLEAR:
 				{
 					$this->Socket->Write( self :: A2S_PLAYER, $this->Challenge );
-					$this->Socket->Read( );
+					$this->Socket->Read( 14000 ); // Moronic Arma 3 developers do not split their packets, so we have to read more data
+					// This violates the protocol spec, and they probably should fix it: https://developer.valvesoftware.com/wiki/Server_queries#Protocol
 					
 					$Type = $this->Buffer->GetByte( );
 					
