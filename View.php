@@ -39,7 +39,7 @@
 	<meta charset="utf-8">
 	<title>Source Query PHP Class</title>
 	
-	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css">
+	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
 	<style type="text/css">
 		.jumbotron {
 			margin-top: 30px;
@@ -80,7 +80,7 @@
 				<table class="table table-bordered table-striped">
 					<thead>
 						<tr>
-							<th colspan="2">Server Info <em>(queried in <?php echo $Timer; ?>s)</em></th>
+							<th colspan="2">Server Info <span class="label label-<?php echo $Timer > 1.0 ? 'danger' : 'success'; ?>"><?php echo $Timer; ?>s</span></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -97,7 +97,18 @@
 	}
 	else
 	{
-		echo htmlspecialchars( $InfoValue );
+		if( $InfoValue === true )
+		{
+			echo 'true';
+		}
+		else if( $InfoValue === false )
+		{
+			echo 'false';
+		}
+		else
+		{
+			echo htmlspecialchars( $InfoValue );
+		}
 	}
 ?></td>
 						</tr>

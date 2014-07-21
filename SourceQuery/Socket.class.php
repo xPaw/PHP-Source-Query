@@ -69,7 +69,19 @@
 		{
 			$this->Buffer->Set( FRead( $this->Socket, $Length ) );
 			
-			if( $this->Buffer->Remaining( ) > 0 && $this->Buffer->GetLong( ) == -2 )
+			if( $this->Buffer->Remaining( ) === 0 )
+			{
+				// TODO: Should we throw an exception here?
+				return;
+			}
+			
+			$Header = $this->Buffer->GetLong( );
+			
+			if( $Header === -1 ) // Single packet
+			{
+				 // We don't have to do anything
+			}
+			else if( $Header === -2 ) // Split packet
 			{
 				$Packets      = Array( );
 				$IsCompressed = false;
@@ -91,7 +103,7 @@
 						}
 						case SourceQuery :: SOURCE:
 						{
-							$IsCompressed         = ( $RequestID & 0x80000000 ) != 0;
+							$IsCompressed         = ( $RequestID & 0x80000000 ) !== 0;
 							$PacketCount          = $this->Buffer->GetByte( );
 							$PacketNumber         = $this->Buffer->GetByte( ) + 1;
 							
@@ -129,13 +141,17 @@
 					
 					$Data = bzdecompress( $Data );
 					
-					if( CRC32( $Data ) != $PacketChecksum )
+					if( CRC32( $Data ) !== $PacketChecksum )
 					{
 						throw new SourceQueryException( 'CRC32 checksum mismatch of uncompressed packet data.' );
 					}
 				}
 				
 				$this->Buffer->Set( SubStr( $Buffer, 4 ) );
+			}
+			else
+			{
+				throw new SourceQueryException( 'Socket read: Raw packet header mismatch. (0x' . DecHex( $Header ) . ')' );
 			}
 		}
 		
@@ -150,6 +166,6 @@
 			
 			$this->Buffer->Set( $Data );
 			
-			return $this->Buffer->GetLong( ) == -2;
+			return $this->Buffer->GetLong( ) === -2;
 		}
 	}

@@ -191,7 +191,7 @@
 			$this->Socket->Write( self :: A2S_PING );
 			$this->Socket->Read( );
 			
-			return $this->Buffer->GetByte( ) == self :: S2A_PING;
+			return $this->Buffer->GetByte( ) === self :: S2A_PING;
 		}
 		
 		/**
@@ -213,13 +213,13 @@
 			
 			$Type = $this->Buffer->GetByte( );
 			
-			if( $Type == 0 )
+			if( $Type === 0 )
 			{
 				return false;
 			}
 			
 			// Old GoldSource protocol, HLTV still uses it
-			if( $Type == self :: S2A_INFO_OLD && $this->Socket->Engine == self :: GOLDSOURCE )
+			if( $Type === self :: S2A_INFO_OLD && $this->Socket->Engine === self :: GOLDSOURCE )
 			{
 				/**
 				 * If we try to read data again, and we get the result with type S2A_INFO (0x49)
@@ -237,8 +237,8 @@
 				$Server[ 'Protocol' ]   = $this->Buffer->GetByte( );
 				$Server[ 'Dedicated' ]  = Chr( $this->Buffer->GetByte( ) );
 				$Server[ 'Os' ]         = Chr( $this->Buffer->GetByte( ) );
-				$Server[ 'Password' ]   = $this->Buffer->GetByte( ) == 1;
-				$Server[ 'IsMod' ]      = $this->Buffer->GetByte( ) == 1;
+				$Server[ 'Password' ]   = $this->Buffer->GetByte( ) === 1;
+				$Server[ 'IsMod' ]      = $this->Buffer->GetByte( ) === 1;
 				
 				if( $Server[ 'IsMod' ] )
 				{
@@ -247,11 +247,11 @@
 					$this->Buffer->Get( 1 ); // NULL byte
 					$Mod[ 'Version' ]    = $this->Buffer->GetLong( );
 					$Mod[ 'Size' ]       = $this->Buffer->GetLong( );
-					$Mod[ 'ServerSide' ] = $this->Buffer->GetByte( ) == 1;
-					$Mod[ 'CustomDLL' ]  = $this->Buffer->GetByte( ) == 1;
+					$Mod[ 'ServerSide' ] = $this->Buffer->GetByte( ) === 1;
+					$Mod[ 'CustomDLL' ]  = $this->Buffer->GetByte( ) === 1;
 				}
 				
-				$Server[ 'Secure' ]   = $this->Buffer->GetByte( ) == 1;
+				$Server[ 'Secure' ]   = $this->Buffer->GetByte( ) === 1;
 				$Server[ 'Bots' ]     = $this->Buffer->GetByte( );
 				
 				if( isset( $Mod ) )
@@ -262,7 +262,7 @@
 				return $Server;
 			}
 			
-			if( $Type != self :: S2A_INFO )
+			if( $Type !== self :: S2A_INFO )
 			{
 				throw new SourceQueryException( 'GetInfo: Packet header mismatch. (0x' . DecHex( $Type ) . ')' );
 			}
@@ -278,11 +278,11 @@
 			$Server[ 'Bots' ]       = $this->Buffer->GetByte( );
 			$Server[ 'Dedicated' ]  = Chr( $this->Buffer->GetByte( ) );
 			$Server[ 'Os' ]         = Chr( $this->Buffer->GetByte( ) );
-			$Server[ 'Password' ]   = $this->Buffer->GetByte( ) == 1;
-			$Server[ 'Secure' ]     = $this->Buffer->GetByte( ) == 1;
+			$Server[ 'Password' ]   = $this->Buffer->GetByte( ) === 1;
+			$Server[ 'Secure' ]     = $this->Buffer->GetByte( ) === 1;
 			
-			// The Ship
-			if( $Server[ 'AppID' ] == 2400 )
+			// The Ship (they violate query protocol spec by modifying the response)
+			if( $Server[ 'AppID' ] === 2400 )
 			{
 				$Server[ 'GameMode' ]     = $this->Buffer->GetByte( );
 				$Server[ 'WitnessCount' ] = $this->Buffer->GetByte( );
@@ -294,7 +294,7 @@
 			// Extra Data Flags
 			if( $this->Buffer->Remaining( ) > 0 )
 			{
-				$Flags = $this->Buffer->GetByte( );
+				$Server[ 'ExtraDataFlags' ] = $Flags = $this->Buffer->GetByte( );
 				
 				// The server's game port
 				if( $Flags & 0x80 )
@@ -305,7 +305,7 @@
 				// The server's SteamID - does this serve any purpose?
 				if( $Flags & 0x10 )
 				{
-					$Server[ 'ServerID' ] = $this->Buffer->GetUnsignedLong( ) | ( $this->Buffer->GetUnsignedLong( ) << 32 );
+					$Server[ 'ServerID' ] = $this->Buffer->GetUnsignedLong( ) | ( $this->Buffer->GetUnsignedLong( ) << 32 ); // TODO: verify this
 				}
 				
 				// The spectator port and then the spectator server name
@@ -321,7 +321,16 @@
 					$Server[ 'GameTags' ] = $this->Buffer->GetString( );
 				}
 				
-				// 0x01 - The server's 64-bit GameID
+				// GameID -- alternative to AppID?
+				if( $Flags & 0x01 )
+				{
+					$Server[ 'GameID' ] = $this->Buffer->GetUnsignedLong( ) | ( $this->Buffer->GetUnsignedLong( ) << 32 ); 
+				}
+				
+				if( $this->Buffer->Remaining( ) > 0 )
+				{
+					throw new SourceQueryException( 'GetInfo: unread data? ' . $this->Buffer->Remaining( ) . ' bytes remaining in the buffer. Please report it to the library developer.' );
+				}
 			}
 			
 			return $Server;
@@ -355,11 +364,11 @@
 					
 					$Type = $this->Buffer->GetByte( );
 					
-					if( $Type == 0 )
+					if( $Type === 0 )
 					{
 						return false;
 					}
-					else if( $Type != self :: S2A_PLAYER )
+					else if( $Type !== self :: S2A_PLAYER )
 					{
 						throw new SourceQueryException( 'GetPlayers: Packet header mismatch. (0x' . DecHex( $Type ) . ')' );
 					}
@@ -412,11 +421,11 @@
 					
 					$Type = $this->Buffer->GetByte( );
 					
-					if( $Type == 0 )
+					if( $Type === 0 )
 					{
 						return false;
 					}
-					else if( $Type != self :: S2A_RULES )
+					else if( $Type !== self :: S2A_RULES )
 					{
 						throw new SourceQueryException( 'GetRules: Packet header mismatch. (0x' . DecHex( $Type ) . ')' );
 					}

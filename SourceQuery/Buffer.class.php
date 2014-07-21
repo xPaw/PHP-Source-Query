@@ -70,21 +70,20 @@
 		 */
 		public function Get( $Length = -1 )
 		{
-			if( $Length == 0 )
+			if( $Length === 0 )
 			{
-				// Why even bother
-				return "";
+				return '';
 			}
 			
 			$Remaining = $this->Remaining( );
 			
-			if( $Length == -1 )
+			if( $Length === -1 )
 			{
 				$Length = $Remaining;
 			}
 			else if( $Length > $Remaining )
 			{
-				return "";
+				return '';
 			}
 			
 			$Data = SubStr( $this->Buffer, $this->Position, $Length );
