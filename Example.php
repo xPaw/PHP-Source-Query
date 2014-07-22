@@ -5,7 +5,7 @@
 	Header( 'Content-Type: text/plain' );
 	
 	// Edit this ->
-	define( 'SQ_SERVER_ADDR', 'gs2.my-run.de' );
+	define( 'SQ_SERVER_ADDR', 'localhost' );
 	define( 'SQ_SERVER_PORT', 27015 );
 	define( 'SQ_TIMEOUT',     1 );
 	define( 'SQ_ENGINE',      SourceQuery :: SOURCE );
