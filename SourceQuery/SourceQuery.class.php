@@ -128,8 +128,6 @@
 		public function Connect( $Ip, $Port, $Timeout = 3, $Engine = self :: SOURCE )
 		{
 			$this->Disconnect( );
-			$this->Buffer->Reset( );
-			$this->Challenge = 0;
 			
 			if( !is_int( $Timeout ) || $Timeout < 0 )
 			{
@@ -166,6 +164,9 @@
 		public function Disconnect( )
 		{
 			$this->Connected = false;
+			$this->Challenge = 0;
+			
+			$this->Buffer->Reset( );
 			
 			$this->Socket->Close( );
 			
