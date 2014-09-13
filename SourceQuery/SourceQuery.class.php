@@ -514,11 +514,11 @@
 		}
 		
 		/**
-		 * Sets rcon password, for future use in Rcon()
+		 * Sends a command to the server for execution.
 		 *
-		 * @param string $Command Command to execute on the server
+		 * @param string $Command Command to execute
 		 *
-		 * @return bool|string Answer from server in string, false on failure
+		 * @return string|bool Answer from server in string, false on failure
 		 */
 		public function Rcon( $Command )
 		{
