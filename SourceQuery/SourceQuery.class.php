@@ -148,22 +148,6 @@
 			}
 			
 			$this->Connected = true;
-			
-			switch( $this->Socket->Engine )
-			{
-				case SourceQuery :: GOLDSOURCE:
-				{
-					$this->Rcon = new SourceQueryGoldSourceRcon( $this->Buffer, $this->Socket );
-					
-					break;
-				}
-				case SourceQuery :: SOURCE:
-				{
-					$this->Rcon = new SourceQuerySourceRcon( $this->Buffer, $this->Socket );
-					
-					break;
-				}
-			}
 		}
 		
 		/**
@@ -197,6 +181,8 @@
 			if( $this->Rcon )
 			{
 				$this->Rcon->Close( );
+				
+				$this->Rcon = null;
 			}
 		}
 		
@@ -535,6 +521,22 @@
 			if( !$this->Connected )
 			{
 				return false;
+			}
+			
+			switch( $this->Socket->Engine )
+			{
+				case SourceQuery :: GOLDSOURCE:
+				{
+					$this->Rcon = new SourceQueryGoldSourceRcon( $this->Buffer, $this->Socket );
+					
+					break;
+				}
+				case SourceQuery :: SOURCE:
+				{
+					$this->Rcon = new SourceQuerySourceRcon( $this->Buffer, $this->Socket );
+					
+					break;
+				}
 			}
 			
 			$this->Rcon->Open( );
