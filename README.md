@@ -18,6 +18,7 @@ The class also allows you to query servers using RCON although this only works f
 * [Dino D-Day](http://store.steampowered.com/app/70000/)
 * [Nuclear Dawn](http://store.steampowered.com/app/17710/)
 * [Call of Duty: Modern Warfare 3](http://store.steampowered.com/app/115300/)
+* [Starbound](http://store.steampowered.com/app/211820/) *(use SetUseOldGetChallengeMethod method after connecting)*
 * [Arma 3](http://store.steampowered.com/app/107410/) *(add +1 to the server port, their implementation also violates Source query protocol spec.)*
 * [Minecraft](http://www.minecraft.net/) **(RCON ONLY!)**
 * *and many other games that implement Source Query Protocol*

@@ -44,6 +44,7 @@
 		const A2S_INFO      = 0x54;
 		const A2S_PLAYER    = 0x55;
 		const A2S_RULES     = 0x56;
+		const A2S_SERVERQUERY_GETCHALLENGE = 0x57;
 		
 		/**
 		 * Packets received
@@ -103,6 +104,13 @@
 		 */
 		private $Challenge;
 		
+		/**
+		 * Use old method for getting challenge number
+		 * 
+		 * @var bool
+		 */
+		private $UseOldGetChallengeMethod;
+		
 		public function __construct( )
 		{
 			$this->Buffer = new SourceQueryBuffer( );
@@ -156,6 +164,22 @@
 					break;
 				}
 			}
+		}
+		
+		/**
+		 * Forces GetChallenge to use old method for challenge retrieval because some games use outdated protocol (e.g Starbound)
+		 *
+		 * @param bool $Value Set to true to force old method
+		 *
+		 * @returns bool Previous value
+		 */
+		public function SetUseOldGetChallengeMethod( $Value )
+		{
+			$Previous = $this->UseOldGetChallengeMethod;
+			
+			$this->UseOldGetChallengeMethod = $Value === true;
+			
+			return $Previous;
 		}
 		
 		/**
@@ -462,6 +486,11 @@
 			if( $this->Challenge )
 			{
 				return self :: GETCHALLENGE_ALL_CLEAR;
+			}
+			
+			if( $this->UseOldGetChallengeMethod )
+			{
+				$Header = self :: A2S_SERVERQUERY_GETCHALLENGE;
 			}
 			
 			$this->Socket->Write( $Header, 0xFFFFFFFF );

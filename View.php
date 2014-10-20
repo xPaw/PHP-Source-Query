@@ -4,7 +4,7 @@
 	// Edit this ->
 	define( 'SQ_SERVER_ADDR', 'localhost' );
 	define( 'SQ_SERVER_PORT', 27015 );
-	define( 'SQ_TIMEOUT',     1 );
+	define( 'SQ_TIMEOUT',     3 );
 	define( 'SQ_ENGINE',      SourceQuery :: SOURCE );
 	// Edit this <-
 	
@@ -19,6 +19,7 @@
 	try
 	{
 		$Query->Connect( SQ_SERVER_ADDR, SQ_SERVER_PORT, SQ_TIMEOUT, SQ_ENGINE );
+		//$Query->SetUseOldGetChallengeMethod( true ); // Use this when players/rules retrieval fails on games like Starbound
 		
 		$Info    = $Query->GetInfo( );
 		$Players = $Query->GetPlayers( );
@@ -39,7 +40,7 @@
 	<meta charset="utf-8">
 	<title>Source Query PHP Class</title>
 	
-	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
 	<style type="text/css">
 		.jumbotron {
 			margin-top: 30px;
@@ -141,7 +142,7 @@
 <?php endforeach; ?>
 <?php else: ?>
 						<tr>
-							<td>No players in da house</td>
+							<td colspan="3">No players received</td>
 						</tr>
 <?php endif; ?>
 					</tbody>
@@ -164,6 +165,10 @@
 							<td><?php echo htmlspecialchars( $Value ); ?></td>
 						</tr>
 <?php endforeach; ?>
+<?php else: ?>
+						<tr>
+							<td colspan="2">No rules received</td>
+						</tr>
 <?php endif; ?>
 					</tbody>
 				</table>
