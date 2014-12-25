@@ -139,9 +139,9 @@
 						throw new RuntimeException( 'Received compressed packet, PHP doesn\'t have Bzip2 library installed, can\'t decompress.' );
 					}
 					
-					$Data = bzdecompress( $Data );
+					$Buffer = bzdecompress( $Buffer );
 					
-					if( CRC32( $Data ) !== $PacketChecksum )
+					if( CRC32( $Buffer ) !== $PacketChecksum )
 					{
 						throw new SourceQueryException( 'CRC32 checksum mismatch of uncompressed packet data.' );
 					}
