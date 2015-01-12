@@ -59,6 +59,8 @@ The class also allows you to query servers using RCON although this only works f
 	</tr>
 </table>
 
+Also refer to [an example](Example.php) to work things out.
+
 ## License
 > *This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.<br>
 > To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/3.0/*
