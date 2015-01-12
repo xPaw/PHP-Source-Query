@@ -54,7 +54,7 @@
 		const S2A_INFO      = 0x49;
 		const S2A_INFO_OLD  = 0x6D; // Old GoldSource, HLTV uses it
 		const S2A_PLAYER    = 0x44;
-		const S2A_RULES     = 0x45; // GetChallenge Packet header 0x49 on some servers GOLDSOURCE
+		const S2A_RULES     = 0x45; // GetChallenge Packet header 0x49 on servers GOLDSOURCE 47 protocol
 		const S2A_RCON      = 0x6C;
 		
 		/**
