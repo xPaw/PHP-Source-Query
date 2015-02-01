@@ -1,5 +1,8 @@
 <?php
-	/**
+use xPaw\SourceQuery\Exception\AuthenticationException;
+use xPaw\SourceQuery\Exception\TimeoutException;
+
+/**
 	 * Class written by xPaw
 	 *
 	 * Website: http://xpaw.me
@@ -51,7 +54,7 @@
 				
 				if( $ErrNo || !$this->RconSocket )
 				{
-					throw new SourceQueryException( 'Can\'t connect to RCON server: ' . $ErrStr );
+					throw new TimeoutException( 'Can\'t connect to RCON server: ' . $ErrStr, TimeoutException::TIMEOUT_CONNECT);
 				}
 				
 				Stream_Set_Timeout( $this->RconSocket, $this->Socket->Timeout );
@@ -103,7 +106,7 @@
 			
 			if( $Type === SourceQuery :: SERVERDATA_AUTH_RESPONSE )
 			{
-				throw new SourceQueryException( 'Bad rcon_password.' );
+				throw new AuthenticationException( 'Bad rcon_password.', AuthenticationException::BAD_PASSWORD);
 			}
 			else if( $Type !== SourceQuery :: SERVERDATA_RESPONSE_VALUE )
 			{
@@ -160,7 +163,7 @@
 			
 			if( $RequestID === -1 || $Type !== SourceQuery :: SERVERDATA_AUTH_RESPONSE )
 			{
-				throw new SourceQueryException( 'RCON authorization failed.' );
+				throw new AuthenticationException( 'RCON authorization failed.', AuthenticationException::BAD_PASSWORD);
 			}
 			
 			return true;

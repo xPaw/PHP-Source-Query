@@ -5,6 +5,8 @@
 	 * Website: http://xpaw.me
 	 * GitHub: https://github.com/xPaw/PHP-Source-Query-Class
 	 */
+
+	use xPaw\SourceQuery\Exception\AuthenticationException;
 	
 	class SourceQueryGoldSourceRcon
 	{
@@ -51,7 +53,11 @@
 			
 			return $Length === FWrite( $this->Socket->Socket, $Command, $Length );
 		}
-		
+
+		/**
+		 * @param int $Length
+		 * @throws AuthenticationException
+		 */
 		public function Read( $Length = 1400 )
 		{
 			// GoldSource RCON has same structure as Query
@@ -65,10 +71,13 @@
 			$Buffer  = $this->Buffer->Get( );
 			$Trimmed = Trim( $Buffer );
 			
-			if( $Trimmed === 'Bad rcon_password.'
-			||  $Trimmed === 'You have been banned from this server.' )
+			if($Trimmed === 'Bad rcon_password.')
 			{
-				throw new SourceQueryException( $Trimmed );
+				throw new AuthenticationException($Trimmed, AuthenticationException::BAD_PASSWORD);
+			}
+			else if($Trimmed === 'You have been banned from this server.')
+			{
+				throw new AuthenticationException($Trimmed, AuthenticationException::BANNED);
 			}
 			
 			$ReadMore = false;
