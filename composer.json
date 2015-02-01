@@ -1,0 +1,12 @@
+{
+	"name": "xpaw/php-source-query-class",
+	"description": "PHP Class to query servers based on \"Source Engine Query\"",
+	"homepage": "https://github.com/xPaw/PHP-Source-Query-Class",
+	"type": "library",
+	"license": "LGPL-2.1",
+	"autoload": {
+		"files": [
+			"SourceQuery/SourceQuery.class.php"
+		]
+	}
+}
