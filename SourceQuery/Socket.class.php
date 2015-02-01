@@ -1,5 +1,8 @@
 <?php
-	/**
+use xPaw\SourceQuery\Exception\InvalidPacketException;
+use xPaw\SourceQuery\Exception\SocketException;
+
+/**
 	 * Class written by xPaw
 	 *
 	 * Website: http://xpaw.me
@@ -48,7 +51,7 @@
 			
 			if( $ErrNo || $this->Socket === false )
 			{
-				throw new Exception( 'Could not create socket: ' . $ErrStr );
+				throw new SocketException( 'Could not create socket: ' . $ErrStr, SocketException::COULD_NOT_CREATE_SOCKET);
 			}
 			
 			Stream_Set_Timeout( $this->Socket, $Timeout );
@@ -143,7 +146,7 @@
 					
 					if( CRC32( $Buffer ) !== $PacketChecksum )
 					{
-						throw new SourceQueryException( 'CRC32 checksum mismatch of uncompressed packet data.' );
+						throw new InvalidPacketException( 'CRC32 checksum mismatch of uncompressed packet data.', InvalidPacketException::CHECKSUM_MISMATCH);
 					}
 				}
 				
@@ -151,7 +154,7 @@
 			}
 			else
 			{
-				throw new SourceQueryException( 'Socket read: Raw packet header mismatch. (0x' . DecHex( $Header ) . ')' );
+				throw new InvalidPacketException( 'Socket read: Raw packet header mismatch. (0x' . DecHex( $Header ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH);
 			}
 		}
 		

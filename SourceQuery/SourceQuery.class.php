@@ -14,12 +14,16 @@
 		define( '__DIR__', dirname( __FILE__ ) );
 	}
 	
-	require __DIR__ . '/Exception.class.php';
+	require __DIR__ . '/Exceptions.class.php';
 	require __DIR__ . '/Buffer.class.php';
 	require __DIR__ . '/Socket.class.php';
 	require __DIR__ . '/SourceRcon.class.php';
 	require __DIR__ . '/GoldSourceRcon.class.php';
-	
+
+	use xPaw\SourceQuery\Exception\InvalidArgumentException;
+	use xPaw\SourceQuery\Exception\TimeoutException;
+	use xPaw\SourceQuery\Exception\InvalidPacketException;
+
 	class SourceQuery
 	{
 		/**
@@ -121,7 +125,7 @@
 		{
 			$this->Disconnect( );
 		}
-		
+
 		/**
 		 * Opens connection to server
 		 *
@@ -130,8 +134,8 @@
 		 * @param int $Timeout Timeout period
 		 * @param int $Engine Engine the server runs on (goldsource, source)
 		 *
-		 * @throws SourceQueryException
-		 * @throws InvalidArgumentException If timeout is not an integer
+		 * @throws InvalidArgumentException
+		 * @throws TimeoutException
 		 */
 		public function Connect( $Ip, $Port, $Timeout = 3, $Engine = self :: SOURCE )
 		{
@@ -139,12 +143,12 @@
 			
 			if( !is_int( $Timeout ) || $Timeout < 0 )
 			{
-				throw new InvalidArgumentException( 'Timeout must be an integer.' );
+				throw new InvalidArgumentException("Timeout must be an integer.", InvalidArgumentException::TIMEOUT_NOT_INTEGER);
 			}
 			
 			if( !$this->Socket->Open( $Ip, (int)$Port, $Timeout, (int)$Engine ) )
 			{
-				throw new SourceQueryException( 'Can\'t connect to the server.' );
+				throw new TimeoutException("Could not connect to server.", TimeoutException::TIMEOUT_CONNECT);
 			}
 			
 			$this->Connected = true;
@@ -208,7 +212,7 @@
 		/**
 		 * Get server information
 		 *
-		 * @throws SourceQueryException
+		 * @throws InvalidPacketException
 		 *
 		 * @return bool|array Returns array with information on success, false on failure
 		 */
@@ -275,7 +279,7 @@
 			
 			if( $Type !== self :: S2A_INFO )
 			{
-				throw new SourceQueryException( 'GetInfo: Packet header mismatch. (0x' . DecHex( $Type ) . ')' );
+				throw new InvalidPacketException("GetInfo: Packet header mismatch. (0x' . DecHex( $Type ) . ')", InvalidPacketException::PACKET_HEADER_MISMATCH);
 			}
 			
 			$Server[ 'Protocol' ]   = $this->Buffer->GetByte( );
@@ -340,7 +344,8 @@
 				
 				if( $this->Buffer->Remaining( ) > 0 )
 				{
-					throw new SourceQueryException( 'GetInfo: unread data? ' . $this->Buffer->Remaining( ) . ' bytes remaining in the buffer. Please report it to the library developer.' );
+					throw new InvalidPacketException("GetInfo: unread data? " . $this->Buffer->Remaining( ) . " bytes remaining in the buffer. Please report it to the library developer.",
+						InvalidPacketException::BUFFER_NOT_EMPTY);
 				}
 			}
 			
@@ -350,7 +355,7 @@
 		/**
 		 * Get players on the server
 		 *
-		 * @throws SourceQueryException
+		 * @throws InvalidPacketException
 		 *
 		 * @return bool|array Returns array with players on success, false on failure
 		 */
@@ -381,7 +386,7 @@
 					}
 					else if( $Type !== self :: S2A_PLAYER )
 					{
-						throw new SourceQueryException( 'GetPlayers: Packet header mismatch. (0x' . DecHex( $Type ) . ')' );
+						throw new InvalidPacketException( 'GetPlayers: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH);
 					}
 					
 					break;
@@ -408,7 +413,7 @@
 		/**
 		 * Get rules (cvars) from the server
 		 *
-		 * @throws SourceQueryException
+		 * @throws InvalidPacketException
 		 *
 		 * @return bool|array Returns array with rules on success, false on failure
 		 */
@@ -438,7 +443,7 @@
 					}
 					else if( $Type !== self :: S2A_RULES )
 					{
-						throw new SourceQueryException( 'GetRules: Packet header mismatch. (0x' . DecHex( $Type ) . ')' );
+						throw new InvalidPacketException( 'GetRules: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH);
 					}
 					
 					break;
@@ -461,10 +466,13 @@
 			
 			return $Rules;
 		}
-		
+
 		/**
 		 * Get challenge (used for players/rules packets)
 		 *
+		 * @param $Header
+		 * @param $ExpectedResult
+		 * @throws InvalidPacketException
 		 * @return bool True if all went well, false if server uses old GoldSource protocol, and it already contains answer
 		 */
 		private function GetChallenge( $Header, $ExpectedResult )
@@ -504,7 +512,7 @@
 				}
 				default:
 				{
-					throw new SourceQueryException( 'GetChallenge: Packet header mismatch. (0x' . DecHex( $Type ) . ')' );
+					throw new InvalidPacketException( 'GetChallenge: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH);
 				}
 			}
 		}
