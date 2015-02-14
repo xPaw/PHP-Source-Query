@@ -1,11 +1,10 @@
 # PHP Source Query
 
-## Description
 This class was created to query game server which use the Source query protocol, this includes all source games, and all the games that implement Steamworks.
 
 The class also allows you to query servers using RCON although this only works for half-life 1 and source engine games.
 
-[Minecraft](http://www.minecraft.net) also uses Source RCON protocol, and this means you can use this class to send commands to your minecraft server while having engine set to source.
+[Minecraft](http://www.minecraft.net) also uses Source RCON protocol, and this means you can use this class to send commands to your minecraft server while having engine set to Source engine.
 
 ### Protocol specifications can be found over at VDC
 * https://developer.valvesoftware.com/wiki/Server_queries
