@@ -71,13 +71,13 @@
 			$Buffer  = $this->Buffer->Get( );
 			$Trimmed = Trim( $Buffer );
 			
-			if($Trimmed === 'Bad rcon_password.')
+			if( $Trimmed === 'Bad rcon_password.' )
 			{
-				throw new AuthenticationException($Trimmed, AuthenticationException::BAD_PASSWORD);
+				throw new AuthenticationException( $Trimmed, AuthenticationException::BAD_PASSWORD );
 			}
-			else if($Trimmed === 'You have been banned from this server.')
+			else if( $Trimmed === 'You have been banned from this server.' )
 			{
-				throw new AuthenticationException($Trimmed, AuthenticationException::BANNED);
+				throw new AuthenticationException( $Trimmed, AuthenticationException::BANNED );
 			}
 			
 			$ReadMore = false;

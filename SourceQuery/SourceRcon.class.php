@@ -1,13 +1,14 @@
 <?php
-use xPaw\SourceQuery\Exception\AuthenticationException;
-use xPaw\SourceQuery\Exception\TimeoutException;
-
-/**
+	/**
 	 * Class written by xPaw
 	 *
 	 * Website: http://xpaw.me
 	 * GitHub: https://github.com/xPaw/PHP-Source-Query-Class
 	 */
+	
+	use xPaw\SourceQuery\Exception\AuthenticationException;
+	use xPaw\SourceQuery\Exception\TimeoutException;
+	use xPaw\SourceQuery\Exception\InvalidPacketException;
 	
 	class SourceQuerySourceRcon
 	{
@@ -54,7 +55,7 @@ use xPaw\SourceQuery\Exception\TimeoutException;
 				
 				if( $ErrNo || !$this->RconSocket )
 				{
-					throw new TimeoutException( 'Can\'t connect to RCON server: ' . $ErrStr, TimeoutException::TIMEOUT_CONNECT);
+					throw new TimeoutException( 'Can\'t connect to RCON server: ' . $ErrStr, TimeoutException::TIMEOUT_CONNECT );
 				}
 				
 				Stream_Set_Timeout( $this->RconSocket, $this->Socket->Timeout );
@@ -77,6 +78,11 @@ use xPaw\SourceQuery\Exception\TimeoutException;
 		public function Read( $Length = 1400 )
 		{
 			$this->Buffer->Set( FRead( $this->RconSocket, $Length ) );
+			
+			if( $this->Buffer->Remaining( ) < 4 )
+			{
+				throw new InvalidPacketException( 'Rcon read: Failed to read any data from socket', InvalidPacketException::BUFFER_EMPTY );
+			}
 			
 			$PacketSize = $this->Buffer->GetLong( );
 			
@@ -102,11 +108,12 @@ use xPaw\SourceQuery\Exception\TimeoutException;
 			$this->Read( );
 			
 			$this->Buffer->GetLong( ); // RequestID
-			$Type      = $this->Buffer->GetLong( );
+			
+			$Type = $this->Buffer->GetLong( );
 			
 			if( $Type === SourceQuery :: SERVERDATA_AUTH_RESPONSE )
 			{
-				throw new AuthenticationException( 'Bad rcon_password.', AuthenticationException::BAD_PASSWORD);
+				throw new AuthenticationException( 'Bad rcon_password.', AuthenticationException::BAD_PASSWORD );
 			}
 			else if( $Type !== SourceQuery :: SERVERDATA_RESPONSE_VALUE )
 			{
@@ -163,7 +170,7 @@ use xPaw\SourceQuery\Exception\TimeoutException;
 			
 			if( $RequestID === -1 || $Type !== SourceQuery :: SERVERDATA_AUTH_RESPONSE )
 			{
-				throw new AuthenticationException( 'RCON authorization failed.', AuthenticationException::BAD_PASSWORD);
+				throw new AuthenticationException( 'RCON authorization failed.', AuthenticationException::BAD_PASSWORD );
 			}
 			
 			return true;

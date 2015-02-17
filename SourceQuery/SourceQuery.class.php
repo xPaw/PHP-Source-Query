@@ -143,12 +143,12 @@
 			
 			if( !is_int( $Timeout ) || $Timeout < 0 )
 			{
-				throw new InvalidArgumentException("Timeout must be an integer.", InvalidArgumentException::TIMEOUT_NOT_INTEGER);
+				throw new InvalidArgumentException( 'Timeout must be an integer.', InvalidArgumentException::TIMEOUT_NOT_INTEGER );
 			}
 			
 			if( !$this->Socket->Open( $Ip, (int)$Port, $Timeout, (int)$Engine ) )
 			{
-				throw new TimeoutException("Could not connect to server.", TimeoutException::TIMEOUT_CONNECT);
+				throw new TimeoutException( 'Could not connect to server.', TimeoutException::TIMEOUT_CONNECT );
 			}
 			
 			$this->Connected = true;
@@ -279,7 +279,7 @@
 			
 			if( $Type !== self :: S2A_INFO )
 			{
-				throw new InvalidPacketException("GetInfo: Packet header mismatch. (0x' . DecHex( $Type ) . ')", InvalidPacketException::PACKET_HEADER_MISMATCH);
+				throw new InvalidPacketException( 'GetInfo: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 			}
 			
 			$Server[ 'Protocol' ]   = $this->Buffer->GetByte( );
@@ -344,8 +344,8 @@
 				
 				if( $this->Buffer->Remaining( ) > 0 )
 				{
-					throw new InvalidPacketException("GetInfo: unread data? " . $this->Buffer->Remaining( ) . " bytes remaining in the buffer. Please report it to the library developer.",
-						InvalidPacketException::BUFFER_NOT_EMPTY);
+					throw new InvalidPacketException( 'GetInfo: unread data? ' . $this->Buffer->Remaining( ) . ' bytes remaining in the buffer. Please report it to the library developer.',
+						InvalidPacketException::BUFFER_NOT_EMPTY );
 				}
 			}
 			
@@ -386,7 +386,7 @@
 					}
 					else if( $Type !== self :: S2A_PLAYER )
 					{
-						throw new InvalidPacketException( 'GetPlayers: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH);
+						throw new InvalidPacketException( 'GetPlayers: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 					}
 					
 					break;
@@ -443,7 +443,7 @@
 					}
 					else if( $Type !== self :: S2A_RULES )
 					{
-						throw new InvalidPacketException( 'GetRules: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH);
+						throw new InvalidPacketException( 'GetRules: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 					}
 					
 					break;
@@ -512,7 +512,7 @@
 				}
 				default:
 				{
-					throw new InvalidPacketException( 'GetChallenge: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH);
+					throw new InvalidPacketException( 'GetChallenge: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 				}
 			}
 		}
