@@ -75,9 +75,9 @@
 			return $Length === FWrite( $this->RconSocket, $Command, $Length );
 		}
 		
-		public function Read( $Length = 1400 )
+		public function Read( )
 		{
-			$this->Buffer->Set( FRead( $this->RconSocket, $Length ) );
+			$this->Buffer->Set( FRead( $this->RconSocket, 4 ) );
 			
 			if( $this->Buffer->Remaining( ) < 4 )
 			{
@@ -86,16 +86,27 @@
 			
 			$PacketSize = $this->Buffer->GetLong( );
 			
+			$this->Buffer->Set( FRead( $this->RconSocket, $PacketSize ) );
+			
 			$Buffer = $this->Buffer->Get( );
 			
 			$Remaining = $PacketSize - StrLen( $Buffer );
 			
 			while( $Remaining > 0 )
 			{
-				$Buffer2 = FRead( $this->RconSocket, $Length );
-				$Buffer .= $Buffer2;
+				$Buffer2 = FRead( $this->RconSocket, $Remaining );
 				
-				$Remaining -= StrLen( $Buffer2 );
+				$PacketSize = StrLen( $Buffer2 );
+				
+				if( $PacketSize === 0 )
+				{
+					throw new InvalidPacketException( 'Read ' . strlen( $Buffer ) . ' bytes from socket, ' . $Remaining . ' remaining', InvalidPacketException::BUFFER_EMPTY );
+					
+					break;
+				}
+				
+				$Buffer .= $Buffer2;
+				$Remaining -= $PacketSize;
 			}
 			
 			$this->Buffer->Set( $Buffer );
@@ -139,9 +150,16 @@
 						break;
 					}
 					
-					$Buffer .= $this->Buffer->Get( );
+					$Buffer2 = $this->Buffer->Get( );
+					
+					if( $Buffer2 === "\x00\x01\x00\x00\x00\x00" )
+					{
+						break;
+					}
+					
+					$Buffer .= $Buffer2;
 				}
-				while( false ); // TODO: This is so broken that we don't even try to read multiple times, needs to be revised
+				while( true );
 			}
 			
 			// TODO: It should use GetString, but there are no null bytes at the end, why?
