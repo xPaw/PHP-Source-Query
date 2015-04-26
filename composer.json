@@ -4,8 +4,14 @@
 	"homepage": "https://github.com/xPaw/PHP-Source-Query-Class",
 	"type": "library",
 	"license": "LGPL-2.1",
-	"autoload": {
-		"files": [
+	"require":
+	{
+		"php": ">=5.4",
+	},
+	"autoload":
+	{
+		"files":
+		[
 			"SourceQuery/SourceQuery.class.php"
 		]
 	}
