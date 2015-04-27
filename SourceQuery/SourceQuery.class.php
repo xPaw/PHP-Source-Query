@@ -9,11 +9,6 @@
 	 * I used it as a reference at some points.
 	 */
 	
-	if( !defined( '__DIR__' ) ) // PHP < 5.3
-	{
-		define( '__DIR__', dirname( __FILE__ ) );
-	}
-	
 	require __DIR__ . '/Exceptions.class.php';
 	require __DIR__ . '/Buffer.class.php';
 	require __DIR__ . '/Socket.class.php';
