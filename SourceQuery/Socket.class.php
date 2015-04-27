@@ -70,7 +70,12 @@
 		
 		public function Read( $Length = 1400 )
 		{
-			$this->Buffer->Set( FRead( $this->Socket, $Length ) );
+			$this->ReadBuffer( FRead( $this->Socket, $Length ), $Length );
+		}
+		
+		protected function ReadBuffer( $Buffer, $Length )
+		{
+			$this->Buffer->Set( $Buffer );
 			
 			if( $this->Buffer->Remaining( ) === 0 )
 			{
