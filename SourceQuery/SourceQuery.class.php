@@ -2,7 +2,7 @@
 	/**
 	 * Class written by xPaw
 	 *
-	 * Website: http://xpaw.me
+	 * Website: https://xpaw.me
 	 * GitHub: https://github.com/xPaw/PHP-Source-Query-Class
 	 *
 	 * Special thanks to koraktor for his awesome Steam Condenser class,
@@ -14,11 +14,11 @@
 	require __DIR__ . '/Socket.class.php';
 	require __DIR__ . '/SourceRcon.class.php';
 	require __DIR__ . '/GoldSourceRcon.class.php';
-
+	
 	use xPaw\SourceQuery\Exception\InvalidArgumentException;
 	use xPaw\SourceQuery\Exception\TimeoutException;
 	use xPaw\SourceQuery\Exception\InvalidPacketException;
-
+	
 	class SourceQuery
 	{
 		/**
@@ -120,7 +120,7 @@
 		{
 			$this->Disconnect( );
 		}
-
+		
 		/**
 		 * Opens connection to server
 		 *
@@ -461,7 +461,7 @@
 			
 			return $Rules;
 		}
-
+		
 		/**
 		 * Get challenge (used for players/rules packets)
 		 *

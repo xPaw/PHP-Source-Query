@@ -2,10 +2,10 @@
 	/**
 	 * Class written by xPaw
 	 *
-	 * Website: http://xpaw.me
+	 * Website: https://xpaw.me
 	 * GitHub: https://github.com/xPaw/PHP-Source-Query-Class
 	 */
-
+	
 	use xPaw\SourceQuery\Exception\AuthenticationException;
 	
 	class SourceQueryGoldSourceRcon
@@ -53,7 +53,7 @@
 			
 			return $Length === FWrite( $this->Socket->Socket, $Command, $Length );
 		}
-
+		
 		/**
 		 * @param int $Length
 		 * @throws AuthenticationException
