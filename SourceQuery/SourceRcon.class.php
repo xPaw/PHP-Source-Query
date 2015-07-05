@@ -162,9 +162,7 @@
 				while( true );
 			}
 			
-			// TODO: It should use GetString, but there are no null bytes at the end, why?
-			// $Buffer = $this->Buffer->GetString( );
-			return $Buffer;
+			return rtrim( $Buffer, "\0" );
 		}
 		
 		public function Authorize( $Password )
