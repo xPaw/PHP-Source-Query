@@ -1,9 +1,16 @@
 {
 	"name": "xpaw/php-source-query-class",
-	"description": "PHP Class to query servers based on \"Source Engine Query\"",
-	"homepage": "https://github.com/xPaw/PHP-Source-Query-Class",
+	"description": "PHP library to query and send RCON commands to servers based on \"Source Engine Query\" protocol",
+	"homepage": "https://github.com/xPaw/PHP-Source-Query",
 	"type": "library",
 	"license": "LGPL-2.1",
+	"keywords":
+	[
+		"rcon",
+		"minecraft",
+		"counter-strike",
+		"team fortress"
+	],
 	"require":
 	{
 		"php": ">=5.4"
