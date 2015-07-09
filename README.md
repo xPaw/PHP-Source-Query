@@ -64,7 +64,7 @@ Also refer to [an example](Example.php) to work things out.
 
 ## License
     PHP Source Query
-    Copyright (C) 2012-2015 xPaw
+    Copyright (C) 2012-2015 Pavel Djundik
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
