@@ -25,7 +25,7 @@ AppID | Game | Query | RCON | Notes
 107410 | [Arma 3](http://store.steampowered.com/app/107410/) | :white_check_mark: | :white_check_mark: | Add +1 to the server port
 115300 | [Call of Duty: Modern Warfare 3](http://store.steampowered.com/app/115300/) | :white_check_mark: | :white_check_mark: | 
 211820 | [Starbound](http://store.steampowered.com/app/211820/) | :white_check_mark: | :white_check_mark: | Call `SetUseOldGetChallengeMethod` method after connecting
-252490 | [Rust](http://store.steampowered.com/app/252490/) | :white_check_mark: | :white_check_mark: | 
+252490 | [Rust](http://store.steampowered.com/app/252490/) | :white_check_mark: | :white_check_mark: | Add +1 to the server port
  | [Minecraft](http://www.minecraft.net/) | :x: | :white_check_mark: | 
 
 Open a pull request if you know another game which supports Source Query and/or RCON protocols.
