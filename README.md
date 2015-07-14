@@ -15,11 +15,14 @@ The class also allows you to query servers using RCON although this only works f
 ## Supported Games
 AppID | Game | Query | RCON | Notes
 ----- | ---- | :---: | :--: | ----
+~ | All HL1/HL2 games and mods | :white_check_mark: | :white_check_mark: | 
 10 | [Counter-Strike 1.6](http://store.steampowered.com/app/10/) | :white_check_mark: | :white_check_mark: | 
 730 | [Counter-Strike: Global Offensive](http://store.steampowered.com/app/730/) | :white_check_mark: | :white_check_mark: | 
 440 | [Team Fortress 2](http://store.steampowered.com/app/440/) | :white_check_mark: | :white_check_mark: | 
+550 | [Left 4 Dead 2](http://store.steampowered.com/app/550/) | :white_check_mark: | :white_check_mark: | 
 1002 | [Rag Doll Kung Fu](http://store.steampowered.com/app/1002/) | :white_check_mark: | :white_check_mark: | 
 2400 | [The Ship](http://store.steampowered.com/app/2400/) | :white_check_mark: | :white_check_mark: | 
+4000 | [Garry's Mod](http://store.steampowered.com/app/4000/) | :white_check_mark: | :white_check_mark: | 
 17710 | [Nuclear Dawn](http://store.steampowered.com/app/17710/) | :white_check_mark: | :white_check_mark: | 
 70000 | [Dino D-Day](http://store.steampowered.com/app/70000/) | :white_check_mark: | :white_check_mark: | 
 107410 | [Arma 3](http://store.steampowered.com/app/107410/) | :white_check_mark: | :white_check_mark: | Add +1 to the server port
