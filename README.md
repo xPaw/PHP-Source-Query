@@ -13,16 +13,22 @@ The class also allows you to query servers using RCON although this only works f
 * https://developer.valvesoftware.com/wiki/Source_RCON_Protocol
 
 ## Supported Games
-* All multiplayer games released by Valve: *[Counter-Strike 1.6](http://store.steampowered.com/app/10/), [Counter-Strike: Global Offensive](http://store.steampowered.com/app/730/), [Team Fortress 2](http://store.steampowered.com/app/440/), etc...*
-* [Rag Doll Kung Fu](http://store.steampowered.com/app/1002/)
-* [The Ship](http://store.steampowered.com/app/2400/)
-* [Dino D-Day](http://store.steampowered.com/app/70000/)
-* [Nuclear Dawn](http://store.steampowered.com/app/17710/)
-* [Call of Duty: Modern Warfare 3](http://store.steampowered.com/app/115300/)
-* [Starbound](http://store.steampowered.com/app/211820/) *(use SetUseOldGetChallengeMethod method after connecting)*
-* [Arma 3](http://store.steampowered.com/app/107410/) *(add +1 to the server port, their implementation also violates Source query protocol spec.)*
-* [Minecraft](http://www.minecraft.net/) **(RCON ONLY!)**
-* *and many other games that implement Source Query Protocol*
+AppID | Game | Query | RCON | Notes
+----- | ---- | :---: | :--: | ----
+10 | [Counter-Strike 1.6](http://store.steampowered.com/app/10/) | :white_check_mark: | :white_check_mark: | 
+730 | [Counter-Strike: Global Offensive](http://store.steampowered.com/app/730/) | :white_check_mark: | :white_check_mark: | 
+440 | [Team Fortress 2](http://store.steampowered.com/app/440/) | :white_check_mark: | :white_check_mark: | 
+1002 | [Rag Doll Kung Fu](http://store.steampowered.com/app/1002/) | :white_check_mark: | :white_check_mark: | 
+2400 | [The Ship](http://store.steampowered.com/app/2400/) | :white_check_mark: | :white_check_mark: | 
+17710 | [Nuclear Dawn](http://store.steampowered.com/app/17710/) | :white_check_mark: | :white_check_mark: | 
+70000 | [Dino D-Day](http://store.steampowered.com/app/70000/) | :white_check_mark: | :white_check_mark: | 
+107410 | [Arma 3](http://store.steampowered.com/app/107410/) | :white_check_mark: | :white_check_mark: | Add +1 to the server port
+115300 | [Call of Duty: Modern Warfare 3](http://store.steampowered.com/app/115300/) | :white_check_mark: | :white_check_mark: | 
+211820 | [Starbound](http://store.steampowered.com/app/211820/) | :white_check_mark: | :white_check_mark: | Call `SetUseOldGetChallengeMethod` method after connecting
+252490 | [Rust](http://store.steampowered.com/app/252490/) | :white_check_mark: | :white_check_mark: | 
+ | [Minecraft](http://www.minecraft.net/) | :x: | :white_check_mark: | 
+
+Open a pull request if you know another game which supports Source Query and/or RCON protocols.
 
 ## Functions
 <table>
