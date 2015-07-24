@@ -33,6 +33,10 @@ AppID | Game | Query | RCON | Notes
 
 Open a pull request if you know another game which supports Source Query and/or RCON protocols.
 
+# How to tell if the game supports Source Query Protocol?
+
+Add your server to your favourites in Steam server browser, and if Steam can display information about your server, then the protocol is supported.
+
 ## Functions
 <table>
 	<tr>
