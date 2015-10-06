@@ -8,6 +8,8 @@ The class also allows you to query servers using RCON although this only works f
 
 **This library requires a [modern version](https://php.net/supported-versions.php) of PHP, so make sure you are using at least PHP 5.4 or newer.**
 
+**:warning: Please do not create issues when you are unable to retrieve information from a server, unless you can prove that there is a bug within the library.**
+
 ### Protocol specifications can be found over at VDC
 * https://developer.valvesoftware.com/wiki/Server_queries
 * https://developer.valvesoftware.com/wiki/Source_RCON_Protocol
