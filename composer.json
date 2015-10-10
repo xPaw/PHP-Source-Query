@@ -17,9 +17,8 @@
 	},
 	"autoload":
 	{
-		"files":
-		[
-			"SourceQuery/SourceQuery.class.php"
-		]
+		"psr-4": {
+			"xPaw\\SourceQuery\\": "SourceQuery/"
+		}
 	}
 }

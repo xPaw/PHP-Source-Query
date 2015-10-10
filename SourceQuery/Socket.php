@@ -1,15 +1,29 @@
 <?php
 	/**
-	 * Class written by xPaw
+	 * @author Pavel Djundik <sourcequery@xpaw.me>
 	 *
-	 * Website: https://xpaw.me
-	 * GitHub: https://github.com/xPaw/PHP-Source-Query-Class
+	 * @link https://xpaw.me
+	 * @link https://github.com/xPaw/PHP-Source-Query-Class
+	 *
+	 * @license GNU Lesser General Public License, version 2.1
+	 *
+	 * @internal
 	 */
+
+	namespace xPaw\SourceQuery;
 	
 	use xPaw\SourceQuery\Exception\InvalidPacketException;
 	use xPaw\SourceQuery\Exception\SocketException;
-	
-	class SourceQuerySocket
+
+	/**
+	 * Class Socket
+	 *
+	 * @package xPaw\SourceQuery
+	 *
+	 * @uses xPaw\SourceQuery\Exception\InvalidPacketException
+	 * @uses xPaw\SourceQuery\Exception\SocketException
+	 */
+	class Socket
 	{
 		public $Socket;
 		public $Engine;
@@ -21,7 +35,7 @@
 		/**
 		 * Points to buffer class
 		 * 
-		 * @var SourceQueryBuffer
+		 * @var Buffer
 		 */
 		private $Buffer;
 		
@@ -144,7 +158,7 @@
 					// Let's make sure this function exists, it's not included in PHP by default
 					if( !Function_Exists( 'bzdecompress' ) )
 					{
-						throw new RuntimeException( 'Received compressed packet, PHP doesn\'t have Bzip2 library installed, can\'t decompress.' );
+						throw new \RuntimeException( 'Received compressed packet, PHP doesn\'t have Bzip2 library installed, can\'t decompress.' );
 					}
 					
 					$Buffer = bzdecompress( $Buffer );

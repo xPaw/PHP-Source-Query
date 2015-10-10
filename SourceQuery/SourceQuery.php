@@ -1,30 +1,36 @@
 <?php
 	/**
-	 * Class written by xPaw
+	 * This class provides the public interface to the PHP-Source-Query library.
 	 *
-	 * Website: https://xpaw.me
-	 * GitHub: https://github.com/xPaw/PHP-Source-Query-Class
+	 * @author Pavel Djundik <sourcequery@xpaw.me>
 	 *
-	 * Special thanks to koraktor for his awesome Steam Condenser class,
-	 * I used it as a reference at some points.
+	 * @link https://xpaw.me
+	 * @link https://github.com/xPaw/PHP-Source-Query-Class
+	 *
+	 * @license GNU Lesser General Public License, version 2.1
 	 */
-	
-	require __DIR__ . '/Exceptions.class.php';
-	require __DIR__ . '/Buffer.class.php';
-	require __DIR__ . '/Socket.class.php';
-	require __DIR__ . '/SourceRcon.class.php';
-	require __DIR__ . '/GoldSourceRcon.class.php';
-	
+
+	namespace xPaw\SourceQuery;
+
 	use xPaw\SourceQuery\Exception\InvalidArgumentException;
 	use xPaw\SourceQuery\Exception\TimeoutException;
 	use xPaw\SourceQuery\Exception\InvalidPacketException;
-	
+
+	/**
+	 * Class SourceQuery
+	 *
+	 * @package xPaw\SourceQuery
+	 *
+	 * @uses xPaw\SourceQuery\Exception\InvalidArgumentException
+	 * @uses xPaw\SourceQuery\Exception\TimeoutException
+	 * @uses xPaw\SourceQuery\Exception\InvalidPacketException
+	 */
 	class SourceQuery
 	{
 		/**
 		 * Values returned by GetChallenge()
 		 *
-		 * TODO: Get rid of this? Improve? Do something else?
+		 * @todo Get rid of this? Improve? Do something else?
 		 */
 		const GETCHALLENGE_FAILED          = 0;
 		const GETCHALLENGE_ALL_CLEAR       = 1;
@@ -71,21 +77,21 @@
 		/**
 		 * Points to rcon class
 		 * 
-		 * @var SourceQueryRcon
+		 * @var SourceRcon
 		 */
 		private $Rcon;
 		
 		/**
 		 * Points to buffer class
 		 * 
-		 * @var SourceQueryBuffer
+		 * @var Buffer
 		 */
 		private $Buffer;
 		
 		/**
 		 * Points to socket class
 		 * 
-		 * @var SourceQuerySocket
+		 * @var Socket
 		 */
 		private $Socket;
 		
@@ -112,8 +118,8 @@
 		
 		public function __construct( )
 		{
-			$this->Buffer = new SourceQueryBuffer( );
-			$this->Socket = new SourceQuerySocket( $this->Buffer );
+			$this->Buffer = new Buffer( );
+			$this->Socket = new Socket( $this->Buffer );
 		}
 		
 		public function __destruct( )
@@ -530,13 +536,13 @@
 			{
 				case SourceQuery :: GOLDSOURCE:
 				{
-					$this->Rcon = new SourceQueryGoldSourceRcon( $this->Buffer, $this->Socket );
+					$this->Rcon = new GoldSourceRcon( $this->Buffer, $this->Socket );
 					
 					break;
 				}
 				case SourceQuery :: SOURCE:
 				{
-					$this->Rcon = new SourceQuerySourceRcon( $this->Buffer, $this->Socket );
+					$this->Rcon = new SourceRcon( $this->Buffer, $this->Socket );
 					
 					break;
 				}
