@@ -1,26 +1,39 @@
 <?php
 	/**
-	 * Class written by xPaw
+	 * @author Pavel Djundik <sourcequery@xpaw.me>
 	 *
-	 * Website: https://xpaw.me
-	 * GitHub: https://github.com/xPaw/PHP-Source-Query-Class
+	 * @link https://xpaw.me
+	 * @link https://github.com/xPaw/PHP-Source-Query-Class
+	 *
+	 * @license GNU Lesser General Public License, version 2.1
+	 *
+	 * @internal
 	 */
+
+	namespace xPaw\SourceQuery;
 	
 	use xPaw\SourceQuery\Exception\AuthenticationException;
-	
-	class SourceQueryGoldSourceRcon
+
+	/**
+	 * Class GoldSourceRcon
+	 *
+	 * @package xPaw\SourceQuery
+	 *
+	 * @uses xPaw\SourceQuery\Exception\AuthenticationException
+	 */
+	class GoldSourceRcon
 	{
 		/**
 		 * Points to buffer class
 		 * 
-		 * @var SourceQueryBuffer
+		 * @var Buffer
 		 */
 		private $Buffer;
 		
 		/**
 		 * Points to socket class
 		 * 
-		 * @var SourceQuerySocket
+		 * @var Socket
 		 */
 		private $Socket;
 		
@@ -57,6 +70,7 @@
 		/**
 		 * @param int $Length
 		 * @throws AuthenticationException
+		 * @return bool
 		 */
 		public function Read( $Length = 1400 )
 		{

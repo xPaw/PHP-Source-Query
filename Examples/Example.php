@@ -1,5 +1,7 @@
 <?php
-	require __DIR__ . '/SourceQuery/SourceQuery.class.php';
+	require __DIR__ . '/../SourceQuery/bootstrap.php';
+
+	use xPaw\SourceQuery\SourceQuery;
 	
 	// For the sake of this example
 	Header( 'Content-Type: text/plain' );

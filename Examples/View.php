@@ -1,5 +1,7 @@
 <?php
-	require __DIR__ . '/SourceQuery/SourceQuery.class.php';
+	require __DIR__ . '/../SourceQuery/bootstrap.php';
+
+	use xPaw\SourceQuery\SourceQuery;
 	
 	// Edit this ->
 	define( 'SQ_SERVER_ADDR', 'localhost' );
@@ -56,7 +58,7 @@
 </head>
 
 <body>
-    <div class="container">
+	<div class="container">
 		<div class="jumbotron">
 			<h1>Source Query PHP Class</h1>
 			

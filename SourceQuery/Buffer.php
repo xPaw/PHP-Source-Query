@@ -1,12 +1,23 @@
 <?php
 	/**
-	 * Class written by xPaw
+	 * @author Pavel Djundik <sourcequery@xpaw.me>
 	 *
-	 * Website: https://xpaw.me
-	 * GitHub: https://github.com/xPaw/PHP-Source-Query-Class
+	 * @link https://xpaw.me
+	 * @link https://github.com/xPaw/PHP-Source-Query-Class
+	 *
+	 * @license GNU Lesser General Public License, version 2.1
+	 *
+	 * @internal
 	 */
-	
-	class SourceQueryBuffer
+
+	namespace xPaw\SourceQuery;
+
+	/**
+	 * Class Buffer
+	 *
+	 * @package xPaw\SourceQuery
+	 */
+	class Buffer
 	{
 		/**
 		 * Buffer
