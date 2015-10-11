@@ -42,11 +42,10 @@
 	<meta charset="utf-8">
 	<title>Source Query PHP Library</title>
 	
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
 	<style type="text/css">
-		.jumbotron {
-			margin-top: 30px;
-			border-radius: 0;
+		.table {
+			border-top-color: #428BCA;
 		}
 		
 		.table thead th {
@@ -58,19 +57,21 @@
 </head>
 
 <body>
-	<div class="container">
-		<div class="jumbotron">
+	<div class="jumbotron">
+		<div class="container">
 			<h1>Source Query PHP Library</h1>
 			
-			<p>This library was created to query game server which use the Source (Steamworks) query protocol.</p>
+			<p class="lead">This library was created to query game server which use the Source (Steamworks) query protocol.</p>
 			
 			<p>
-				<a class="btn btn-large btn-primary" href="http://xpaw.me">Made by xPaw</a>
+				<a class="btn btn-large btn-primary" href="https://xpaw.me">Made by xPaw</a>
 				<a class="btn btn-large btn-primary" href="https://github.com/xPaw/PHP-Source-Query">View on GitHub</a>
 				<a class="btn btn-large btn-danger" href="https://github.com/xPaw/PHP-Source-Query/blob/master/LICENSE">LGPL v2.1</a>
 			</p>
 		</div>
+	</div>
 		
+	<div class="container">
 <?php if( isset( $Exception ) ): ?>
 		<div class="panel panel-primary">
 			<div class="panel-heading"><?php echo Get_Class( $Exception ); ?> at line <?php echo $Exception->getLine( ); ?></div>
@@ -83,7 +84,8 @@
 				<table class="table table-bordered table-striped">
 					<thead>
 						<tr>
-							<th colspan="2">Server Info <span class="label label-<?php echo $Timer > 1.0 ? 'danger' : 'success'; ?>"><?php echo $Timer; ?>s</span></th>
+							<th>Server Info</th>
+							<th><span class="label label-<?php echo $Timer > 1.0 ? 'danger' : 'success'; ?>"><?php echo $Timer; ?>s</span></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -134,7 +136,7 @@
 						</tr>
 					</thead>
 					<tbody>
-<?php if( Is_Array( $Players ) ): ?>
+<?php if( !empty( $Players ) ): ?>
 <?php foreach( $Players as $Player ): ?>
 						<tr>
 							<td><?php echo htmlspecialchars( $Player[ 'Name' ] ); ?></td>
