@@ -40,7 +40,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Source Query PHP Class</title>
+	<title>Source Query PHP Library</title>
 	
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
 	<style type="text/css">
@@ -60,9 +60,9 @@
 <body>
 	<div class="container">
 		<div class="jumbotron">
-			<h1>Source Query PHP Class</h1>
+			<h1>Source Query PHP Library</h1>
 			
-			<p>This class was created to query game server which use the Source (Steamworks) query protocol.</p>
+			<p>This library was created to query game server which use the Source (Steamworks) query protocol.</p>
 			
 			<p>
 				<a class="btn btn-large btn-primary" href="http://xpaw.me">Made by xPaw</a>
