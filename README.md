@@ -10,7 +10,7 @@ The class also allows you to query servers using RCON although this only works f
 
 **:warning: Please do not create issues when you are unable to retrieve information from a server, unless you can prove that there is a bug within the library.**
 
-### Protocol specifications can be found over at VDC
+## Protocol Specifications
 * https://developer.valvesoftware.com/wiki/Server_queries
 * https://developer.valvesoftware.com/wiki/Source_RCON_Protocol
 
@@ -36,7 +36,7 @@ AppID | Game | Query | RCON | Notes
 
 Open a pull request if you know another game which supports Source Query and/or RCON protocols.
 
-# How to tell if the game supports Source Query Protocol?
+## How to tell if the game supports Source Query Protocol?
 
 Add your server to your favourites in Steam server browser, and if Steam can display information about your server, then the protocol is supported.
 
