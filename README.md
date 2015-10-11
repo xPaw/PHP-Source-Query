@@ -76,7 +76,7 @@ Add your server to your favourites in Steam server browser, and if Steam can dis
 	</tr>
 </table>
 
-Also refer to [an example](Example.php) to work things out.
+Also refer to [examples folder](Examples/) to work things out.
 
 ## License
     PHP Source Query
