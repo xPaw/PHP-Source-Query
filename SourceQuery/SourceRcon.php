@@ -129,7 +129,7 @@
 		
 		public function Command( $Command )
 		{
-			$this->Write( SourceQuery :: SERVERDATA_EXECCOMMAND, $Command );
+			$this->Write( SourceQuery::SERVERDATA_EXECCOMMAND, $Command );
 			
 			$this->Read( );
 			
@@ -137,11 +137,11 @@
 			
 			$Type = $this->Buffer->GetLong( );
 			
-			if( $Type === SourceQuery :: SERVERDATA_AUTH_RESPONSE )
+			if( $Type === SourceQuery::SERVERDATA_AUTH_RESPONSE )
 			{
 				throw new AuthenticationException( 'Bad rcon_password.', AuthenticationException::BAD_PASSWORD );
 			}
-			else if( $Type !== SourceQuery :: SERVERDATA_RESPONSE_VALUE )
+			else if( $Type !== SourceQuery::SERVERDATA_RESPONSE_VALUE )
 			{
 				return false;
 			}
@@ -154,13 +154,13 @@
 			{
 				do
 				{
-					$this->Write( SourceQuery :: SERVERDATA_RESPONSE_VALUE );
+					$this->Write( SourceQuery::SERVERDATA_RESPONSE_VALUE );
 					
 					$this->Read( );
 					
 					$this->Buffer->GetLong( ); // RequestID
 					
-					if( $this->Buffer->GetLong( ) !== SourceQuery :: SERVERDATA_RESPONSE_VALUE )
+					if( $this->Buffer->GetLong( ) !== SourceQuery::SERVERDATA_RESPONSE_VALUE )
 					{
 						break;
 					}
@@ -182,7 +182,7 @@
 		
 		public function Authorize( $Password )
 		{
-			$this->Write( SourceQuery :: SERVERDATA_AUTH, $Password );
+			$this->Write( SourceQuery::SERVERDATA_AUTH, $Password );
 			$this->Read( );
 			
 			$RequestID = $this->Buffer->GetLong( );
@@ -191,7 +191,7 @@
 			// If we receive SERVERDATA_RESPONSE_VALUE, then we need to read again
 			// More info: https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Additional_Comments
 			
-			if( $Type === SourceQuery :: SERVERDATA_RESPONSE_VALUE )
+			if( $Type === SourceQuery::SERVERDATA_RESPONSE_VALUE )
 			{
 				$this->Read( );
 				
@@ -199,7 +199,7 @@
 				$Type      = $this->Buffer->GetLong( );
 			}
 			
-			if( $RequestID === -1 || $Type !== SourceQuery :: SERVERDATA_AUTH_RESPONSE )
+			if( $RequestID === -1 || $Type !== SourceQuery::SERVERDATA_AUTH_RESPONSE )
 			{
 				throw new AuthenticationException( 'RCON authorization failed.', AuthenticationException::BAD_PASSWORD );
 			}

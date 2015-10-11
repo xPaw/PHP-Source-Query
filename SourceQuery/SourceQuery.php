@@ -138,7 +138,7 @@
 		 * @throws InvalidArgumentException
 		 * @throws TimeoutException
 		 */
-		public function Connect( $Ip, $Port, $Timeout = 3, $Engine = self :: SOURCE )
+		public function Connect( $Ip, $Port, $Timeout = 3, $Engine = self::SOURCE )
 		{
 			$this->Disconnect( );
 			
@@ -204,10 +204,10 @@
 				return false;
 			}
 			
-			$this->Socket->Write( self :: A2S_PING );
+			$this->Socket->Write( self::A2S_PING );
 			$this->Socket->Read( );
 			
-			return $this->Buffer->GetByte( ) === self :: S2A_PING;
+			return $this->Buffer->GetByte( ) === self::S2A_PING;
 		}
 		
 		/**
@@ -224,7 +224,7 @@
 				return false;
 			}
 			
-			$this->Socket->Write( self :: A2S_INFO, "Source Engine Query\0" );
+			$this->Socket->Write( self::A2S_INFO, "Source Engine Query\0" );
 			$this->Socket->Read( );
 			
 			$Type = $this->Buffer->GetByte( );
@@ -235,7 +235,7 @@
 			}
 			
 			// Old GoldSource protocol, HLTV still uses it
-			if( $Type === self :: S2A_INFO_OLD && $this->Socket->Engine === self :: GOLDSOURCE )
+			if( $Type === self::S2A_INFO_OLD && $this->Socket->Engine === self::GOLDSOURCE )
 			{
 				/**
 				 * If we try to read data again, and we get the result with type S2A_INFO (0x49)
@@ -278,7 +278,7 @@
 				return $Server;
 			}
 			
-			if( $Type !== self :: S2A_INFO )
+			if( $Type !== self::S2A_INFO )
 			{
 				throw new InvalidPacketException( 'GetInfo: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 			}
@@ -367,15 +367,15 @@
 				return false;
 			}
 			
-			switch( $this->GetChallenge( self :: A2S_PLAYER, self :: S2A_PLAYER ) )
+			switch( $this->GetChallenge( self::A2S_PLAYER, self::S2A_PLAYER ) )
 			{
-				case self :: GETCHALLENGE_FAILED:
+				case self::GETCHALLENGE_FAILED:
 				{
 					return false;
 				}
-				case self :: GETCHALLENGE_ALL_CLEAR:
+				case self::GETCHALLENGE_ALL_CLEAR:
 				{
-					$this->Socket->Write( self :: A2S_PLAYER, $this->Challenge );
+					$this->Socket->Write( self::A2S_PLAYER, $this->Challenge );
 					$this->Socket->Read( 14000 ); // Moronic Arma 3 developers do not split their packets, so we have to read more data
 					// This violates the protocol spec, and they probably should fix it: https://developer.valvesoftware.com/wiki/Server_queries#Protocol
 					
@@ -385,7 +385,7 @@
 					{
 						return false;
 					}
-					else if( $Type !== self :: S2A_PLAYER )
+					else if( $Type !== self::S2A_PLAYER )
 					{
 						throw new InvalidPacketException( 'GetPlayers: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 					}
@@ -425,15 +425,15 @@
 				return false;
 			}
 			
-			switch( $this->GetChallenge( self :: A2S_RULES, self :: S2A_RULES ) )
+			switch( $this->GetChallenge( self::A2S_RULES, self::S2A_RULES ) )
 			{
-				case self :: GETCHALLENGE_FAILED:
+				case self::GETCHALLENGE_FAILED:
 				{
 					return false;
 				}
-				case self :: GETCHALLENGE_ALL_CLEAR:
+				case self::GETCHALLENGE_ALL_CLEAR:
 				{
-					$this->Socket->Write( self :: A2S_RULES, $this->Challenge );
+					$this->Socket->Write( self::A2S_RULES, $this->Challenge );
 					$this->Socket->Read( );
 					
 					$Type = $this->Buffer->GetByte( );
@@ -442,7 +442,7 @@
 					{
 						return false;
 					}
-					else if( $Type !== self :: S2A_RULES )
+					else if( $Type !== self::S2A_RULES )
 					{
 						throw new InvalidPacketException( 'GetRules: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 					}
@@ -480,12 +480,12 @@
 		{
 			if( $this->Challenge )
 			{
-				return self :: GETCHALLENGE_ALL_CLEAR;
+				return self::GETCHALLENGE_ALL_CLEAR;
 			}
 			
 			if( $this->UseOldGetChallengeMethod )
 			{
-				$Header = self :: A2S_SERVERQUERY_GETCHALLENGE;
+				$Header = self::A2S_SERVERQUERY_GETCHALLENGE;
 			}
 			
 			$this->Socket->Write( $Header, 0xFFFFFFFF );
@@ -495,21 +495,21 @@
 			
 			switch( $Type )
 			{
-				case self :: S2A_CHALLENGE:
+				case self::S2A_CHALLENGE:
 				{
 					$this->Challenge = $this->Buffer->Get( 4 );
 					
-					return self :: GETCHALLENGE_ALL_CLEAR;
+					return self::GETCHALLENGE_ALL_CLEAR;
 				}
 				case $ExpectedResult:
 				{
 					// Goldsource (HLTV)
 					
-					return self :: GETCHALLENGE_CONTAINS_ANSWER;
+					return self::GETCHALLENGE_CONTAINS_ANSWER;
 				}
 				case 0:
 				{
-					return self :: GETCHALLENGE_FAILED;
+					return self::GETCHALLENGE_FAILED;
 				}
 				default:
 				{
@@ -534,13 +534,13 @@
 			
 			switch( $this->Socket->Engine )
 			{
-				case SourceQuery :: GOLDSOURCE:
+				case SourceQuery::GOLDSOURCE:
 				{
 					$this->Rcon = new GoldSourceRcon( $this->Buffer, $this->Socket );
 					
 					break;
 				}
-				case SourceQuery :: SOURCE:
+				case SourceQuery::SOURCE:
 				{
 					$this->Rcon = new SourceRcon( $this->Buffer, $this->Socket );
 					

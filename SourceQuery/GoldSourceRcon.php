@@ -77,7 +77,7 @@
 			// GoldSource RCON has same structure as Query
 			$this->Socket->Read( );
 			
-			if( $this->Buffer->GetByte( ) !== SourceQuery :: S2A_RCON )
+			if( $this->Buffer->GetByte( ) !== SourceQuery::S2A_RCON )
 			{
 				return false;
 			}
@@ -102,7 +102,7 @@
 			{
 				$this->Socket->Read( );
 				
-				$ReadMore = $this->Buffer->Remaining( ) > 0 && $this->Buffer->GetByte( ) === SourceQuery :: S2A_RCON;
+				$ReadMore = $this->Buffer->Remaining( ) > 0 && $this->Buffer->GetByte( ) === SourceQuery::S2A_RCON;
 				
 				if( $ReadMore )
 				{

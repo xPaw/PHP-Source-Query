@@ -115,7 +115,7 @@
 					
 					switch( $this->Engine )
 					{
-						case SourceQuery :: GOLDSOURCE:
+						case SourceQuery::GOLDSOURCE:
 						{
 							$PacketCountAndNumber = $this->Buffer->GetByte( );
 							$PacketCount          = $PacketCountAndNumber & 0xF;
@@ -123,7 +123,7 @@
 							
 							break;
 						}
-						case SourceQuery :: SOURCE:
+						case SourceQuery::SOURCE:
 						{
 							$IsCompressed         = ( $RequestID & 0x80000000 ) !== 0;
 							$PacketCount          = $this->Buffer->GetByte( );
