@@ -8,8 +8,13 @@
 	[
 		"rcon",
 		"minecraft",
+		"csgo",
 		"counter-strike",
-		"team fortress"
+		"team fortress",
+		"starbound",
+		"rust",
+		"ark",
+		"gmod"
 	],
 	"require":
 	{
@@ -17,7 +22,8 @@
 	},
 	"autoload":
 	{
-		"psr-4": {
+		"psr-4":
+		{
 			"xPaw\\SourceQuery\\": "SourceQuery/"
 		}
 	}
