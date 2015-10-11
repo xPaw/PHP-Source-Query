@@ -1,4 +1,4 @@
-# PHP Source Query [![Packagist](https://img.shields.io/packagist/dt/xpaw/php-source-query-class.svg)](https://packagist.org/packages/xpaw/php-source-query-class)
+# PHP Source Query [![Packagist](https://img.shields.io/packagist/dt/xpaw/php-source-query-class.svg)](https://packagist.org/packages/xpaw/php-source-query-class) [![Packagist](https://img.shields.io/packagist/v/xpaw/php-source-query-class.svg)](https://packagist.org/packages/xpaw/php-source-query-class)
 
 This class was created to query game server which use the Source query protocol, this includes all source games, and all the games that implement Steamworks.
 
