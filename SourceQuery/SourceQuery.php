@@ -15,7 +15,6 @@
 	use xPaw\SourceQuery\Exception\InvalidArgumentException;
 	use xPaw\SourceQuery\Exception\InvalidPacketException;
 	use xPaw\SourceQuery\Exception\SocketException;
-	use xPaw\SourceQuery\Exception\TimeoutException;
 
 	/**
 	 * Class SourceQuery
@@ -25,7 +24,6 @@
 	 * @uses xPaw\SourceQuery\Exception\InvalidArgumentException
 	 * @uses xPaw\SourceQuery\Exception\InvalidPacketException
 	 * @uses xPaw\SourceQuery\Exception\SocketException
-	 * @uses xPaw\SourceQuery\Exception\TimeoutException
 	 */
 	class SourceQuery
 	{
@@ -138,7 +136,6 @@
 		 * @param int $Engine Engine the server runs on (goldsource, source)
 		 *
 		 * @throws InvalidArgumentException
-		 * @throws TimeoutException
 		 * @throws SocketException
 		 */
 		public function Connect( $Ip, $Port, $Timeout = 3, $Engine = self::SOURCE )
@@ -150,10 +147,7 @@
 				throw new InvalidArgumentException( 'Timeout must be an integer.', InvalidArgumentException::TIMEOUT_NOT_INTEGER );
 			}
 			
-			if( !$this->Socket->Open( $Ip, (int)$Port, $Timeout, (int)$Engine ) )
-			{
-				throw new TimeoutException( 'Could not connect to server.', TimeoutException::TIMEOUT_CONNECT );
-			}
+			$this->Socket->Open( $Ip, (int)$Port, $Timeout, (int)$Engine );
 			
 			$this->Connected = true;
 		}

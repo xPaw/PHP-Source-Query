@@ -70,8 +70,6 @@
 			
 			Stream_Set_Timeout( $this->Socket, $Timeout );
 			Stream_Set_Blocking( $this->Socket, true );
-			
-			return true;
 		}
 		
 		public function Write( $Header, $String = '' )
