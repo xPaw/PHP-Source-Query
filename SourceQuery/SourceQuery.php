@@ -192,6 +192,7 @@
 		 * Sends ping packet to the server
 		 * NOTE: This may not work on some games (TF2 for example)
 		 *
+		 * @throws InvalidPacketException
 		 * @throws SocketException
 		 *
 		 * @return bool True on success, false on failure
@@ -483,10 +484,10 @@
 		 *
 		 * @param $Header
 		 * @param $ExpectedResult
-		 * 
+		 *
 		 * @throws InvalidPacketException
-		 * 
-		 * @return bool True if all went well, false if server uses old GoldSource protocol, and it already contains answer
+		 *
+		 * @return int Returns one of the GETCHALLENGE_* constants
 		 */
 		private function GetChallenge( $Header, $ExpectedResult )
 		{
@@ -536,6 +537,7 @@
 		 * @param string $Password Rcon Password
 		 *
 		 * @throws AuthenticationException
+		 * @throws InvalidPacketException
 		 * @throws SocketException
 		 *
 		 * @return bool True on success, false on failure
@@ -576,6 +578,7 @@
 		 * @param string $Command Command to execute
 		 *
 		 * @throws AuthenticationException
+		 * @throws InvalidPacketException
 		 * @throws SocketException
 		 *
 		 * @return string|bool Answer from server in string, false on failure
