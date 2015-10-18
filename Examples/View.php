@@ -31,8 +31,10 @@
 	{
 		$Exception = $e;
 	}
-	
-	$Query->Disconnect( );
+	finally
+	{
+		$Query->Disconnect( );
+	}
 	
 	$Timer = Number_Format( MicroTime( true ) - $Timer, 4, '.', '' );
 ?>

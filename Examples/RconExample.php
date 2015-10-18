@@ -28,5 +28,7 @@
 	{
 		echo $e->getMessage( );
 	}
-	
-	$Query->Disconnect( );
+	finally
+	{
+		$Query->Disconnect( );
+	}

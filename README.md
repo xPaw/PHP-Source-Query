@@ -6,7 +6,7 @@ The class also allows you to query servers using RCON although this only works f
 
 [Minecraft](http://www.minecraft.net) also uses Source RCON protocol, and this means you can use this class to send commands to your minecraft server while having engine set to Source engine.
 
-**This library requires a [modern version](https://php.net/supported-versions.php) of PHP, so make sure you are using at least PHP 5.4 or newer.**
+**This library requires a [modern version](https://php.net/supported-versions.php) of PHP, so make sure you are using at least PHP 5.5 or newer.**
 
 **:warning: Please do not create issues when you are unable to retrieve information from a server, unless you can prove that there is a bug within the library.**
 
