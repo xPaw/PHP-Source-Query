@@ -13,8 +13,9 @@
 	namespace xPaw\SourceQuery;
 
 	use xPaw\SourceQuery\Exception\InvalidArgumentException;
-	use xPaw\SourceQuery\Exception\TimeoutException;
 	use xPaw\SourceQuery\Exception\InvalidPacketException;
+	use xPaw\SourceQuery\Exception\SocketException;
+	use xPaw\SourceQuery\Exception\TimeoutException;
 
 	/**
 	 * Class SourceQuery
@@ -22,8 +23,9 @@
 	 * @package xPaw\SourceQuery
 	 *
 	 * @uses xPaw\SourceQuery\Exception\InvalidArgumentException
-	 * @uses xPaw\SourceQuery\Exception\TimeoutException
 	 * @uses xPaw\SourceQuery\Exception\InvalidPacketException
+	 * @uses xPaw\SourceQuery\Exception\SocketException
+	 * @uses xPaw\SourceQuery\Exception\TimeoutException
 	 */
 	class SourceQuery
 	{
@@ -137,6 +139,7 @@
 		 *
 		 * @throws InvalidArgumentException
 		 * @throws TimeoutException
+		 * @throws SocketException
 		 */
 		public function Connect( $Ip, $Port, $Timeout = 3, $Engine = self::SOURCE )
 		{
@@ -195,12 +198,16 @@
 		 * Sends ping packet to the server
 		 * NOTE: This may not work on some games (TF2 for example)
 		 *
+		 * @throws SocketException
+		 *
 		 * @return bool True on success, false on failure
 		 */
 		public function Ping( )
 		{
 			if( !$this->Connected )
 			{
+				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
+				
 				return false;
 			}
 			
@@ -214,6 +221,7 @@
 		 * Get server information
 		 *
 		 * @throws InvalidPacketException
+		 * @throws SocketException
 		 *
 		 * @return bool|array Returns array with information on success, false on failure
 		 */
@@ -221,6 +229,8 @@
 		{
 			if( !$this->Connected )
 			{
+				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
+				
 				return false;
 			}
 			
@@ -357,13 +367,16 @@
 		 * Get players on the server
 		 *
 		 * @throws InvalidPacketException
-		 *
+		 * @throws SocketException
+		 * 
 		 * @return bool|array Returns array with players on success, false on failure
 		 */
 		public function GetPlayers( )
 		{
 			if( !$this->Connected )
 			{
+				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
+				
 				return false;
 			}
 			
@@ -415,6 +428,7 @@
 		 * Get rules (cvars) from the server
 		 *
 		 * @throws InvalidPacketException
+		 * @throws SocketException
 		 *
 		 * @return bool|array Returns array with rules on success, false on failure
 		 */
@@ -422,6 +436,8 @@
 		{
 			if( !$this->Connected )
 			{
+				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
+				
 				return false;
 			}
 			
@@ -473,7 +489,9 @@
 		 *
 		 * @param $Header
 		 * @param $ExpectedResult
+		 * 
 		 * @throws InvalidPacketException
+		 * 
 		 * @return bool True if all went well, false if server uses old GoldSource protocol, and it already contains answer
 		 */
 		private function GetChallenge( $Header, $ExpectedResult )
@@ -523,12 +541,18 @@
 		 *
 		 * @param string $Password Rcon Password
 		 *
+		 * @throws AuthenticationException
+		 * @throws SocketException
+		 * @throws TimeoutException
+		 *
 		 * @return bool True on success, false on failure
 		 */
 		public function SetRconPassword( $Password )
 		{
 			if( !$this->Connected )
 			{
+				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
+				
 				return false;
 			}
 			
@@ -558,12 +582,17 @@
 		 *
 		 * @param string $Command Command to execute
 		 *
+		 * @throws AuthenticationException
+		 * @throws SocketException
+		 *
 		 * @return string|bool Answer from server in string, false on failure
 		 */
 		public function Rcon( $Command )
 		{
 			if( !$this->Connected )
 			{
+				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
+				
 				return false;
 			}
 			
