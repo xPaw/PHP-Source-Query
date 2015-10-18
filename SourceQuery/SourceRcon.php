@@ -70,7 +70,7 @@
 				
 				if( $ErrNo || !$this->RconSocket )
 				{
-					throw new SocketException( 'Can\'t connect to RCON server: ' . $ErrStr, SocketException::CONNECTEON_FALED );
+					throw new SocketException( 'Can\'t connect to RCON server: ' . $ErrStr, SocketException::CONNECTION_FAILED );
 				}
 				
 				Stream_Set_Timeout( $this->RconSocket, $this->Socket->Timeout );
