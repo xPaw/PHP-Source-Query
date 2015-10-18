@@ -18,7 +18,6 @@
 	require_once __DIR__ . '/Exception/InvalidArgumentException.php';
 	require_once __DIR__ . '/Exception/SocketException.php';
 	require_once __DIR__ . '/Exception/InvalidPacketException.php';
-	require_once __DIR__ . '/Exception/TimeoutException.php';
 
 	require_once __DIR__ . '/Buffer.php';
 	require_once __DIR__ . '/Socket.php';

@@ -537,7 +537,6 @@
 		 *
 		 * @throws AuthenticationException
 		 * @throws SocketException
-		 * @throws TimeoutException
 		 *
 		 * @return bool True on success, false on failure
 		 */

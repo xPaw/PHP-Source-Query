@@ -13,8 +13,8 @@
 	namespace xPaw\SourceQuery;
 	
 	use xPaw\SourceQuery\Exception\AuthenticationException;
-	use xPaw\SourceQuery\Exception\TimeoutException;
 	use xPaw\SourceQuery\Exception\InvalidPacketException;
+	use xPaw\SourceQuery\Exception\SocketException;
 
 	/**
 	 * Class SourceRcon
@@ -22,8 +22,8 @@
 	 * @package xPaw\SourceQuery
 	 *
 	 * @uses xPaw\SourceQuery\Exception\AuthenticationException
-	 * @uses xPaw\SourceQuery\Exception\TimeoutException
 	 * @uses xPaw\SourceQuery\Exception\InvalidPacketException
+	 * @uses xPaw\SourceQuery\Exception\SocketException
 	 */
 	class SourceRcon
 	{
@@ -70,7 +70,7 @@
 				
 				if( $ErrNo || !$this->RconSocket )
 				{
-					throw new TimeoutException( 'Can\'t connect to RCON server: ' . $ErrStr, TimeoutException::TIMEOUT_CONNECT );
+					throw new SocketException( 'Can\'t connect to RCON server: ' . $ErrStr, SocketException::CONNECTEON_FALED );
 				}
 				
 				Stream_Set_Timeout( $this->RconSocket, $this->Socket->Timeout );
