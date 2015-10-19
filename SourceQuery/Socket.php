@@ -82,15 +82,14 @@
 			
 			if( $Buffer->Remaining( ) === 0 )
 			{
-				// TODO: Should we throw an exception here?
-				return;
+				throw new InvalidPacketException( 'Failed to read any data from socket', InvalidPacketException::BUFFER_EMPTY );
 			}
 			
 			$Header = $Buffer->GetLong( );
 			
 			if( $Header === -1 ) // Single packet
 			{
-				 // We don't have to do anything
+				// We don't have to do anything
 			}
 			else if( $Header === -2 ) // Split packet
 			{

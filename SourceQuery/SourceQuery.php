@@ -192,8 +192,6 @@
 			if( !$this->Connected )
 			{
 				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
-				
-				return false;
 			}
 			
 			$this->Socket->Write( self::A2S_PING );
@@ -215,19 +213,12 @@
 			if( !$this->Connected )
 			{
 				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
-				
-				return false;
 			}
 			
 			$this->Socket->Write( self::A2S_INFO, "Source Engine Query\0" );
 			$Buffer = $this->Socket->Read( );
 			
 			$Type = $Buffer->GetByte( );
-			
-			if( $Type === 0 )
-			{
-				return false;
-			}
 			
 			// Old GoldSource protocol, HLTV still uses it
 			if( $Type === self::S2A_INFO_OLD && $this->Socket->Engine === self::GOLDSOURCE )
@@ -361,8 +352,6 @@
 			if( !$this->Connected )
 			{
 				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
-				
-				return false;
 			}
 			
 			switch( $this->GetChallenge( self::A2S_PLAYER, self::S2A_PLAYER ) )
@@ -422,8 +411,6 @@
 			if( !$this->Connected )
 			{
 				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
-				
-				return false;
 			}
 			
 			switch( $this->GetChallenge( self::A2S_RULES, self::S2A_RULES ) )
@@ -537,8 +524,6 @@
 			if( !$this->Connected )
 			{
 				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
-				
-				return false;
 			}
 			
 			switch( $this->Socket->Engine )
@@ -578,8 +563,6 @@
 			if( !$this->Connected )
 			{
 				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
-				
-				return false;
 			}
 			
 			return $this->Rcon->Command( $Command );
