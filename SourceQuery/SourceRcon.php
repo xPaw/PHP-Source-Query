@@ -28,13 +28,6 @@
 	class SourceRcon
 	{
 		/**
-		 * Points to buffer class
-		 * 
-		 * @var Buffer
-		 */
-		private $Buffer;
-		
-		/**
 		 * Points to socket class
 		 * 
 		 * @var Socket
@@ -44,9 +37,8 @@
 		private $RconSocket;
 		private $RconRequestId;
 		
-		public function __construct( $Buffer, $Socket )
+		public function __construct( $Socket )
 		{
-			$this->Buffer = $Buffer;
 			$this->Socket = $Socket;
 		}
 		
@@ -92,50 +84,52 @@
 		
 		public function Read( )
 		{
-			$this->Buffer->Set( FRead( $this->RconSocket, 4 ) );
+			$Buffer = new Buffer( );
+			$Buffer->Set( FRead( $this->RconSocket, 4 ) );
 			
-			if( $this->Buffer->Remaining( ) < 4 )
+			if( $Buffer->Remaining( ) < 4 )
 			{
 				throw new InvalidPacketException( 'Rcon read: Failed to read any data from socket', InvalidPacketException::BUFFER_EMPTY );
 			}
 			
-			$PacketSize = $this->Buffer->GetLong( );
+			$PacketSize = $Buffer->GetLong( );
 			
-			$this->Buffer->Set( FRead( $this->RconSocket, $PacketSize ) );
+			$Buffer->Set( FRead( $this->RconSocket, $PacketSize ) );
 			
-			$Buffer = $this->Buffer->Get( );
+			$Data = $Buffer->Get( );
 			
-			$Remaining = $PacketSize - StrLen( $Buffer );
+			$Remaining = $PacketSize - StrLen( $Data );
 			
 			while( $Remaining > 0 )
 			{
-				$Buffer2 = FRead( $this->RconSocket, $Remaining );
+				$Data2 = FRead( $this->RconSocket, $Remaining );
 				
-				$PacketSize = StrLen( $Buffer2 );
+				$PacketSize = StrLen( $Data2 );
 				
 				if( $PacketSize === 0 )
 				{
-					throw new InvalidPacketException( 'Read ' . strlen( $Buffer ) . ' bytes from socket, ' . $Remaining . ' remaining', InvalidPacketException::BUFFER_EMPTY );
+					throw new InvalidPacketException( 'Read ' . strlen( $Data ) . ' bytes from socket, ' . $Remaining . ' remaining', InvalidPacketException::BUFFER_EMPTY );
 					
 					break;
 				}
 				
-				$Buffer .= $Buffer2;
+				$Data .= $Data2;
 				$Remaining -= $PacketSize;
 			}
 			
-			$this->Buffer->Set( $Buffer );
+			$Buffer->Set( $Data );
+			
+			return $Buffer;
 		}
 		
 		public function Command( $Command )
 		{
 			$this->Write( SourceQuery::SERVERDATA_EXECCOMMAND, $Command );
+			$Buffer = $this->Read( );
 			
-			$this->Read( );
+			$Buffer->GetLong( ); // RequestID
 			
-			$this->Buffer->GetLong( ); // RequestID
-			
-			$Type = $this->Buffer->GetLong( );
+			$Type = $Buffer->GetLong( );
 			
 			if( $Type === SourceQuery::SERVERDATA_AUTH_RESPONSE )
 			{
@@ -146,57 +140,57 @@
 				return false;
 			}
 			
-			$Buffer = $this->Buffer->Get( );
+			$Data = $Buffer->Get( );
 			
 			// We do this stupid hack to handle split packets
 			// See https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Multiple-packet_Responses
-			if( StrLen( $Buffer ) >= 4000 )
+			if( StrLen( $Data ) >= 4000 )
 			{
 				do
 				{
 					$this->Write( SourceQuery::SERVERDATA_RESPONSE_VALUE );
 					
-					$this->Read( );
+					$Buffer = $this->Read( );
 					
-					$this->Buffer->GetLong( ); // RequestID
+					$Buffer->GetLong( ); // RequestID
 					
-					if( $this->Buffer->GetLong( ) !== SourceQuery::SERVERDATA_RESPONSE_VALUE )
+					if( $Buffer->GetLong( ) !== SourceQuery::SERVERDATA_RESPONSE_VALUE )
 					{
 						break;
 					}
 					
-					$Buffer2 = $this->Buffer->Get( );
+					$Data2 = $Buffer->Get( );
 					
-					if( $Buffer2 === "\x00\x01\x00\x00\x00\x00" )
+					if( $Data2 === "\x00\x01\x00\x00\x00\x00" )
 					{
 						break;
 					}
 					
-					$Buffer .= $Buffer2;
+					$Data .= $Data2;
 				}
 				while( true );
 			}
 			
-			return rtrim( $Buffer, "\0" );
+			return rtrim( $Data, "\0" );
 		}
 		
 		public function Authorize( $Password )
 		{
 			$this->Write( SourceQuery::SERVERDATA_AUTH, $Password );
-			$this->Read( );
+			$Buffer = $this->Read( );
 			
-			$RequestID = $this->Buffer->GetLong( );
-			$Type      = $this->Buffer->GetLong( );
+			$RequestID = $Buffer->GetLong( );
+			$Type      = $Buffer->GetLong( );
 			
 			// If we receive SERVERDATA_RESPONSE_VALUE, then we need to read again
 			// More info: https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Additional_Comments
 			
 			if( $Type === SourceQuery::SERVERDATA_RESPONSE_VALUE )
 			{
-				$this->Read( );
+				$Buffer = $this->Read( );
 				
-				$RequestID = $this->Buffer->GetLong( );
-				$Type      = $this->Buffer->GetLong( );
+				$RequestID = $Buffer->GetLong( );
+				$Type      = $Buffer->GetLong( );
 			}
 			
 			if( $RequestID === -1 || $Type !== SourceQuery::SERVERDATA_AUTH_RESPONSE )

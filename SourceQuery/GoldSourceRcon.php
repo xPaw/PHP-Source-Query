@@ -24,13 +24,6 @@
 	class GoldSourceRcon
 	{
 		/**
-		 * Points to buffer class
-		 * 
-		 * @var Buffer
-		 */
-		private $Buffer;
-		
-		/**
 		 * Points to socket class
 		 * 
 		 * @var Socket
@@ -41,9 +34,8 @@
 		private $RconRequestId;
 		private $RconChallenge;
 		
-		public function __construct( $Buffer, $Socket )
+		public function __construct( $Socket )
 		{
-			$this->Buffer = $Buffer;
 			$this->Socket = $Socket;
 		}
 		
@@ -75,14 +67,14 @@
 		public function Read( $Length = 1400 )
 		{
 			// GoldSource RCON has same structure as Query
-			$this->Socket->Read( );
+			$Buffer = $this->Socket->Read( );
 			
-			if( $this->Buffer->GetByte( ) !== SourceQuery::S2A_RCON )
+			if( $Buffer->GetByte( ) !== SourceQuery::S2A_RCON )
 			{
 				return false;
 			}
 			
-			$Buffer  = $this->Buffer->Get( );
+			$Buffer  = $Buffer->Get( );
 			$Trimmed = Trim( $Buffer );
 			
 			if( $Trimmed === 'Bad rcon_password.' )
@@ -102,11 +94,11 @@
 			{
 				$this->Socket->Read( );
 				
-				$ReadMore = $this->Buffer->Remaining( ) > 0 && $this->Buffer->GetByte( ) === SourceQuery::S2A_RCON;
+				$ReadMore = $Buffer->Remaining( ) > 0 && $Buffer->GetByte( ) === SourceQuery::S2A_RCON;
 				
 				if( $ReadMore )
 				{
-					$Packet  = $this->Buffer->Get( );
+					$Packet  = $Buffer->Get( );
 					$Buffer .= SubStr( $Packet, 0, -2 );
 					
 					// Let's assume if this packet is not long enough, there are no more after this one
@@ -115,7 +107,7 @@
 			}
 			while( $ReadMore );
 			
-			$this->Buffer->Set( Trim( $Buffer ) );
+			$Buffer->Set( Trim( $Buffer ) );
 		}
 		
 		public function Command( $Command )
@@ -126,9 +118,9 @@
 			}
 			
 			$this->Write( 0, 'rcon ' . $this->RconChallenge . ' "' . $this->RconPassword . '" ' . $Command . "\0" );
-			$this->Read( );
+			$Buffer = $this->Read( );
 			
-			return $this->Buffer->Get( );
+			return $Buffer->Get( );
 		}
 		
 		public function Authorize( $Password )
@@ -136,14 +128,14 @@
 			$this->RconPassword = $Password;
 			
 			$this->Write( 0, 'challenge rcon' );
-			$this->Socket->Read( );
+			$Buffer = $this->Socket->Read( );
 			
-			if( $this->Buffer->Get( 14 ) !== 'challenge rcon' )
+			if( $Buffer->Get( 14 ) !== 'challenge rcon' )
 			{
 				return false;
 			}
 			
-			$this->RconChallenge = Trim( $this->Buffer->Get( ) );
+			$this->RconChallenge = Trim( $Buffer->Get( ) );
 			
 			return true;
 		}

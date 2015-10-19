@@ -82,13 +82,6 @@
 		private $Rcon;
 		
 		/**
-		 * Points to buffer class
-		 * 
-		 * @var Buffer
-		 */
-		private $Buffer;
-		
-		/**
 		 * Points to socket class
 		 * 
 		 * @var Socket
@@ -118,8 +111,7 @@
 		
 		public function __construct( )
 		{
-			$this->Buffer = new Buffer( );
-			$this->Socket = new Socket( $this->Buffer );
+			$this->Socket = new Socket( );
 		}
 		
 		public function __destruct( )
@@ -176,8 +168,6 @@
 			$this->Connected = false;
 			$this->Challenge = 0;
 			
-			$this->Buffer->Reset( );
-			
 			$this->Socket->Close( );
 			
 			if( $this->Rcon )
@@ -207,9 +197,9 @@
 			}
 			
 			$this->Socket->Write( self::A2S_PING );
-			$this->Socket->Read( );
+			$Buffer = $this->Socket->Read( );
 			
-			return $this->Buffer->GetByte( ) === self::S2A_PING;
+			return $Buffer->GetByte( ) === self::S2A_PING;
 		}
 		
 		/**
@@ -230,9 +220,9 @@
 			}
 			
 			$this->Socket->Write( self::A2S_INFO, "Source Engine Query\0" );
-			$this->Socket->Read( );
+			$Buffer = $this->Socket->Read( );
 			
-			$Type = $this->Buffer->GetByte( );
+			$Type = $Buffer->GetByte( );
 			
 			if( $Type === 0 )
 			{
@@ -248,32 +238,32 @@
 				 * Because it sends answer for both protocols
 				 */
 				
-				$Server[ 'Address' ]    = $this->Buffer->GetString( );
-				$Server[ 'HostName' ]   = $this->Buffer->GetString( );
-				$Server[ 'Map' ]        = $this->Buffer->GetString( );
-				$Server[ 'ModDir' ]     = $this->Buffer->GetString( );
-				$Server[ 'ModDesc' ]    = $this->Buffer->GetString( );
-				$Server[ 'Players' ]    = $this->Buffer->GetByte( );
-				$Server[ 'MaxPlayers' ] = $this->Buffer->GetByte( );
-				$Server[ 'Protocol' ]   = $this->Buffer->GetByte( );
-				$Server[ 'Dedicated' ]  = Chr( $this->Buffer->GetByte( ) );
-				$Server[ 'Os' ]         = Chr( $this->Buffer->GetByte( ) );
-				$Server[ 'Password' ]   = $this->Buffer->GetByte( ) === 1;
-				$Server[ 'IsMod' ]      = $this->Buffer->GetByte( ) === 1;
+				$Server[ 'Address' ]    = $Buffer->GetString( );
+				$Server[ 'HostName' ]   = $Buffer->GetString( );
+				$Server[ 'Map' ]        = $Buffer->GetString( );
+				$Server[ 'ModDir' ]     = $Buffer->GetString( );
+				$Server[ 'ModDesc' ]    = $Buffer->GetString( );
+				$Server[ 'Players' ]    = $Buffer->GetByte( );
+				$Server[ 'MaxPlayers' ] = $Buffer->GetByte( );
+				$Server[ 'Protocol' ]   = $Buffer->GetByte( );
+				$Server[ 'Dedicated' ]  = Chr( $Buffer->GetByte( ) );
+				$Server[ 'Os' ]         = Chr( $Buffer->GetByte( ) );
+				$Server[ 'Password' ]   = $Buffer->GetByte( ) === 1;
+				$Server[ 'IsMod' ]      = $Buffer->GetByte( ) === 1;
 				
 				if( $Server[ 'IsMod' ] )
 				{
-					$Mod[ 'Url' ]        = $this->Buffer->GetString( );
-					$Mod[ 'Download' ]   = $this->Buffer->GetString( );
-					$this->Buffer->Get( 1 ); // NULL byte
-					$Mod[ 'Version' ]    = $this->Buffer->GetLong( );
-					$Mod[ 'Size' ]       = $this->Buffer->GetLong( );
-					$Mod[ 'ServerSide' ] = $this->Buffer->GetByte( ) === 1;
-					$Mod[ 'CustomDLL' ]  = $this->Buffer->GetByte( ) === 1;
+					$Mod[ 'Url' ]        = $Buffer->GetString( );
+					$Mod[ 'Download' ]   = $Buffer->GetString( );
+					$Buffer->Get( 1 ); // NULL byte
+					$Mod[ 'Version' ]    = $Buffer->GetLong( );
+					$Mod[ 'Size' ]       = $Buffer->GetLong( );
+					$Mod[ 'ServerSide' ] = $Buffer->GetByte( ) === 1;
+					$Mod[ 'CustomDLL' ]  = $Buffer->GetByte( ) === 1;
 				}
 				
-				$Server[ 'Secure' ]   = $this->Buffer->GetByte( ) === 1;
-				$Server[ 'Bots' ]     = $this->Buffer->GetByte( );
+				$Server[ 'Secure' ]   = $Buffer->GetByte( ) === 1;
+				$Server[ 'Bots' ]     = $Buffer->GetByte( );
 				
 				if( isset( $Mod ) )
 				{
@@ -288,69 +278,69 @@
 				throw new InvalidPacketException( 'GetInfo: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 			}
 			
-			$Server[ 'Protocol' ]   = $this->Buffer->GetByte( );
-			$Server[ 'HostName' ]   = $this->Buffer->GetString( );
-			$Server[ 'Map' ]        = $this->Buffer->GetString( );
-			$Server[ 'ModDir' ]     = $this->Buffer->GetString( );
-			$Server[ 'ModDesc' ]    = $this->Buffer->GetString( );
-			$Server[ 'AppID' ]      = $this->Buffer->GetShort( );
-			$Server[ 'Players' ]    = $this->Buffer->GetByte( );
-			$Server[ 'MaxPlayers' ] = $this->Buffer->GetByte( );
-			$Server[ 'Bots' ]       = $this->Buffer->GetByte( );
-			$Server[ 'Dedicated' ]  = Chr( $this->Buffer->GetByte( ) );
-			$Server[ 'Os' ]         = Chr( $this->Buffer->GetByte( ) );
-			$Server[ 'Password' ]   = $this->Buffer->GetByte( ) === 1;
-			$Server[ 'Secure' ]     = $this->Buffer->GetByte( ) === 1;
+			$Server[ 'Protocol' ]   = $Buffer->GetByte( );
+			$Server[ 'HostName' ]   = $Buffer->GetString( );
+			$Server[ 'Map' ]        = $Buffer->GetString( );
+			$Server[ 'ModDir' ]     = $Buffer->GetString( );
+			$Server[ 'ModDesc' ]    = $Buffer->GetString( );
+			$Server[ 'AppID' ]      = $Buffer->GetShort( );
+			$Server[ 'Players' ]    = $Buffer->GetByte( );
+			$Server[ 'MaxPlayers' ] = $Buffer->GetByte( );
+			$Server[ 'Bots' ]       = $Buffer->GetByte( );
+			$Server[ 'Dedicated' ]  = Chr( $Buffer->GetByte( ) );
+			$Server[ 'Os' ]         = Chr( $Buffer->GetByte( ) );
+			$Server[ 'Password' ]   = $Buffer->GetByte( ) === 1;
+			$Server[ 'Secure' ]     = $Buffer->GetByte( ) === 1;
 			
 			// The Ship (they violate query protocol spec by modifying the response)
 			if( $Server[ 'AppID' ] === 2400 )
 			{
-				$Server[ 'GameMode' ]     = $this->Buffer->GetByte( );
-				$Server[ 'WitnessCount' ] = $this->Buffer->GetByte( );
-				$Server[ 'WitnessTime' ]  = $this->Buffer->GetByte( );
+				$Server[ 'GameMode' ]     = $Buffer->GetByte( );
+				$Server[ 'WitnessCount' ] = $Buffer->GetByte( );
+				$Server[ 'WitnessTime' ]  = $Buffer->GetByte( );
 			}
 			
-			$Server[ 'Version' ] = $this->Buffer->GetString( );
+			$Server[ 'Version' ] = $Buffer->GetString( );
 			
 			// Extra Data Flags
-			if( $this->Buffer->Remaining( ) > 0 )
+			if( $Buffer->Remaining( ) > 0 )
 			{
-				$Server[ 'ExtraDataFlags' ] = $Flags = $this->Buffer->GetByte( );
+				$Server[ 'ExtraDataFlags' ] = $Flags = $Buffer->GetByte( );
 				
 				// The server's game port
 				if( $Flags & 0x80 )
 				{
-					$Server[ 'GamePort' ] = $this->Buffer->GetShort( );
+					$Server[ 'GamePort' ] = $Buffer->GetShort( );
 				}
 				
 				// The server's SteamID - does this serve any purpose?
 				if( $Flags & 0x10 )
 				{
-					$Server[ 'ServerID' ] = $this->Buffer->GetUnsignedLong( ) | ( $this->Buffer->GetUnsignedLong( ) << 32 ); // TODO: verify this
+					$Server[ 'ServerID' ] = $Buffer->GetUnsignedLong( ) | ( $Buffer->GetUnsignedLong( ) << 32 ); // TODO: verify this
 				}
 				
 				// The spectator port and then the spectator server name
 				if( $Flags & 0x40 )
 				{
-					$Server[ 'SpecPort' ] = $this->Buffer->GetShort( );
-					$Server[ 'SpecName' ] = $this->Buffer->GetString( );
+					$Server[ 'SpecPort' ] = $Buffer->GetShort( );
+					$Server[ 'SpecName' ] = $Buffer->GetString( );
 				}
 				
 				// The game tag data string for the server
 				if( $Flags & 0x20 )
 				{
-					$Server[ 'GameTags' ] = $this->Buffer->GetString( );
+					$Server[ 'GameTags' ] = $Buffer->GetString( );
 				}
 				
 				// GameID -- alternative to AppID?
 				if( $Flags & 0x01 )
 				{
-					$Server[ 'GameID' ] = $this->Buffer->GetUnsignedLong( ) | ( $this->Buffer->GetUnsignedLong( ) << 32 ); 
+					$Server[ 'GameID' ] = $Buffer->GetUnsignedLong( ) | ( $Buffer->GetUnsignedLong( ) << 32 ); 
 				}
 				
-				if( $this->Buffer->Remaining( ) > 0 )
+				if( $Buffer->Remaining( ) > 0 )
 				{
-					throw new InvalidPacketException( 'GetInfo: unread data? ' . $this->Buffer->Remaining( ) . ' bytes remaining in the buffer. Please report it to the library developer.',
+					throw new InvalidPacketException( 'GetInfo: unread data? ' . $Buffer->Remaining( ) . ' bytes remaining in the buffer. Please report it to the library developer.',
 						InvalidPacketException::BUFFER_NOT_EMPTY );
 				}
 			}
@@ -384,10 +374,10 @@
 				case self::GETCHALLENGE_ALL_CLEAR:
 				{
 					$this->Socket->Write( self::A2S_PLAYER, $this->Challenge );
-					$this->Socket->Read( 14000 ); // Moronic Arma 3 developers do not split their packets, so we have to read more data
+					$Buffer = $this->Socket->Read( 14000 ); // Moronic Arma 3 developers do not split their packets, so we have to read more data
 					// This violates the protocol spec, and they probably should fix it: https://developer.valvesoftware.com/wiki/Server_queries#Protocol
 					
-					$Type = $this->Buffer->GetByte( );
+					$Type = $Buffer->GetByte( );
 					
 					if( $Type === 0 )
 					{
@@ -402,15 +392,15 @@
 				}
 			}
 			
-			$Players = Array( );
-			$Count   = $this->Buffer->GetByte( );
+			$Players = [];
+			$Count   = $Buffer->GetByte( );
 			
-			while( $Count-- > 0 && $this->Buffer->Remaining( ) > 0 )
+			while( $Count-- > 0 && $Buffer->Remaining( ) > 0 )
 			{
-				$Player[ 'Id' ]    = $this->Buffer->GetByte( ); // PlayerID, is it just always 0?
-				$Player[ 'Name' ]  = $this->Buffer->GetString( );
-				$Player[ 'Frags' ] = $this->Buffer->GetLong( );
-				$Player[ 'Time' ]  = (int)$this->Buffer->GetFloat( );
+				$Player[ 'Id' ]    = $Buffer->GetByte( ); // PlayerID, is it just always 0?
+				$Player[ 'Name' ]  = $Buffer->GetString( );
+				$Player[ 'Frags' ] = $Buffer->GetLong( );
+				$Player[ 'Time' ]  = (int)$Buffer->GetFloat( );
 				$Player[ 'TimeF' ] = GMDate( ( $Player[ 'Time' ] > 3600 ? "H:i:s" : "i:s" ), $Player[ 'Time' ] );
 				
 				$Players[ ] = $Player;
@@ -445,9 +435,9 @@
 				case self::GETCHALLENGE_ALL_CLEAR:
 				{
 					$this->Socket->Write( self::A2S_RULES, $this->Challenge );
-					$this->Socket->Read( );
+					$Buffer = $this->Socket->Read( );
 					
-					$Type = $this->Buffer->GetByte( );
+					$Type = $Buffer->GetByte( );
 					
 					if( $Type === 0 )
 					{
@@ -462,13 +452,13 @@
 				}
 			}
 			
-			$Rules = Array( );
-			$Count = $this->Buffer->GetShort( );
+			$Rules = [];
+			$Count = $Buffer->GetShort( );
 			
-			while( $Count-- > 0 && $this->Buffer->Remaining( ) > 0 )
+			while( $Count-- > 0 && $Buffer->Remaining( ) > 0 )
 			{
-				$Rule  = $this->Buffer->GetString( );
-				$Value = $this->Buffer->GetString( );
+				$Rule  = $Buffer->GetString( );
+				$Value = $Buffer->GetString( );
 				
 				if( !Empty( $Rule ) )
 				{
@@ -502,15 +492,15 @@
 			}
 			
 			$this->Socket->Write( $Header, 0xFFFFFFFF );
-			$this->Socket->Read( );
+			$Buffer = $this->Socket->Read( );
 			
-			$Type = $this->Buffer->GetByte( );
+			$Type = $Buffer->GetByte( );
 			
 			switch( $Type )
 			{
 				case self::S2A_CHALLENGE:
 				{
-					$this->Challenge = $this->Buffer->Get( 4 );
+					$this->Challenge = $Buffer->Get( 4 );
 					
 					return self::GETCHALLENGE_ALL_CLEAR;
 				}
@@ -555,13 +545,13 @@
 			{
 				case SourceQuery::GOLDSOURCE:
 				{
-					$this->Rcon = new GoldSourceRcon( $this->Buffer, $this->Socket );
+					$this->Rcon = new GoldSourceRcon( $this->Socket );
 					
 					break;
 				}
 				case SourceQuery::SOURCE:
 				{
-					$this->Rcon = new SourceRcon( $this->Buffer, $this->Socket );
+					$this->Rcon = new SourceRcon( $this->Socket );
 					
 					break;
 				}
