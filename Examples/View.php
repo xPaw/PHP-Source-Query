@@ -47,13 +47,26 @@
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
 	<style type="text/css">
 		.table {
+			table-layout: fixed;
 			border-top-color: #428BCA;
+		}
+		
+		.table td {
+			overflow-x: auto;
 		}
 		
 		.table thead th {
 			background-color: #428BCA;
 			border-color: #428BCA !important;
 			color: #FFF;
+		}
+		
+		.info-column {
+			width: 120px;
+		}
+		
+		.frags-column {
+			width: 80px;
 		}
 	</style>
 </head>
@@ -86,7 +99,7 @@
 				<table class="table table-bordered table-striped">
 					<thead>
 						<tr>
-							<th>Server Info</th>
+							<th class="info-column">Server Info</th>
 							<th><span class="label label-<?php echo $Timer > 1.0 ? 'danger' : 'success'; ?>"><?php echo $Timer; ?>s</span></th>
 						</tr>
 					</thead>
@@ -133,8 +146,8 @@
 					<thead>
 						<tr>
 							<th>Player</th>
-							<th>Frags</th>
-							<th>Time</th>
+							<th class="frags-column">Frags</th>
+							<th class="frags-column">Time</th>
 						</tr>
 					</thead>
 					<tbody>
