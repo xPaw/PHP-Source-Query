@@ -304,10 +304,37 @@
 					$Server[ 'GamePort' ] = $Buffer->GetShort( );
 				}
 				
-				// The server's SteamID - does this serve any purpose?
+				// The server's steamid
+				// Want to play around with this?
+				// You can use https://github.com/xPaw/SteamID.php
 				if( $Flags & 0x10 )
 				{
-					$Server[ 'ServerID' ] = $Buffer->GetUnsignedLong( ) | ( $Buffer->GetUnsignedLong( ) << 32 ); // TODO: verify this
+					$a = $Buffer->GetUnsignedLong( );
+					$b = $Buffer->GetUnsignedLong( );
+					$SteamID = 0;
+					
+					if( PHP_INT_SIZE === 4 )
+					{
+						if( extension_loaded( 'gmp2' ) )
+						{
+							$a = gmp_abs( $a );
+							$b = gmp_abs( $b );
+							
+							$SteamID = gmp_strval( gmp_or( $a, gmp_mul( $b, gmp_pow( 2, 32 ) ) ) );
+						}
+						else
+						{
+							throw new \RuntimeException( 'Either 64-bit PHP installation or "gmp" module is required to correctly parse server\'s steamid.' );
+						}
+					}
+					else
+					{
+						$SteamID = $a | ( $b << 32 );
+					}
+					
+					$Server[ 'SteamID' ] = $SteamID;
+					
+					unset( $a, $b, $SteamID );
 				}
 				
 				// The spectator port and then the spectator server name
