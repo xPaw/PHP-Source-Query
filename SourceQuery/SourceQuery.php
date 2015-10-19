@@ -315,7 +315,7 @@
 					
 					if( PHP_INT_SIZE === 4 )
 					{
-						if( extension_loaded( 'gmp2' ) )
+						if( extension_loaded( 'gmp' ) )
 						{
 							$a = gmp_abs( $a );
 							$b = gmp_abs( $b );
