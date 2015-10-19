@@ -20,6 +20,7 @@
 	require_once __DIR__ . '/Exception/InvalidPacketException.php';
 
 	require_once __DIR__ . '/Buffer.php';
+	require_once __DIR__ . '/BaseSocket.php';
 	require_once __DIR__ . '/Socket.php';
 	require_once __DIR__ . '/SourceRcon.php';
 	require_once __DIR__ . '/GoldSourceRcon.php';

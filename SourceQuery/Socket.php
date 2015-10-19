@@ -23,15 +23,8 @@
 	 * @uses xPaw\SourceQuery\Exception\InvalidPacketException
 	 * @uses xPaw\SourceQuery\Exception\SocketException
 	 */
-	class Socket
+	class Socket extends BaseSocket
 	{
-		public $Socket;
-		public $Engine;
-		
-		public $Ip;
-		public $Port;
-		public $Timeout;
-		
 		public function Close( )
 		{
 			if( $this->Socket )
