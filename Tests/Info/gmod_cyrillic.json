@@ -1,0 +1,21 @@
+{
+    "Protocol": 17,
+    "HostName": "Город Инноваций | Русский DarkRP",
+    "Map": "rp_bangclaw",
+    "ModDir": "garrysmod",
+    "ModDesc": "DarkRP",
+    "AppID": 4000,
+    "Players": 33,
+    "MaxPlayers": 40,
+    "Bots": 0,
+    "Dedicated": "d",
+    "Os": "l",
+    "Password": false,
+    "Secure": true,
+    "Version": "15.08.10",
+    "ExtraDataFlags": 177,
+    "GamePort": 27015,
+    "SteamID": 90097724371517447,
+    "GameTags": " gm:darkrp",
+    "GameID": 4000
+}

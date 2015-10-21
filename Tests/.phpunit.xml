@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit colors="true">
+<phpunit colors="true" 
+         bootstrap="../SourceQuery/bootstrap.php"
+         verbose="true">
 	<testsuites>
 		<testsuite name="Tests">
 			<file>./Tests.php</file>

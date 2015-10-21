@@ -1,0 +1,21 @@
+{
+    "Protocol": 17,
+    "HostName": "BombGame by xPaw & Co.",
+    "Map": "de_dust2",
+    "ModDir": "csgo",
+    "ModDesc": "Counter-Strike: Global Offensive",
+    "AppID": 730,
+    "Players": 0,
+    "MaxPlayers": 16,
+    "Bots": 0,
+    "Dedicated": "d",
+    "Os": "l",
+    "Password": false,
+    "Secure": true,
+    "Version": "1.35.0.7",
+    "ExtraDataFlags": 177,
+    "GamePort": 27036,
+    "SteamID": 90097713628897284,
+    "GameTags": "empty,*grp:1105381i,bombgame,secure",
+    "GameID": 730
+}

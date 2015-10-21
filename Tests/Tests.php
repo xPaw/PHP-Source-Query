@@ -1,9 +1,8 @@
 <?php
-	require __DIR__ . '/../SourceQuery/bootstrap.php';
-	
 	use xPaw\SourceQuery\BaseSocket;
 	use xPaw\SourceQuery\Exception\InvalidPacketException;
 	use xPaw\SourceQuery\SourceQuery;
+	use xPaw\SourceQuery\Buffer;
 	
 	class TestableSocket extends BaseSocket
 	{
@@ -36,7 +35,14 @@
 			
 			$this->NextOutput = '';
 			
+			$this->ReadInternal( $Buffer, $this->Sherlock );
+			
 			return $Buffer;
+		}
+		
+		private function Sherlock( $Buffer, $Length )
+		{
+			return false;
 		}
 	}
 	
@@ -66,13 +72,51 @@
 			
 			$RealOutput = $this->SourceQuery->GetInfo();
 			
-			$this->assertEquals( $ExpectedOutput, $RealOutput );
+			foreach( $ExpectedOutput as $Key => $ExpectedValue )
+			{
+				$this->assertEquals( $ExpectedValue, $RealOutput[ $Key ], $Key );
+			}
 		}
 		
 		public function InfoProvider()
 		{
-			// read from Tests/Info/ folder
+			$DataProvider = [];
 			
-			return [ [ '', '' ] ];
+			$Files = glob( __DIR__ . '/Info/*.raw', GLOB_ERR );
+			
+			foreach( $Files as $File )
+			{
+				$DataProvider[] =
+				[
+					hex2bin( trim( file_get_contents( $File ) ) ),
+					json_decode( file_get_contents( str_replace( '.raw', '.json', $File ) ), true )
+				];
+			}
+			
+			return $DataProvider;
+		}
+		
+		/**
+	     * @expectedException xPaw\SourceQuery\Exception\InvalidPacketException
+	     * @dataProvider BadInfoProvider
+	     */
+		public function testBadGetInfo( $Data )
+		{
+			$this->Socket->NextOutput = $Data;
+			
+			$this->SourceQuery->GetInfo();
+		}
+		
+		public function BadInfoProvider( )
+		{
+			return
+			[
+				[ "" ],
+				[ "\xff\xff\xff\xff" ], // No type
+				[ "\xff\xff\xff\xff\x49" ], // Correct type, but no data after
+				[ "\xff\xff\xff\xff\x6D" ], // Old info packet, but tests are done for source
+				[ "\xff\xff\xff\xff\x11" ], // Wrong type
+				[ "\xff" ], // Should be 4 bytes, but it's 1
+			];
 		}
 	}

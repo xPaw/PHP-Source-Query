@@ -1,0 +1,19 @@
+{
+    "Protocol": 7,
+    "HostName": "RKSzone.com | US Chicago | The Ship | Hunt",
+    "Map": "atalanta",
+    "ModDir": "ship",
+    "ModDesc": "The Ship",
+    "AppID": 2400,
+    "Players": 27,
+    "MaxPlayers": 32,
+    "Bots": 16,
+    "Dedicated": "d",
+    "Os": "w",
+    "Password": false,
+    "Secure": true,
+    "GameMode": 0,
+    "WitnessCount": 2,
+    "WitnessTime": 5,
+    "Version": "1.0.0.16"
+}

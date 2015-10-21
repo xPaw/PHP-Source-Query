@@ -1,0 +1,23 @@
+{
+    "Protocol": 17,
+    "HostName": " FirePowered.org | Unusual Trade | !jackpot",
+    "Map": "trade_unusual_center_v3",
+    "ModDir": "tf",
+    "ModDesc": "Unusual Trading",
+    "AppID": 440,
+    "Players": 32,
+    "MaxPlayers": 32,
+    "Bots": 0,
+    "Dedicated": "d",
+    "Os": "l",
+    "Password": false,
+    "Secure": true,
+    "Version": "3032525",
+    "ExtraDataFlags": 241,
+    "GamePort": 27045,
+    "SteamID": 85568392920039468,
+    "SpecPort": 27050,
+    "SpecName": "ScamCam",
+    "GameTags": "FirePowered,alltalk,backpack.tf,increased_maxplayers,no_ads,noads,nopinion,norespawntime,trade,trading,unusual",
+    "GameID": 440
+}
