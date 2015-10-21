@@ -78,7 +78,7 @@
 			return $Buffer;
 		}
 		
-		private function Sherlock( $Buffer, $Length )
+		public function Sherlock( $Buffer, $Length )
 		{
 			$Data = FRead( $this->Socket, $Length );
 			

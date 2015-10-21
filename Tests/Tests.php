@@ -40,7 +40,7 @@
 			return $Buffer;
 		}
 		
-		private function Sherlock( $Buffer, $Length )
+		public function Sherlock( $Buffer, $Length )
 		{
 			return false;
 		}
