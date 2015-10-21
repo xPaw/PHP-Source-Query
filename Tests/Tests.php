@@ -71,6 +71,53 @@
 		public function tearDown()
 		{
 			$this->SourceQuery->Disconnect();
+			
+			unset( $this->SourceQuery );
+		}
+		
+		/**
+		 * @expectedException xPaw\SourceQuery\Exception\InvalidArgumentException
+		 */
+		public function testInvalidTimeout()
+		{
+			$SourceQuery = new SourceQuery( );
+			$SourceQuery->Connect( 1, 2, -1 );
+		}
+		
+		/**
+		 * @expectedException xPaw\SourceQuery\Exception\SocketException
+		 */
+		public function testNotConnectedGetInfo()
+		{
+			$this->SourceQuery->Disconnect();
+			$this->SourceQuery->GetInfo();
+		}
+		
+		/**
+		 * @expectedException xPaw\SourceQuery\Exception\SocketException
+		 */
+		public function testNotConnectedPing()
+		{
+			$this->SourceQuery->Disconnect();
+			$this->SourceQuery->Ping();
+		}
+		
+		/**
+		 * @expectedException xPaw\SourceQuery\Exception\SocketException
+		 */
+		public function testNotConnectedGetPlayers()
+		{
+			$this->SourceQuery->Disconnect();
+			$this->SourceQuery->GetPlayers();
+		}
+		
+		/**
+		 * @expectedException xPaw\SourceQuery\Exception\SocketException
+		 */
+		public function testNotConnectedGetRules()
+		{
+			$this->SourceQuery->Disconnect();
+			$this->SourceQuery->GetRules();
 		}
 		
 		/**
