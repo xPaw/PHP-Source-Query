@@ -1,0 +1,16 @@
+language: php
+php:
+  - 5.5
+  - 5.6
+  - hhvm
+  - nightly
+
+notifications:
+  email: false
+
+install:
+  - composer install --dev --no-interaction
+script:
+  - phpunit --configuration Tests/.phpunit.xml --verbose
+after_script:
+  - ./.codeclimate.sh

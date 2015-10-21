@@ -27,6 +27,11 @@
 	{
 		"php": ">=5.5"
 	},
+	"require-dev":
+	{
+		"phpunit/phpunit": "5.0.*",
+		"codeclimate/php-test-reporter": "dev-master"
+	},
 	"autoload":
 	{
 		"psr-4":

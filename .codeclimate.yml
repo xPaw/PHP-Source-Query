@@ -1,0 +1,13 @@
+engines:
+  phpcodesniffer:
+    enabled: true
+    config:
+      file_extensions: "php"
+  phpmd:
+    enabled: true
+    config:
+      file_extensions: "php"
+      standard: "PSR1,Squiz"
+ratings:
+  paths:
+  - "SourceQuery/**.php"
