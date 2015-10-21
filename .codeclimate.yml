@@ -8,6 +8,11 @@ engines:
     config:
       file_extensions: "php"
       standard: "PSR1,Squiz"
+    checks:
+      Controversial/CamelCaseMethodName:
+        enabled: false
+      Controversial/CamelCaseParameterName:
+        enabled: false
 ratings:
   paths:
   - "SourceQuery/**.php"

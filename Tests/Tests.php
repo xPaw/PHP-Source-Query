@@ -72,5 +72,7 @@
 		public function InfoProvider()
 		{
 			// read from Tests/Info/ folder
+			
+			return [ [ '', '' ] ];
 		}
 	}
