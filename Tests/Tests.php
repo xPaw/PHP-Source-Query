@@ -45,11 +45,16 @@
 		private $Socket;
 		private $SourceQuery;
 		
-		public function setUpBeforeClass()
+		public function setUp()
 		{
 			$this->Socket = new TestableSocket();
 			$this->SourceQuery = new SourceQuery( $this->Socket );
 			$this->SourceQuery->Connect( 1, 2 );
+		}
+		
+		public function tearDown()
+		{
+			$this->SourceQuery->Disconnect();
 		}
 		
 		/**
