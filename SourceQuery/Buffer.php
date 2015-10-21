@@ -173,14 +173,12 @@
 			
 			if( $ZeroBytePosition === false )
 			{
-				$String = "";
+				return '';
 			}
-			else
-			{
-				$String = $this->Get( $ZeroBytePosition - $this->Position );
-				
-				$this->Position++;
-			}
+			
+			$String = $this->Get( $ZeroBytePosition - $this->Position );
+			
+			$this->Position++;
 			
 			return $String;
 		}

@@ -13,6 +13,10 @@ engines:
         enabled: false
       Controversial/CamelCaseParameterName:
         enabled: false
+      Controversial/CamelCaseVariableName:
+        enabled: false
+      Controversial/CamelCasePropertyName:
+        enabled: false
 ratings:
   paths:
   - "SourceQuery/**.php"
