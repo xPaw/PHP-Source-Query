@@ -6,7 +6,19 @@
 	
 	class TestableSocket extends BaseSocket
 	{
-		public $NextOutput = '';
+		private $PacketQueue;
+		
+		public function __construct( )
+		{
+			$this->PacketQueue = new \SplQueue();
+			$this->PacketQueue->setIteratorMode( \SplDoublyLinkedList::IT_MODE_DELETE );
+			
+		}
+		
+		public function Queue( $Data )
+		{
+			$this->PacketQueue->push( $Data );
+		}
 		
 		public function Close( )
 		{
@@ -25,15 +37,13 @@
 		
 		public function Read( $Length = 1400 )
 		{
-			if( strlen( $this->NextOutput ) === 0 )
+			if( $this->PacketQueue->Count === 0 )
 			{
 				throw new InvalidPacketException( 'Buffer is empty', InvalidPacketException::BUFFER_EMPTY );
 			}
 			
 			$Buffer = new Buffer( );
-			$Buffer->Set( $this->NextOutput );
-			
-			$this->NextOutput = '';
+			$Buffer->Set( $this->PacketQueue->pop() );
 			
 			$this->ReadInternal( $Buffer, [ $this, 'Sherlock' ] );
 			
@@ -68,7 +78,7 @@
 		 */
 		public function testGetInfo( $RawInput, $ExpectedOutput )
 		{
-			$this->Socket->NextOutput = $RawInput;
+			$this->Socket->Queue( $RawInput );
 			
 			$RealOutput = $this->SourceQuery->GetInfo();
 			
@@ -102,7 +112,7 @@
 		 */
 		public function testBadGetInfo( $Data )
 		{
-			$this->Socket->NextOutput = $Data;
+			$this->Socket->Queue( $Data );
 			
 			$this->SourceQuery->GetInfo();
 		}

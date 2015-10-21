@@ -12,10 +12,14 @@
 	
 	namespace xPaw\SourceQuery;
 	
+	use xPaw\SourceQuery\Exception\InvalidPacketException;
+	
 	/**
 	 * Base socket interface
 	 *
 	 * @package xPaw\SourceQuery
+	 *
+	 * @uses xPaw\SourceQuery\Exception\InvalidPacketException
 	 */
 	abstract class BaseSocket
 	{
