@@ -35,7 +35,7 @@
 			
 			$this->NextOutput = '';
 			
-			$this->ReadInternal( $Buffer, $this->Sherlock );
+			$this->ReadInternal( $Buffer, [ $this, 'Sherlock' ] );
 			
 			return $Buffer;
 		}
@@ -97,9 +97,9 @@
 		}
 		
 		/**
-	     * @expectedException xPaw\SourceQuery\Exception\InvalidPacketException
-	     * @dataProvider BadInfoProvider
-	     */
+		 * @expectedException xPaw\SourceQuery\Exception\InvalidPacketException
+		 * @dataProvider BadInfoProvider
+		 */
 		public function testBadGetInfo( $Data )
 		{
 			$this->Socket->NextOutput = $Data;
