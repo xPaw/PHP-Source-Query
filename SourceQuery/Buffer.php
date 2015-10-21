@@ -57,16 +57,6 @@
 		}
 		
 		/**
-		 * Resets buffer
-		 */
-		public function Reset( )
-		{
-			$this->Buffer   = "";
-			$this->Length   = 0;
-			$this->Position = 0;
-		}
-		
-		/**
 		 * Get remaining bytes
 		 *
 		 * @return int Remaining bytes in buffer
