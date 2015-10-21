@@ -12,10 +12,14 @@
 
 	namespace xPaw\SourceQuery;
 
+	use xPaw\SourceQuery\Exception\InvalidPacketException;
+
 	/**
 	 * Class Buffer
 	 *
 	 * @package xPaw\SourceQuery
+	 *
+	 * @uses xPaw\SourceQuery\Exception\InvalidPacketException
 	 */
 	class Buffer
 	{
@@ -121,6 +125,11 @@
 		 */
 		public function GetShort( )
 		{
+			if( $this->Remaining( ) < 2 )
+			{
+				throw new InvalidPacketException( 'Not enough data to unpack a short.', InvalidPacketException::BUFFER_EMPTY );
+			}
+			
 			$Data = UnPack( 'v', $this->Get( 2 ) );
 			
 			return $Data[ 1 ];
@@ -133,6 +142,11 @@
 		 */
 		public function GetLong( )
 		{
+			if( $this->Remaining( ) < 4 )
+			{
+				throw new InvalidPacketException( 'Not enough data to unpack a long.', InvalidPacketException::BUFFER_EMPTY );
+			}
+			
 			$Data = UnPack( 'l', $this->Get( 4 ) );
 			
 			return $Data[ 1 ];
@@ -145,6 +159,11 @@
 		 */
 		public function GetFloat( )
 		{
+			if( $this->Remaining( ) < 4 )
+			{
+				throw new InvalidPacketException( 'Not enough data to unpack a float.', InvalidPacketException::BUFFER_EMPTY );
+			}
+			
 			$Data = UnPack( 'f', $this->Get( 4 ) );
 			
 			return $Data[ 1 ];
@@ -157,6 +176,11 @@
 		 */
 		public function GetUnsignedLong( )
 		{
+			if( $this->Remaining( ) < 4 )
+			{
+				throw new InvalidPacketException( 'Not enough data to unpack an usigned long.', InvalidPacketException::BUFFER_EMPTY );
+			}
+			
 			$Data = UnPack( 'V', $this->Get( 4 ) );
 			
 			return $Data[ 1 ];
