@@ -40,7 +40,7 @@
 		abstract public function Write( $Header, $String = '' );
 		abstract public function Read( $Length = 1400 );
 		
-		protected function ReadInternal( $Buffer, $SherlockFunction )
+		protected function ReadInternal( $Buffer, $Length, $SherlockFunction )
 		{
 			if( $Buffer->Remaining( ) === 0 )
 			{

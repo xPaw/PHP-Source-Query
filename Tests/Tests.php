@@ -40,7 +40,7 @@
 			$Buffer = new Buffer( );
 			$Buffer->Set( $this->PacketQueue->pop() );
 			
-			$this->ReadInternal( $Buffer, [ $this, 'Sherlock' ] );
+			$this->ReadInternal( $Buffer, $Length, [ $this, 'Sherlock' ] );
 			
 			return $Buffer;
 		}
