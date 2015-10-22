@@ -1,0 +1,16 @@
+{
+    "Address": "192.168.1.197:27020",
+    "HostName": "Castle Mortimus:0",
+    "Map": "op4_kbase",
+    "ModDir": "gearbox",
+    "ModDesc": "HLTV",
+    "Players": 0,
+    "MaxPlayers": 1,
+    "Protocol": 48,
+    "Dedicated": "p",
+    "Os": "w",
+    "Password": false,
+    "IsMod": false,
+    "Secure": false,
+    "Bots": 0
+}

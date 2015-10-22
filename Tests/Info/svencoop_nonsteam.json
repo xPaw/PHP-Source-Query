@@ -1,0 +1,24 @@
+{
+    "Address": "127.0.0.1:27015",
+    "HostName": "ClanSC #3 - Engage [Logros]",
+    "Map": "sc_doc",
+    "ModDir": "svencoop",
+    "ModDesc": "Sven Co-op 4.8",
+    "Players": 0,
+    "MaxPlayers": 16,
+    "Protocol": 47,
+    "Dedicated": "d",
+    "Os": "w",
+    "Password": true,
+    "IsMod": true,
+    "Secure": false,
+    "Bots": 0,
+    "Mod": {
+        "Url": "",
+        "Download": "",
+        "Version": 1,
+        "Size": 0,
+        "ServerSide": true,
+        "CustomDLL": false
+    }
+}

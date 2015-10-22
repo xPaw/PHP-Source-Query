@@ -130,14 +130,16 @@
 		 */
 		public function testGetInfo( $RawInput, $ExpectedOutput )
 		{
+			if( isset( $ExpectedOutput[ 'IsMod' ] ) )
+			{
+				$this->Socket->Engine = SourceQuery::GOLDSOURCE;
+			}
+			
 			$this->Socket->Queue( $RawInput );
 			
 			$RealOutput = $this->SourceQuery->GetInfo();
 			
-			foreach( $ExpectedOutput as $Key => $ExpectedValue )
-			{
-				$this->assertEquals( $ExpectedValue, $RealOutput[ $Key ], $Key );
-			}
+			$this->assertEquals( $ExpectedOutput, $RealOutput );
 		}
 		
 		public function InfoProvider()
@@ -197,10 +199,7 @@
 			
 			$RealOutput = $this->SourceQuery->GetRules();
 			
-			foreach( $ExpectedOutput as $Key => $ExpectedValue )
-			{
-				$this->assertEquals( $ExpectedValue, $RealOutput[ $Key ], $Key );
-			}
+			$this->assertEquals( $ExpectedOutput, $RealOutput );
 		}
 		
 		public function RulesProvider()
@@ -219,5 +218,49 @@
 			}
 			
 			return $DataProvider;
+		}
+		
+		/**
+		 * @dataProvider PlayersProvider
+		 */
+		public function testGetPlayers( $RawInput, $ExpectedOutput )
+		{
+			$this->Socket->Queue( hex2bin( "ffffffff4104fce20e" ) ); // Challenge
+			
+			foreach( $RawInput as $Packet )
+			{
+				$this->Socket->Queue( hex2bin( $Packet ) );
+			}
+			
+			$RealOutput = $this->SourceQuery->GetPlayers();
+			
+			$this->assertEquals( $ExpectedOutput, $RealOutput );
+		}
+		
+		public function PlayersProvider()
+		{
+			$DataProvider = [];
+			
+			$Files = glob( __DIR__ . '/Players/*.raw', GLOB_ERR );
+			
+			foreach( $Files as $File )
+			{
+				$DataProvider[] =
+				[
+					file( $File, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES ),
+					json_decode( file_get_contents( str_replace( '.raw', '.json', $File ) ), true )
+				];
+			}
+			
+			return $DataProvider;
+		}
+		
+		public function testPing()
+		{
+			$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x6A\x00");
+			$this->assertTrue( $this->SourceQuery->Ping() );
+			
+			$this->Socket->Queue( "\xFF\xFF\xFF\xFF\xEE");
+			$this->assertFalse( $this->SourceQuery->Ping() );
 		}
 	}
