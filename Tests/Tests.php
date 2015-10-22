@@ -30,7 +30,7 @@
 			$this->Timeout = $Timeout;
 			$this->Engine  = $Engine;
 			$this->Port    = $Port;
-			$this->Ip      = $Ip;
+			$this->Address = $Address;
 		}
 		
 		public function Write( $Header, $String = '' )
