@@ -27,7 +27,10 @@
 		
 		public function Open( $Address, $Port, $Timeout, $Engine )
 		{
-			//
+			$this->Timeout = $Timeout;
+			$this->Engine  = $Engine;
+			$this->Port    = $Port;
+			$this->Ip      = $Ip;
 		}
 		
 		public function Write( $Header, $String = '' )
@@ -38,7 +41,7 @@
 		public function Read( $Length = 1400 )
 		{
 			$Buffer = new Buffer( );
-			$Buffer->Set( $this->PacketQueue->pop() );
+			$Buffer->Set( $this->PacketQueue->shift() );
 			
 			$this->ReadInternal( $Buffer, $Length, [ $this, 'Sherlock' ] );
 			
@@ -47,7 +50,14 @@
 		
 		public function Sherlock( $Buffer, $Length )
 		{
-			return false;
+			if( $this->PacketQueue->isEmpty() )
+			{
+				return false;
+			}
+			
+			$Buffer->Set( $this->PacketQueue->shift() );
+			
+			return $Buffer->GetLong( ) === -2;
 		}
 	}
 	
@@ -67,7 +77,7 @@
 		{
 			$this->SourceQuery->Disconnect();
 			
-			unset( $this->SourceQuery );
+			unset( $this->Socket, $this->SourceQuery );
 		}
 		
 		/**
@@ -168,7 +178,46 @@
 				[ "\xff\xff\xff\xff\x49" ], // Correct type, but no data after
 				[ "\xff\xff\xff\xff\x6D" ], // Old info packet, but tests are done for source
 				[ "\xff\xff\xff\xff\x11" ], // Wrong type
+				[ "\x11\x11\x11\x11" ], // Wrong header
 				[ "\xff" ], // Should be 4 bytes, but it's 1
 			];
+		}
+		
+		/**
+		 * @dataProvider RulesProvider
+		 */
+		public function testGetRules( $RawInput, $ExpectedOutput )
+		{
+			$this->Socket->Queue( hex2bin( "ffffffff4104fce20e" ) ); // Challenge
+			
+			foreach( $RawInput as $Packet )
+			{
+				$this->Socket->Queue( hex2bin( $Packet ) );
+			}
+			
+			$RealOutput = $this->SourceQuery->GetRules();
+			
+			foreach( $ExpectedOutput as $Key => $ExpectedValue )
+			{
+				$this->assertEquals( $ExpectedValue, $RealOutput[ $Key ], $Key );
+			}
+		}
+		
+		public function RulesProvider()
+		{
+			$DataProvider = [];
+			
+			$Files = glob( __DIR__ . '/Rules/*.raw', GLOB_ERR );
+			
+			foreach( $Files as $File )
+			{
+				$DataProvider[] =
+				[
+					file( $File, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES ),
+					json_decode( file_get_contents( str_replace( '.raw', '.json', $File ) ), true )
+				];
+			}
+			
+			return $DataProvider;
 		}
 	}
