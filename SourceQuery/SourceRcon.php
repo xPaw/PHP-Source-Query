@@ -58,7 +58,7 @@
 		{
 			if( !$this->RconSocket )
 			{
-				$this->RconSocket = @FSockOpen( $this->Socket->Ip, $this->Socket->Port, $ErrNo, $ErrStr, $this->Socket->Timeout );
+				$this->RconSocket = @FSockOpen( $this->Socket->Address, $this->Socket->Port, $ErrNo, $ErrStr, $this->Socket->Timeout );
 				
 				if( $ErrNo || !$this->RconSocket )
 				{

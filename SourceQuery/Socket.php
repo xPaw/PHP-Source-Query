@@ -35,14 +35,14 @@
 			}
 		}
 		
-		public function Open( $Ip, $Port, $Timeout, $Engine )
+		public function Open( $Address, $Port, $Timeout, $Engine )
 		{
 			$this->Timeout = $Timeout;
 			$this->Engine  = $Engine;
 			$this->Port    = $Port;
-			$this->Ip      = $Ip;
+			$this->Address = $Address;
 			
-			$this->Socket = @FSockOpen( 'udp://' . $Ip, $Port, $ErrNo, $ErrStr, $Timeout );
+			$this->Socket = @FSockOpen( 'udp://' . $Address, $Port, $ErrNo, $ErrStr, $Timeout );
 			
 			if( $ErrNo || $this->Socket === false )
 			{

@@ -122,7 +122,7 @@
 		/**
 		 * Opens connection to server
 		 *
-		 * @param string $Ip Server ip
+		 * @param string $Address Server ip
 		 * @param int $Port Server port
 		 * @param int $Timeout Timeout period
 		 * @param int $Engine Engine the server runs on (goldsource, source)
@@ -130,7 +130,7 @@
 		 * @throws InvalidArgumentException
 		 * @throws SocketException
 		 */
-		public function Connect( $Ip, $Port, $Timeout = 3, $Engine = self::SOURCE )
+		public function Connect( $Address, $Port, $Timeout = 3, $Engine = self::SOURCE )
 		{
 			$this->Disconnect( );
 			
@@ -139,7 +139,7 @@
 				throw new InvalidArgumentException( 'Timeout must be an integer.', InvalidArgumentException::TIMEOUT_NOT_INTEGER );
 			}
 			
-			$this->Socket->Open( $Ip, (int)$Port, $Timeout, (int)$Engine );
+			$this->Socket->Open( $Address, (int)$Port, $Timeout, (int)$Engine );
 			
 			$this->Connected = true;
 		}
@@ -309,18 +309,17 @@
 				// You can use https://github.com/xPaw/SteamID.php
 				if( $Flags & 0x10 )
 				{
-					$a = $Buffer->GetUnsignedLong( );
-					$b = $Buffer->GetUnsignedLong( );
+					$SteamIDLower    = $Buffer->GetUnsignedLong( );
+					$SteamIDInstance = $Buffer->GetUnsignedLong( ); // This gets shifted by 32 bits, which should be steamid instance
 					$SteamID = 0;
 					
 					if( PHP_INT_SIZE === 4 )
 					{
 						if( extension_loaded( 'gmp' ) )
 						{
-							$a = gmp_abs( $a );
-							$b = gmp_abs( $b );
-							
-							$SteamID = gmp_strval( gmp_or( $a, gmp_mul( $b, gmp_pow( 2, 32 ) ) ) );
+							$SteamIDLower    = gmp_abs( $SteamIDLower );
+							$SteamIDInstance = gmp_abs( $SteamIDInstance );
+							$SteamID         = gmp_strval( gmp_or( $SteamIDLower, gmp_mul( $SteamIDInstance, gmp_pow( 2, 32 ) ) ) );
 						}
 						else
 						{
@@ -329,12 +328,12 @@
 					}
 					else
 					{
-						$SteamID = $a | ( $b << 32 );
+						$SteamID = $SteamIDLower | ( $SteamIDInstance << 32 );
 					}
 					
 					$Server[ 'SteamID' ] = $SteamID;
 					
-					unset( $a, $b, $SteamID );
+					unset( $SteamIDLower, $SteamIDInstance, $SteamID );
 				}
 				
 				// The spectator port and then the spectator server name

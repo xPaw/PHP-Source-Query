@@ -25,7 +25,7 @@
 			//
 		}
 		
-		public function Open( $Ip, $Port, $Timeout, $Engine )
+		public function Open( $Address, $Port, $Timeout, $Engine )
 		{
 			//
 		}
@@ -37,11 +37,6 @@
 		
 		public function Read( $Length = 1400 )
 		{
-			if( $this->PacketQueue->Count === 0 )
-			{
-				throw new InvalidPacketException( 'Buffer is empty', InvalidPacketException::BUFFER_EMPTY );
-			}
-			
 			$Buffer = new Buffer( );
 			$Buffer->Set( $this->PacketQueue->pop() );
 			

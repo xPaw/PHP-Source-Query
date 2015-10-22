@@ -26,7 +26,7 @@
 		public $Socket;
 		public $Engine;
 		
-		public $Ip;
+		public $Address;
 		public $Port;
 		public $Timeout;
 		
@@ -36,7 +36,7 @@
 		}
 		
 		abstract public function Close( );
-		abstract public function Open( $Ip, $Port, $Timeout, $Engine );
+		abstract public function Open( $Address, $Port, $Timeout, $Engine );
 		abstract public function Write( $Header, $String = '' );
 		abstract public function Read( $Length = 1400 );
 		
