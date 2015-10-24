@@ -503,8 +503,6 @@
 		 * @throws AuthenticationException
 		 * @throws InvalidPacketException
 		 * @throws SocketException
-		 *
-		 * @return bool True if authentication succeeded, false on failure
 		 */
 		public function SetRconPassword( $Password )
 		{
@@ -530,8 +528,7 @@
 			}
 			
 			$this->Rcon->Open( );
-			
-			return $this->Rcon->Authorize( $Password );
+			$this->Rcon->Authorize( $Password );
 		}
 		
 		/**

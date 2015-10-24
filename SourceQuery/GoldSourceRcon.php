@@ -71,7 +71,7 @@
 			
 			if( $Buffer->GetByte( ) !== SourceQuery::S2A_RCON )
 			{
-				return false;
+				throw new InvalidPacketException( 'Invalid rcon response.', InvalidPacketException::PACKET_HEADER_MISMATCH );
 			}
 			
 			$Buffer  = $Buffer->Get( );
@@ -114,7 +114,7 @@
 		{
 			if( !$this->RconChallenge )
 			{
-				return false;
+				throw new AuthenticationException( 'Tried to execute a RCON command before successful authorization.', AuthenticationException::BAD_PASSWORD );
 			}
 			
 			$this->Write( 0, 'rcon ' . $this->RconChallenge . ' "' . $this->RconPassword . '" ' . $Command . "\0" );
@@ -132,11 +132,9 @@
 			
 			if( $Buffer->Get( 14 ) !== 'challenge rcon' )
 			{
-				return false;
+				throw new AuthenticationException( 'Failed to get RCON challenge.', AuthenticationException::BAD_PASSWORD );
 			}
 			
 			$this->RconChallenge = Trim( $Buffer->Get( ) );
-			
-			return true;
 		}
 	}

@@ -137,7 +137,7 @@
 			}
 			else if( $Type !== SourceQuery::SERVERDATA_RESPONSE_VALUE )
 			{
-				return false;
+				throw new InvalidPacketException( 'Invalid rcon response.', InvalidPacketException::PACKET_HEADER_MISMATCH );
 			}
 			
 			$Data = $Buffer->Get( );
@@ -197,7 +197,5 @@
 			{
 				throw new AuthenticationException( 'RCON authorization failed.', AuthenticationException::BAD_PASSWORD );
 			}
-			
-			return true;
 		}
 	}
