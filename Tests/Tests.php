@@ -201,7 +201,7 @@
 		 * @expectedException xPaw\SourceQuery\Exception\InvalidPacketException
 		 * @dataProvider BadPacketProvider
 		 */
-		public function testBadGetPlayers( $Data )
+		public function testBadGetChallengeViaPlayers( $Data )
 		{
 			$this->Socket->Queue( $Data );
 			
@@ -212,8 +212,21 @@
 		 * @expectedException xPaw\SourceQuery\Exception\InvalidPacketException
 		 * @dataProvider BadPacketProvider
 		 */
-		public function testBadGetRules( $Data )
+		public function testBadGetPlayersAfterCorrectChallenge( $Data )
 		{
+			$this->Socket->Queue( "\xFF\xFF\xFF\xFF" . SourceQuery::S2A_PLAYER . "\x11\x11\x11\x11" );
+			$this->Socket->Queue( $Data );
+			
+			$this->SourceQuery->GetPlayers();
+		}
+		
+		/**
+		 * @expectedException xPaw\SourceQuery\Exception\InvalidPacketException
+		 * @dataProvider BadPacketProvider
+		 */
+		public function testBadGetRulesAfterCorrectChallenge( $Data )
+		{
+			$this->Socket->Queue( "\xFF\xFF\xFF\xFF" . SourceQuery::S2A_RULES . "\x11\x11\x11\x11" );
 			$this->Socket->Queue( $Data );
 			
 			$this->SourceQuery->GetRules();
