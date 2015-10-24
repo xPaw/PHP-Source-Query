@@ -549,6 +549,11 @@
 				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
 			}
 			
+			if( $this->Rcon === null )
+			{
+				throw new SocketException( 'You must set a RCON password before trying to execute a RCON command.', SocketException::NOT_CONNECTED );
+			}
+			
 			return $this->Rcon->Command( $Command );
 		}
 	}

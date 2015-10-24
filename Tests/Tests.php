@@ -126,6 +126,32 @@
 		}
 		
 		/**
+		 * @expectedException xPaw\SourceQuery\Exception\SocketException
+		 */
+		public function testNotConnectedSetRconPassword()
+		{
+			$this->SourceQuery->Disconnect();
+			$this->SourceQuery->SetRconPassword('a');
+		}
+		
+		/**
+		 * @expectedException xPaw\SourceQuery\Exception\SocketException
+		 */
+		public function testNotConnectedRcon()
+		{
+			$this->SourceQuery->Disconnect();
+			$this->SourceQuery->Rcon('a');
+		}
+		
+		/**
+		 * @expectedException xPaw\SourceQuery\Exception\SocketException
+		 */
+		public function testRconWithoutPassword()
+		{
+			$this->SourceQuery->Rcon('a');
+		}
+		
+		/**
 		 * @dataProvider InfoProvider
 		 */
 		public function testGetInfo( $RawInput, $ExpectedOutput )
