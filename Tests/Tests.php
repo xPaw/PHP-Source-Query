@@ -214,7 +214,7 @@
 		 */
 		public function testBadGetPlayersAfterCorrectChallenge( $Data )
 		{
-			$this->Socket->Queue( "\xFF\xFF\xFF\xFF" . SourceQuery::S2A_PLAYER . "\x11\x11\x11\x11" );
+			$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11" );
 			$this->Socket->Queue( $Data );
 			
 			$this->SourceQuery->GetPlayers();
@@ -226,7 +226,7 @@
 		 */
 		public function testBadGetRulesAfterCorrectChallenge( $Data )
 		{
-			$this->Socket->Queue( "\xFF\xFF\xFF\xFF" . SourceQuery::S2A_RULES . "\x11\x11\x11\x11" );
+			$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11" );
 			$this->Socket->Queue( $Data );
 			
 			$this->SourceQuery->GetRules();
