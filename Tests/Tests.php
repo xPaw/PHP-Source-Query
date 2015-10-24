@@ -246,6 +246,16 @@
 			];
 		}
 		
+		public function testGetChallengeTwice( $Data )
+		{
+			$this->Socket->Queue( "\xFF\xFF\xFF\xFF" . SourceQuery::S2A_RULES . "\x11\x11\x11\x11" );
+			$this->Socket->Queue( "\xFF\xFF\xFF\xFF" . SourceQuery::S2A_RULES . "\x01\x00ayy\x00lmao\x00" );
+			$this->assertEquals( [ 'ayy' => 'lmao' ], $this->SourceQuery->GetPlayers() );
+			
+			$this->Socket->Queue( "\xFF\xFF\xFF\xFF" . SourceQuery::S2A_RULES . "\x01\x00wow\x00much\x00" );
+			$this->assertEquals( [ 'wow' => 'much' ], $this->SourceQuery->GetPlayers() );
+		}
+		
 		/**
 		 * @dataProvider RulesProvider
 		 */
