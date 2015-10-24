@@ -28,15 +28,6 @@
 	class SourceQuery
 	{
 		/**
-		 * Values returned by GetChallenge()
-		 *
-		 * @todo Get rid of this? Improve? Do something else?
-		 */
-		const GETCHALLENGE_FAILED          = 0;
-		const GETCHALLENGE_ALL_CLEAR       = 1;
-		const GETCHALLENGE_CONTAINS_ANSWER = 2;
-		
-		/**
 		 * Engines
 		 */
 		const GOLDSOURCE = 0;
@@ -206,7 +197,7 @@
 		 * @throws InvalidPacketException
 		 * @throws SocketException
 		 *
-		 * @return bool|array Returns array with information on success, false on failure
+		 * @return array Returns an array with information on success
 		 */
 		public function GetInfo( )
 		{
@@ -371,7 +362,7 @@
 		 * @throws InvalidPacketException
 		 * @throws SocketException
 		 * 
-		 * @return bool|array Returns array with players on success, false on failure
+		 * @return array Returns an array with players on success
 		 */
 		public function GetPlayers( )
 		{
@@ -380,31 +371,17 @@
 				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
 			}
 			
-			switch( $this->GetChallenge( self::A2S_PLAYER, self::S2A_PLAYER ) )
+			$this->GetChallenge( self::A2S_PLAYER, self::S2A_PLAYER );
+			
+			$this->Socket->Write( self::A2S_PLAYER, $this->Challenge );
+			$Buffer = $this->Socket->Read( 14000 ); // Moronic Arma 3 developers do not split their packets, so we have to read more data
+			// This violates the protocol spec, and they probably should fix it: https://developer.valvesoftware.com/wiki/Server_queries#Protocol
+			
+			$Type = $Buffer->GetByte( );
+			
+			if( $Type !== self::S2A_PLAYER )
 			{
-				case self::GETCHALLENGE_FAILED:
-				{
-					return false;
-				}
-				case self::GETCHALLENGE_ALL_CLEAR:
-				{
-					$this->Socket->Write( self::A2S_PLAYER, $this->Challenge );
-					$Buffer = $this->Socket->Read( 14000 ); // Moronic Arma 3 developers do not split their packets, so we have to read more data
-					// This violates the protocol spec, and they probably should fix it: https://developer.valvesoftware.com/wiki/Server_queries#Protocol
-					
-					$Type = $Buffer->GetByte( );
-					
-					if( $Type === 0 )
-					{
-						return false;
-					}
-					else if( $Type !== self::S2A_PLAYER )
-					{
-						throw new InvalidPacketException( 'GetPlayers: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
-					}
-					
-					break;
-				}
+				throw new InvalidPacketException( 'GetPlayers: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 			}
 			
 			$Players = [];
@@ -430,7 +407,7 @@
 		 * @throws InvalidPacketException
 		 * @throws SocketException
 		 *
-		 * @return bool|array Returns array with rules on success, false on failure
+		 * @return array Returns an array with rules on success
 		 */
 		public function GetRules( )
 		{
@@ -439,30 +416,16 @@
 				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
 			}
 			
-			switch( $this->GetChallenge( self::A2S_RULES, self::S2A_RULES ) )
+			$this->GetChallenge( self::A2S_RULES, self::S2A_RULES );
+			
+			$this->Socket->Write( self::A2S_RULES, $this->Challenge );
+			$Buffer = $this->Socket->Read( );
+			
+			$Type = $Buffer->GetByte( );
+			
+			if( $Type !== self::S2A_RULES )
 			{
-				case self::GETCHALLENGE_FAILED:
-				{
-					return false;
-				}
-				case self::GETCHALLENGE_ALL_CLEAR:
-				{
-					$this->Socket->Write( self::A2S_RULES, $this->Challenge );
-					$Buffer = $this->Socket->Read( );
-					
-					$Type = $Buffer->GetByte( );
-					
-					if( $Type === 0 )
-					{
-						return false;
-					}
-					else if( $Type !== self::S2A_RULES )
-					{
-						throw new InvalidPacketException( 'GetRules: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
-					}
-					
-					break;
-				}
+				throw new InvalidPacketException( 'GetRules: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 			}
 			
 			$Rules = [];
@@ -489,14 +452,12 @@
 		 * @param $ExpectedResult
 		 *
 		 * @throws InvalidPacketException
-		 *
-		 * @return int Returns one of the GETCHALLENGE_* constants
 		 */
 		private function GetChallenge( $Header, $ExpectedResult )
 		{
 			if( $this->Challenge )
 			{
-				return self::GETCHALLENGE_ALL_CLEAR;
+				return;
 			}
 			
 			if( $this->UseOldGetChallengeMethod )
@@ -515,17 +476,17 @@
 				{
 					$this->Challenge = $Buffer->Get( 4 );
 					
-					return self::GETCHALLENGE_ALL_CLEAR;
+					return;
 				}
 				case $ExpectedResult:
 				{
 					// Goldsource (HLTV)
 					
-					return self::GETCHALLENGE_CONTAINS_ANSWER;
+					return;
 				}
 				case 0:
 				{
-					return self::GETCHALLENGE_FAILED;
+					throw new InvalidPacketException( 'GetChallenge: Failed to get challenge.' );
 				}
 				default:
 				{
@@ -543,7 +504,7 @@
 		 * @throws InvalidPacketException
 		 * @throws SocketException
 		 *
-		 * @return bool True on success, false on failure
+		 * @return bool True if authentication succeeded, false on failure
 		 */
 		public function SetRconPassword( $Password )
 		{
@@ -582,7 +543,7 @@
 		 * @throws InvalidPacketException
 		 * @throws SocketException
 		 *
-		 * @return string|bool Answer from server in string, false on failure
+		 * @return string Answer from server in string
 		 */
 		public function Rcon( $Command )
 		{
