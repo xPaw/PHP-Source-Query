@@ -188,7 +188,7 @@
 		
 		/**
 		 * @expectedException xPaw\SourceQuery\Exception\InvalidPacketException
-		 * @dataProvider BadInfoProvider
+		 * @dataProvider BadPacketProvider
 		 */
 		public function testBadGetInfo( $Data )
 		{
@@ -197,7 +197,29 @@
 			$this->SourceQuery->GetInfo();
 		}
 		
-		public function BadInfoProvider( )
+		/**
+		 * @expectedException xPaw\SourceQuery\Exception\InvalidPacketException
+		 * @dataProvider BadPacketProvider
+		 */
+		public function testBadGetPlayers( $Data )
+		{
+			$this->Socket->Queue( $Data );
+			
+			$this->SourceQuery->GetPlayers();
+		}
+		
+		/**
+		 * @expectedException xPaw\SourceQuery\Exception\InvalidPacketException
+		 * @dataProvider BadPacketProvider
+		 */
+		public function testBadGetRules( $Data )
+		{
+			$this->Socket->Queue( $Data );
+			
+			$this->SourceQuery->GetRules();
+		}
+		
+		public function BadPacketProvider( )
 		{
 			return
 			[
