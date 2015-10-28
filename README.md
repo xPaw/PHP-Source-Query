@@ -1,4 +1,9 @@
-# PHP Source Query [![Build Status](https://img.shields.io/travis/xPaw/PHP-Source-Query.svg)](https://travis-ci.org/xPaw/PHP-Source-Query) [![Test Coverage](https://img.shields.io/codeclimate/coverage/github/xPaw/PHP-Source-Query.svg)](https://codeclimate.com/github/xPaw/PHP-Source-Query) [![Packagist](https://img.shields.io/packagist/dt/xpaw/php-source-query-class.svg)](https://packagist.org/packages/xpaw/php-source-query-class) [![Packagist](https://img.shields.io/packagist/v/xpaw/php-source-query-class.svg)](https://packagist.org/packages/xpaw/php-source-query-class)
+# PHP Source Query
+
+[![Build Status](https://img.shields.io/travis/xPaw/PHP-Source-Query.svg)](https://travis-ci.org/xPaw/PHP-Source-Query)
+[![Test Coverage](https://img.shields.io/codeclimate/coverage/github/xPaw/PHP-Source-Query.svg)](https://codeclimate.com/github/xPaw/PHP-Source-Query)
+[![Packagist Downloads](https://img.shields.io/packagist/dt/xpaw/php-source-query-class.svg)](https://packagist.org/packages/xpaw/php-source-query-class)
+[![Packagist Version](https://img.shields.io/packagist/v/xpaw/php-source-query-class.svg)](https://packagist.org/packages/xpaw/php-source-query-class)
 
 This class was created to query game server which use the Source query protocol, this includes all source games, and all the games that implement Steamworks.
 
