@@ -37,6 +37,7 @@ AppID | Game | Query | RCON | Notes
 107410 | [Arma 3](http://store.steampowered.com/app/107410/) | :white_check_mark: | :x: | Add +1 to the server port
 115300 | [Call of Duty: Modern Warfare 3](http://store.steampowered.com/app/115300/) | :white_check_mark: | :white_check_mark: | 
 211820 | [Starbound](http://store.steampowered.com/app/211820/) | :white_check_mark: | :white_check_mark: | Call `SetUseOldGetChallengeMethod` method after connecting
+244850 | [Space Engineers](http://store.steampowered.com/app/244850/) | :white_check_mark: | :x: | Add +1 to the server port
 252490 | [Rust](http://store.steampowered.com/app/252490/) | :white_check_mark: | :white_check_mark: | Add +1 to the server port
 346110 | [ARK: Survival Evolved](http://store.steampowered.com/app/346110/) | :white_check_mark: | :white_check_mark: | 
  | [Minecraft](http://www.minecraft.net/) | :x: | :white_check_mark: | 
