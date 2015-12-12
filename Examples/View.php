@@ -4,7 +4,7 @@
 	use xPaw\SourceQuery\SourceQuery;
 	
 	// Edit this ->
-	define( 'SQ_SERVER_ADDR', 'localhost );
+	define( 'SQ_SERVER_ADDR', 'localhost' );
 	define( 'SQ_SERVER_PORT', 27015 );
 	define( 'SQ_TIMEOUT',     3 );
 	define( 'SQ_ENGINE',      SourceQuery::SOURCE );
