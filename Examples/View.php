@@ -4,7 +4,7 @@
 	use xPaw\SourceQuery\SourceQuery;
 	
 	// Edit this ->
-	define( 'SQ_SERVER_ADDR', 'localhost' );
+	define( 'SQ_SERVER_ADDR', 'localhost );
 	define( 'SQ_SERVER_PORT', 27015 );
 	define( 'SQ_TIMEOUT',     3 );
 	define( 'SQ_ENGINE',      SourceQuery::SOURCE );
@@ -145,7 +145,7 @@
 				<table class="table table-bordered table-striped">
 					<thead>
 						<tr>
-							<th>Player</th>
+							<th>Player <span class="label label-info"><?php echo count( $Players ); ?></span></th>
 							<th class="frags-column">Frags</th>
 							<th class="frags-column">Time</th>
 						</tr>
@@ -173,7 +173,7 @@
 				<table class="table table-bordered table-striped">
 					<thead>
 						<tr>
-							<th colspan="2">Rules</th>
+							<th colspan="2">Rules <span class="label label-info"><?php echo count( $Rules ); ?></span></th>
 						</tr>
 					</thead>
 					<tbody>
