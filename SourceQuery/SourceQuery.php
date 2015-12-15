@@ -465,7 +465,7 @@
 				$Header = self::A2S_SERVERQUERY_GETCHALLENGE;
 			}
 			
-			$this->Socket->Write( $Header, 0xFFFFFFFF );
+			$this->Socket->Write( $Header, "\xFF\xFF\xFF\xFF" );
 			$Buffer = $this->Socket->Read( );
 			
 			$Type = $Buffer->GetByte( );
