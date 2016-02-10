@@ -16,6 +16,7 @@ The class also allows you to query servers using RCON although this only works f
 ## Requirements
 * [Modern PHP version](https://php.net/supported-versions.php) (5.5 or newer)
 * 64-bit PHP or [gmp module](https://secure.php.net/manual/en/book.gmp.php)
+* Web server must allow UDP connections
 
 ## Protocol Specifications
 * https://developer.valvesoftware.com/wiki/Server_queries
