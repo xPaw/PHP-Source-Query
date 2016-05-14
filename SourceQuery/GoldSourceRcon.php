@@ -69,13 +69,37 @@
 			// GoldSource RCON has same structure as Query
 			$Buffer = $this->Socket->Read( );
 			
-			if( $Buffer->GetByte( ) !== SourceQuery::S2A_RCON )
-			{
-				throw new InvalidPacketException( 'Invalid rcon response.', InvalidPacketException::PACKET_HEADER_MISMATCH );
-			}
+			$StringBuffer = '';
+			$ReadMore = false;
 			
-			$Buffer  = $Buffer->Get( );
-			$Trimmed = Trim( $Buffer );
+			// There is no indentifier of the end, so we just need to continue reading
+			do
+			{
+				$ReadMore = $Buffer->Remaining( ) > 0;
+				
+				if( $ReadMore )
+				{
+					if( $Buffer->GetByte( ) !== SourceQuery::S2A_RCON )
+					{
+						throw new InvalidPacketException( 'Invalid rcon response.', InvalidPacketException::PACKET_HEADER_MISMATCH );
+					}
+					
+					$Packet = $Buffer->Get( );
+					$StringBuffer .= $Packet;
+					//$StringBuffer .= SubStr( $Packet, 0, -2 );
+					
+					// Let's assume if this packet is not long enough, there are no more after this one
+					$ReadMore = StrLen( $Packet ) > 1000; // use 1300?
+					
+					if( $ReadMore )
+					{
+						$Buffer = $this->Socket->Read( );
+					}
+				}
+			}
+			while( $ReadMore );
+			
+			$Trimmed = trim( $StringBuffer );
 			
 			if( $Trimmed === 'Bad rcon_password.' )
 			{
@@ -86,28 +110,9 @@
 				throw new AuthenticationException( $Trimmed, AuthenticationException::BANNED );
 			}
 			
-			$ReadMore = false;
+			$Buffer->Set( $Trimmed );
 			
-			// There is no indentifier of the end, so we just need to continue reading
-			// TODO: Needs to be looked again, it causes timeouts
-			do
-			{
-				$this->Socket->Read( );
-				
-				$ReadMore = $Buffer->Remaining( ) > 0 && $Buffer->GetByte( ) === SourceQuery::S2A_RCON;
-				
-				if( $ReadMore )
-				{
-					$Packet  = $Buffer->Get( );
-					$Buffer .= SubStr( $Packet, 0, -2 );
-					
-					// Let's assume if this packet is not long enough, there are no more after this one
-					$ReadMore = StrLen( $Packet ) > 1000; // use 1300?
-				}
-			}
-			while( $ReadMore );
-			
-			$Buffer->Set( Trim( $Buffer ) );
+			return $Buffer;
 		}
 		
 		public function Command( $Command )
