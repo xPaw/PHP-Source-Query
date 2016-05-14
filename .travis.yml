@@ -12,6 +12,6 @@ notifications:
 install:
   - composer install --dev --no-interaction
 script:
-  - phpunit --configuration Tests/.phpunit.xml
+  - phpunit --configuration Tests/phpunit.xml
 after_script:
   - ./.codeclimate.sh
