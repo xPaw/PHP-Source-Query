@@ -42,7 +42,7 @@ AppID | Game | Query | RCON | Notes
 252490 | [Rust](http://store.steampowered.com/app/252490/) | :white_check_mark: | :x: |
 282440 | [Quake Live](http://store.steampowered.com/app/282440) | :white_check_mark: | :x: | Quake Live uses the ZMQ messaging queue protocol for rcon control.
 346110 | [ARK: Survival Evolved](http://store.steampowered.com/app/346110/) | :white_check_mark: | :white_check_mark: | 
- | [Minecraft](http://www.minecraft.net/) | :x: | :white_check_mark: | 
+~ | [Minecraft](http://www.minecraft.net/) | :x: | :white_check_mark: | 
 
 Open a pull request if you know another game which supports Source Query and/or RCON protocols.
 
