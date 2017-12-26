@@ -146,10 +146,10 @@
 			// See https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Multiple-packet_Responses
 			if( StrLen( $Data ) >= 4000 )
 			{
+				$this->Write( SourceQuery::SERVERDATA_RESPONSE_VALUE );
+				
 				do
-				{
-					$this->Write( SourceQuery::SERVERDATA_RESPONSE_VALUE );
-					
+				{	
 					$Buffer = $this->Read( );
 					
 					$Buffer->GetLong( ); // RequestID
