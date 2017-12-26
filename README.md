@@ -27,7 +27,7 @@ AppID | Game | Query | RCON | Notes
 ----- | ---- | :---: | :--: | ----
 ~ | All HL1/HL2 games and mods | :white_check_mark: | :white_check_mark: | 
 10 | [Counter-Strike 1.6](http://store.steampowered.com/app/10/) | :white_check_mark: | :white_check_mark: | 
-730 | [Counter-Strike: Global Offensive](http://store.steampowered.com/app/730/) | :white_check_mark: | :white_check_mark: | 
+730 | [Counter-Strike: Global Offensive](http://store.steampowered.com/app/730/) | :white_check_mark: | :white_check_mark: | `host_name_store 1; host_info_show 2; host_players_show 2`
 440 | [Team Fortress 2](http://store.steampowered.com/app/440/) | :white_check_mark: | :white_check_mark: | 
 550 | [Left 4 Dead 2](http://store.steampowered.com/app/550/) | :white_check_mark: | :white_check_mark: | 
 1002 | [Rag Doll Kung Fu](http://store.steampowered.com/app/1002/) | :white_check_mark: | :white_check_mark: | 
