@@ -1,4 +1,5 @@
 <?php
+	use PHPUnit\Framework\TestCase;
 	use xPaw\SourceQuery\BaseSocket;
 	use xPaw\SourceQuery\Exception\InvalidPacketException;
 	use xPaw\SourceQuery\SourceQuery;
@@ -61,7 +62,7 @@
 		}
 	}
 	
-	class SourceQueryTests extends PHPUnit_Framework_TestCase
+	class SourceQueryTests extends TestCase
 	{
 		private $Socket;
 		private $SourceQuery;
