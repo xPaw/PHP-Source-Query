@@ -7,6 +7,11 @@
 			<file>./Tests.php</file>
 		</testsuite>
 	</testsuites>
+	<filter>
+		<whitelist processUncoveredFilesFromWhitelist="true">
+			<directory suffix=".php">../SourceQuery</directory>
+		</whitelist>
+	</filter>
 	<logging>
 		<log type="coverage-clover" target="../build/logs/clover.xml"/>
 	</logging>
