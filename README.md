@@ -1,6 +1,6 @@
 # PHP Source Query
 
-[![Build Status](https://img.shields.io/travis/xPaw/PHP-Source-Query.svg)](https://travis-ci.org/xPaw/PHP-Source-Query)
+[![Build Status](https://img.shields.io/travis/com/xPaw/PHP-Source-Query.svg)](https://travis-ci.com/xPaw/PHP-Source-Query)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/24858a13b82113ad3092/test_coverage)](https://codeclimate.com/github/xPaw/PHP-Source-Query/test_coverage)
 [![Packagist Downloads](https://img.shields.io/packagist/dt/xpaw/php-source-query-class.svg)](https://packagist.org/packages/xpaw/php-source-query-class)
 [![Packagist Version](https://img.shields.io/packagist/v/xpaw/php-source-query-class.svg)](https://packagist.org/packages/xpaw/php-source-query-class)
