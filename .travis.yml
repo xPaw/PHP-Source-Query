@@ -11,4 +11,4 @@ install:
 script:
   - php ./vendor/bin/phpunit --configuration Tests/phpunit.xml
 after_script:
-  - travis_retry php ./vendor/bin/php-coveralls
+  - php ./vendor/bin/php-coveralls -v
