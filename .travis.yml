@@ -1,14 +1,14 @@
 sudo: false
 language: php
 php:
-  - 7.3
+  - 7.2
 
 notifications:
   email: false
 
 install:
-  - composer install --dev --no-interaction
+  - composer install --no-interaction
 script:
-  - ./vendor/bin/phpunit --configuration Tests/phpunit.xml
+  - php ./vendor/bin/phpunit --configuration Tests/phpunit.xml
 after_script:
-  - travis_retry ./vendor/bin/php-coveralls
+  - travis_retry php ./vendor/bin/php-coveralls
