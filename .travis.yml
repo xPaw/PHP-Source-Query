@@ -1,7 +1,7 @@
 sudo: false
 language: php
 php:
-  - 7.2
+  - 7.3
 
 notifications:
   email: false
@@ -11,4 +11,4 @@ install:
 script:
   - ./vendor/bin/phpunit --configuration Tests/phpunit.xml
 after_script:
-  - ./.codeclimate.sh
+  - travis_retry ./vendor/bin/php-coveralls
