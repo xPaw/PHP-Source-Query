@@ -1,0 +1,16 @@
+name: CI
+
+on: [push]
+
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: [7.2, 7.3]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install dependencies
+      run: composer install --no-interaction --no-progress
+    - name: Run tests
+      run: php${{ matrix.php }} vendor/bin/phpunit --configuration Tests/phpunit.xml --verbose --fail-on-warning
