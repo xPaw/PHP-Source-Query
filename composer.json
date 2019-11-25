@@ -4,13 +4,6 @@
 	"homepage": "https://github.com/xPaw/PHP-Source-Query",
 	"type": "library",
 	"license": "LGPL-2.1",
-	"authors":
-	[
-		{
-			"name": "Pavel Djundik",
-			"email": "sourcequery@xpaw.me"
-		}
-	],
 	"keywords":
 	[
 		"rcon",

@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * @author Pavel Djundik <sourcequery@xpaw.me>
+	 * @author Pavel Djundik
 	 *
 	 * @link https://xpaw.me
 	 * @link https://github.com/xPaw/PHP-Source-Query

@@ -5,7 +5,7 @@
 	 * Special thanks to koraktor for his awesome Steam Condenser class,
 	 * I used it as a reference at some points.
 	 *
-	 * @author Pavel Djundik <sourcequery@xpaw.me>
+	 * @author Pavel Djundik
 	 *
 	 * @link https://xpaw.me
 	 * @link https://github.com/xPaw/PHP-Source-Query
