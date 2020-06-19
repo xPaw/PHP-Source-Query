@@ -289,13 +289,13 @@
 			{
 				$Server[ 'ExtraDataFlags' ] = $Flags = $Buffer->GetByte( );
 				
-				// The server's game port
+				// S2A_EXTRA_DATA_HAS_GAME_PORT - Next 2 bytes include the game port.
 				if( $Flags & 0x80 )
 				{
 					$Server[ 'GamePort' ] = $Buffer->GetShort( );
 				}
 				
-				// The server's steamid
+				// S2A_EXTRA_DATA_HAS_STEAMID - Next 8 bytes are the steamID
 				// Want to play around with this?
 				// You can use https://github.com/xPaw/SteamID.php
 				if( $Flags & 0x10 )
@@ -327,20 +327,20 @@
 					unset( $SteamIDLower, $SteamIDInstance, $SteamID );
 				}
 				
-				// The spectator port and then the spectator server name
+				// S2A_EXTRA_DATA_HAS_SPECTATOR_DATA - Next 2 bytes include the spectator port, then the spectator server name.
 				if( $Flags & 0x40 )
 				{
 					$Server[ 'SpecPort' ] = $Buffer->GetShort( );
 					$Server[ 'SpecName' ] = $Buffer->GetString( );
 				}
 				
-				// The game tag data string for the server
+				// S2A_EXTRA_DATA_HAS_GAMETAG_DATA - Next bytes are the game tag string
 				if( $Flags & 0x20 )
 				{
 					$Server[ 'GameTags' ] = $Buffer->GetString( );
 				}
 				
-				// GameID -- alternative to AppID?
+				// S2A_EXTRA_DATA_GAMEID - Next 8 bytes are the gameID of the server
 				if( $Flags & 0x01 )
 				{
 					$Server[ 'GameID' ] = $Buffer->GetUnsignedLong( ) | ( $Buffer->GetUnsignedLong( ) << 32 ); 
