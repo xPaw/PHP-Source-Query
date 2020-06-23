@@ -25,9 +25,9 @@
 	 */
 	class Socket extends BaseSocket
 	{
-		public function Close( )
+		public function Close( ) : void
 		{
-			if( $this->Socket )
+			if( $this->Socket !== null )
 			{
 				FClose( $this->Socket );
 				
@@ -35,7 +35,7 @@
 			}
 		}
 		
-		public function Open( $Address, $Port, $Timeout, $Engine )
+		public function Open( string $Address, int $Port, int $Timeout, int $Engine ) : void
 		{
 			$this->Timeout = $Timeout;
 			$this->Engine  = $Engine;
@@ -53,7 +53,7 @@
 			Stream_Set_Blocking( $this->Socket, true );
 		}
 		
-		public function Write( $Header, $String = '' )
+		public function Write( int $Header, string $String = '' ) : bool
 		{
 			$Command = Pack( 'ccccca*', 0xFF, 0xFF, 0xFF, 0xFF, $Header, $String );
 			$Length  = StrLen( $Command );
@@ -68,7 +68,7 @@
 		 *
 		 * @return Buffer Buffer
 		 */
-		public function Read( $Length = 1400 )
+		public function Read( int $Length = 1400 ) : Buffer
 		{
 			$Buffer = new Buffer( );
 			$Buffer->Set( FRead( $this->Socket, $Length ) );
@@ -78,7 +78,7 @@
 			return $Buffer;
 		}
 		
-		public function Sherlock( $Buffer, $Length )
+		public function Sherlock( Buffer $Buffer, int $Length ) : bool
 		{
 			$Data = FRead( $this->Socket, $Length );
 			

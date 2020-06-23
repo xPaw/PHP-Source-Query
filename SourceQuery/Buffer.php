@@ -25,31 +25,23 @@
 	{
 		/**
 		 * Buffer
-		 * 
-		 * @var string
 		 */
-		private $Buffer;
+		private string $Buffer = '';
 		
 		/**
 		 * Buffer length
-		 * 
-		 * @var int
 		 */
-		private $Length;
+		private int $Length = 0;
 		
 		/**
 		 * Current position in buffer
-		 * 
-		 * @var int
 		 */
-		private $Position;
+		private int $Position = 0;
 		
 		/**
 		 * Sets buffer
-		 *
-		 * @param string $Buffer Buffer
 		 */
-		public function Set( $Buffer )
+		public function Set( string $Buffer ) : void
 		{
 			$this->Buffer   = $Buffer;
 			$this->Length   = StrLen( $Buffer );
@@ -61,7 +53,7 @@
 		 *
 		 * @return int Remaining bytes in buffer
 		 */
-		public function Remaining( )
+		public function Remaining( ) : int
 		{
 			return $this->Length - $this->Position;
 		}
@@ -70,10 +62,8 @@
 		 * Gets data from buffer
 		 *
 		 * @param int $Length Bytes to read
-		 *
-		 * @return string
 		 */
-		public function Get( $Length = -1 )
+		public function Get( int $Length = -1 ) : string
 		{
 			if( $Length === 0 )
 			{
@@ -100,20 +90,16 @@
 		
 		/**
 		 * Get byte from buffer
-		 *
-		 * @return int
 		 */
-		public function GetByte( )
+		public function GetByte( ) : int
 		{
 			return Ord( $this->Get( 1 ) );
 		}
 		
 		/**
 		 * Get short from buffer
-		 *
-		 * @return int
 		 */
-		public function GetShort( )
+		public function GetShort( ) : int
 		{
 			if( $this->Remaining( ) < 2 )
 			{
@@ -122,15 +108,13 @@
 			
 			$Data = UnPack( 'v', $this->Get( 2 ) );
 			
-			return $Data[ 1 ];
+			return (int)$Data[ 1 ];
 		}
 		
 		/**
 		 * Get long from buffer
-		 *
-		 * @return int
 		 */
-		public function GetLong( )
+		public function GetLong( ) : int
 		{
 			if( $this->Remaining( ) < 4 )
 			{
@@ -139,15 +123,13 @@
 			
 			$Data = UnPack( 'l', $this->Get( 4 ) );
 			
-			return $Data[ 1 ];
+			return (int)$Data[ 1 ];
 		}
 		
 		/**
 		 * Get float from buffer
-		 *
-		 * @return float
 		 */
-		public function GetFloat( )
+		public function GetFloat( ) : float
 		{
 			if( $this->Remaining( ) < 4 )
 			{
@@ -156,15 +138,13 @@
 			
 			$Data = UnPack( 'f', $this->Get( 4 ) );
 			
-			return $Data[ 1 ];
+			return (float)$Data[ 1 ];
 		}
 		
 		/**
 		 * Get unsigned long from buffer
-		 *
-		 * @return int
 		 */
-		public function GetUnsignedLong( )
+		public function GetUnsignedLong( ) : int
 		{
 			if( $this->Remaining( ) < 4 )
 			{
@@ -173,15 +153,13 @@
 			
 			$Data = UnPack( 'V', $this->Get( 4 ) );
 			
-			return $Data[ 1 ];
+			return (int)$Data[ 1 ];
 		}
 		
 		/**
 		 * Read one string from buffer ending with null byte
-		 *
-		 * @return string
 		 */
-		public function GetString( )
+		public function GetString( ) : string
 		{
 			$ZeroBytePosition = StrPos( $this->Buffer, "\0", $this->Position );
 			

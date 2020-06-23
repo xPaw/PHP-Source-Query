@@ -25,24 +25,25 @@
 	 */
 	abstract class BaseSocket
 	{
+		/** @var resource */
 		public $Socket;
-		public $Engine;
+		public int $Engine;
 		
-		public $Address;
-		public $Port;
-		public $Timeout;
+		public string $Address;
+		public int $Port;
+		public int $Timeout;
 		
 		public function __destruct( )
 		{
 			$this->Close( );
 		}
 		
-		abstract public function Close( );
-		abstract public function Open( $Address, $Port, $Timeout, $Engine );
-		abstract public function Write( $Header, $String = '' );
-		abstract public function Read( $Length = 1400 );
+		abstract public function Close( ) : void;
+		abstract public function Open( string $Address, int $Port, int $Timeout, int $Engine ) : void;
+		abstract public function Write( int $Header, string $String = '' ) : bool;
+		abstract public function Read( int $Length = 1400 ) : Buffer;
 		
-		protected function ReadInternal( $Buffer, $Length, $SherlockFunction )
+		protected function ReadInternal( Buffer $Buffer, int $Length, callable $SherlockFunction ) : Buffer
 		{
 			if( $Buffer->Remaining( ) === 0 )
 			{

@@ -28,30 +28,30 @@
 		/**
 		 * Points to socket class
 		 * 
-		 * @var Socket
+		 * @var BaseSocket
 		 */
 		private $Socket;
 		
-		private $RconPassword;
-		private $RconChallenge;
+		private string $RconPassword = '';
+		private string $RconChallenge = '';
 		
-		public function __construct( $Socket )
+		public function __construct( BaseSocket $Socket )
 		{
 			$this->Socket = $Socket;
 		}
 		
-		public function Close( )
+		public function Close( ) : void
 		{
-			$this->RconChallenge = 0;
-			$this->RconPassword  = 0;
+			$this->RconChallenge = '';
+			$this->RconPassword  = '';
 		}
 		
-		public function Open( )
+		public function Open( ) : void
 		{
 			//
 		}
 		
-		public function Write( $Header, $String = '' )
+		public function Write( int $Header, string $String = '' ) : bool
 		{
 			$Command = Pack( 'cccca*', 0xFF, 0xFF, 0xFF, 0xFF, $String );
 			$Length  = StrLen( $Command );
@@ -64,7 +64,7 @@
 		 * @throws AuthenticationException
 		 * @return Buffer
 		 */
-		public function Read( $Length = 1400 )
+		public function Read( int $Length = 1400 ) : Buffer
 		{
 			// GoldSource RCON has same structure as Query
 			$Buffer = $this->Socket->Read( );
@@ -115,7 +115,7 @@
 			return $Buffer;
 		}
 		
-		public function Command( $Command )
+		public function Command( string $Command ) : string
 		{
 			if( !$this->RconChallenge )
 			{
@@ -128,7 +128,7 @@
 			return $Buffer->Get( );
 		}
 		
-		public function Authorize( $Password )
+		public function Authorize( string $Password ) : void
 		{
 			$this->RconPassword = $Password;
 			

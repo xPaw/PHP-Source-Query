@@ -76,31 +76,23 @@
 		
 		/**
 		 * Points to socket class
-		 * 
-		 * @var BaseSocket
 		 */
-		private $Socket;
+		private BaseSocket $Socket;
 		
 		/**
 		 * True if connection is open, false if not
-		 * 
-		 * @var bool
 		 */
-		private $Connected;
+		private bool $Connected = false;
 		
 		/**
 		 * Contains challenge
-		 * 
-		 * @var string
 		 */
-		private $Challenge;
+		private string $Challenge = '';
 		
 		/**
 		 * Use old method for getting challenge number
-		 * 
-		 * @var bool
 		 */
-		private $UseOldGetChallengeMethod;
+		private bool $UseOldGetChallengeMethod = false;
 		
 		public function __construct( BaseSocket $Socket = null )
 		{
@@ -123,16 +115,16 @@
 		 * @throws InvalidArgumentException
 		 * @throws SocketException
 		 */
-		public function Connect( $Address, $Port, $Timeout = 3, $Engine = self::SOURCE )
+		public function Connect( string $Address, int $Port, int $Timeout = 3, int $Engine = self::SOURCE ) : void
 		{
 			$this->Disconnect( );
 			
-			if( !is_int( $Timeout ) || $Timeout < 0 )
+			if( $Timeout < 0 )
 			{
-				throw new InvalidArgumentException( 'Timeout must be an integer.', InvalidArgumentException::TIMEOUT_NOT_INTEGER );
+				throw new InvalidArgumentException( 'Timeout must be a positive integer.', InvalidArgumentException::TIMEOUT_NOT_INTEGER );
 			}
 			
-			$this->Socket->Open( $Address, (int)$Port, $Timeout, (int)$Engine );
+			$this->Socket->Open( $Address, $Port, $Timeout, $Engine );
 			
 			$this->Connected = true;
 		}
@@ -144,7 +136,7 @@
 		 *
 		 * @returns bool Previous value
 		 */
-		public function SetUseOldGetChallengeMethod( $Value )
+		public function SetUseOldGetChallengeMethod( bool $Value ) : bool
 		{
 			$Previous = $this->UseOldGetChallengeMethod;
 			
@@ -156,7 +148,7 @@
 		/**
 		 * Closes all open connections
 		 */
-		public function Disconnect( )
+		public function Disconnect( ) : void
 		{
 			$this->Connected = false;
 			$this->Challenge = '';
@@ -180,7 +172,7 @@
 		 *
 		 * @return bool True on success, false on failure
 		 */
-		public function Ping( )
+		public function Ping( ) : bool
 		{
 			if( !$this->Connected )
 			{
@@ -201,7 +193,7 @@
 		 *
 		 * @return array Returns an array with information on success
 		 */
-		public function GetInfo( )
+		public function GetInfo( ) : array
 		{
 			if( !$this->Connected )
 			{
@@ -246,15 +238,11 @@
 					$Mod[ 'Size' ]       = $Buffer->GetLong( );
 					$Mod[ 'ServerSide' ] = $Buffer->GetByte( ) === 1;
 					$Mod[ 'CustomDLL' ]  = $Buffer->GetByte( ) === 1;
+					$Server[ 'Mod' ] = $Mod;
 				}
 				
 				$Server[ 'Secure' ]   = $Buffer->GetByte( ) === 1;
 				$Server[ 'Bots' ]     = $Buffer->GetByte( );
-				
-				if( isset( $Mod ) )
-				{
-					$Server[ 'Mod' ] = $Mod;
-				}
 				
 				return $Server;
 			}
@@ -368,7 +356,7 @@
 		 * 
 		 * @return array Returns an array with players on success
 		 */
-		public function GetPlayers( )
+		public function GetPlayers( ) : array
 		{
 			if( !$this->Connected )
 			{
@@ -414,7 +402,7 @@
 		 *
 		 * @return array Returns an array with rules on success
 		 */
-		public function GetRules( )
+		public function GetRules( ) : array
 		{
 			if( !$this->Connected )
 			{
@@ -453,12 +441,9 @@
 		/**
 		 * Get challenge (used for players/rules packets)
 		 *
-		 * @param $Header
-		 * @param $ExpectedResult
-		 *
 		 * @throws InvalidPacketException
 		 */
-		private function GetChallenge( $Header, $ExpectedResult )
+		private function GetChallenge( int $Header, int $ExpectedResult ) : void
 		{
 			if( $this->Challenge )
 			{
@@ -509,7 +494,7 @@
 		 * @throws InvalidPacketException
 		 * @throws SocketException
 		 */
-		public function SetRconPassword( $Password )
+		public function SetRconPassword( string $Password ) : void
 		{
 			if( !$this->Connected )
 			{
@@ -551,7 +536,7 @@
 		 *
 		 * @return string Answer from server in string
 		 */
-		public function Rcon( $Command )
+		public function Rcon( string $Command ) : string
 		{
 			if( !$this->Connected )
 			{

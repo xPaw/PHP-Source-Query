@@ -1,13 +1,12 @@
 <?php
 	use PHPUnit\Framework\TestCase;
 	use xPaw\SourceQuery\BaseSocket;
-	use xPaw\SourceQuery\Exception\InvalidPacketException;
 	use xPaw\SourceQuery\SourceQuery;
 	use xPaw\SourceQuery\Buffer;
 	
 	class TestableSocket extends BaseSocket
 	{
-		private $PacketQueue;
+		private \SplQueue $PacketQueue;
 		
 		public function __construct( )
 		{
@@ -16,17 +15,17 @@
 			
 		}
 		
-		public function Queue( $Data )
+		public function Queue( string $Data ) : void
 		{
 			$this->PacketQueue->push( $Data );
 		}
 		
-		public function Close( )
+		public function Close( ) : void
 		{
 			//
 		}
 		
-		public function Open( $Address, $Port, $Timeout, $Engine )
+		public function Open( string $Address, int $Port, int $Timeout, int $Engine ) : void
 		{
 			$this->Timeout = $Timeout;
 			$this->Engine  = $Engine;
@@ -34,29 +33,29 @@
 			$this->Address = $Address;
 		}
 		
-		public function Write( $Header, $String = '' )
+		public function Write( int $Header, string $String = '' ) : bool
 		{
-			//
+			return true;
 		}
 		
-		public function Read( $Length = 1400 )
+		public function Read( int $Length = 1400 ) : Buffer
 		{
 			$Buffer = new Buffer( );
-			$Buffer->Set( $this->PacketQueue->shift() );
+			$Buffer->Set( (string)$this->PacketQueue->shift() );
 			
 			$this->ReadInternal( $Buffer, $Length, [ $this, 'Sherlock' ] );
 			
 			return $Buffer;
 		}
 		
-		public function Sherlock( $Buffer, $Length )
+		public function Sherlock( Buffer $Buffer, int $Length ) : bool
 		{
 			if( $this->PacketQueue->isEmpty() )
 			{
 				return false;
 			}
 			
-			$Buffer->Set( $this->PacketQueue->shift() );
+			$Buffer->Set( (string)$this->PacketQueue->shift() );
 			
 			return $Buffer->GetLong( ) === -2;
 		}
@@ -64,17 +63,17 @@
 	
 	class SourceQueryTests extends TestCase
 	{
-		private $Socket;
-		private $SourceQuery;
+		private TestableSocket $Socket;
+		private SourceQuery $SourceQuery;
 		
-		public function setUp()
+		public function setUp() : void
 		{
 			$this->Socket = new TestableSocket();
 			$this->SourceQuery = new SourceQuery( $this->Socket );
 			$this->SourceQuery->Connect( '', 2 );
 		}
 		
-		public function tearDown()
+		public function tearDown() : void
 		{
 			$this->SourceQuery->Disconnect();
 			
@@ -84,7 +83,7 @@
 		/**
 		 * @expectedException xPaw\SourceQuery\Exception\InvalidArgumentException
 		 */
-		public function testInvalidTimeout()
+		public function testInvalidTimeout() : void
 		{
 			$SourceQuery = new SourceQuery( );
 			$SourceQuery->Connect( '', 2, -1 );
@@ -93,7 +92,7 @@
 		/**
 		 * @expectedException xPaw\SourceQuery\Exception\SocketException
 		 */
-		public function testNotConnectedGetInfo()
+		public function testNotConnectedGetInfo() : void
 		{
 			$this->SourceQuery->Disconnect();
 			$this->SourceQuery->GetInfo();
@@ -102,7 +101,7 @@
 		/**
 		 * @expectedException xPaw\SourceQuery\Exception\SocketException
 		 */
-		public function testNotConnectedPing()
+		public function testNotConnectedPing() : void
 		{
 			$this->SourceQuery->Disconnect();
 			$this->SourceQuery->Ping();
@@ -111,7 +110,7 @@
 		/**
 		 * @expectedException xPaw\SourceQuery\Exception\SocketException
 		 */
-		public function testNotConnectedGetPlayers()
+		public function testNotConnectedGetPlayers() : void
 		{
 			$this->SourceQuery->Disconnect();
 			$this->SourceQuery->GetPlayers();
@@ -120,7 +119,7 @@
 		/**
 		 * @expectedException xPaw\SourceQuery\Exception\SocketException
 		 */
-		public function testNotConnectedGetRules()
+		public function testNotConnectedGetRules() : void
 		{
 			$this->SourceQuery->Disconnect();
 			$this->SourceQuery->GetRules();
@@ -129,7 +128,7 @@
 		/**
 		 * @expectedException xPaw\SourceQuery\Exception\SocketException
 		 */
-		public function testNotConnectedSetRconPassword()
+		public function testNotConnectedSetRconPassword() : void
 		{
 			$this->SourceQuery->Disconnect();
 			$this->SourceQuery->SetRconPassword('a');
@@ -138,7 +137,7 @@
 		/**
 		 * @expectedException xPaw\SourceQuery\Exception\SocketException
 		 */
-		public function testNotConnectedRcon()
+		public function testNotConnectedRcon() : void
 		{
 			$this->SourceQuery->Disconnect();
 			$this->SourceQuery->Rcon('a');
@@ -147,7 +146,7 @@
 		/**
 		 * @expectedException xPaw\SourceQuery\Exception\SocketException
 		 */
-		public function testRconWithoutPassword()
+		public function testRconWithoutPassword() : void
 		{
 			$this->SourceQuery->Rcon('a');
 		}
@@ -155,7 +154,7 @@
 		/**
 		 * @dataProvider InfoProvider
 		 */
-		public function testGetInfo( $RawInput, $ExpectedOutput )
+		public function testGetInfo( string $RawInput, array $ExpectedOutput ) : void
 		{
 			if( isset( $ExpectedOutput[ 'IsMod' ] ) )
 			{
@@ -169,7 +168,7 @@
 			$this->assertEquals( $ExpectedOutput, $RealOutput );
 		}
 		
-		public function InfoProvider()
+		public function InfoProvider() : array
 		{
 			$DataProvider = [];
 			
@@ -191,7 +190,7 @@
 		 * @expectedException xPaw\SourceQuery\Exception\InvalidPacketException
 		 * @dataProvider BadPacketProvider
 		 */
-		public function testBadGetInfo( $Data )
+		public function testBadGetInfo( string $Data ) : void
 		{
 			$this->Socket->Queue( $Data );
 			
@@ -202,7 +201,7 @@
 		 * @expectedException xPaw\SourceQuery\Exception\InvalidPacketException
 		 * @dataProvider BadPacketProvider
 		 */
-		public function testBadGetChallengeViaPlayers( $Data )
+		public function testBadGetChallengeViaPlayers( string $Data ) : void
 		{
 			$this->Socket->Queue( $Data );
 			
@@ -213,7 +212,7 @@
 		 * @expectedException xPaw\SourceQuery\Exception\InvalidPacketException
 		 * @dataProvider BadPacketProvider
 		 */
-		public function testBadGetPlayersAfterCorrectChallenge( $Data )
+		public function testBadGetPlayersAfterCorrectChallenge( string $Data ) : void
 		{
 			$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11" );
 			$this->Socket->Queue( $Data );
@@ -225,7 +224,7 @@
 		 * @expectedException xPaw\SourceQuery\Exception\InvalidPacketException
 		 * @dataProvider BadPacketProvider
 		 */
-		public function testBadGetRulesAfterCorrectChallenge( $Data )
+		public function testBadGetRulesAfterCorrectChallenge( string $Data ) : void
 		{
 			$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11" );
 			$this->Socket->Queue( $Data );
@@ -233,7 +232,7 @@
 			$this->SourceQuery->GetRules();
 		}
 		
-		public function BadPacketProvider( )
+		public function BadPacketProvider( ) : array
 		{
 			return
 			[
@@ -247,7 +246,7 @@
 			];
 		}
 		
-		public function testGetChallengeTwice( )
+		public function testGetChallengeTwice( ) : void
 		{
 			$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11" );
 			$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x45\x01\x00ayy\x00lmao\x00" );
@@ -260,7 +259,7 @@
 		/**
 		 * @dataProvider RulesProvider
 		 */
-		public function testGetRules( $RawInput, $ExpectedOutput )
+		public function testGetRules( array $RawInput, array $ExpectedOutput ) : void
 		{
 			$this->Socket->Queue( hex2bin( "ffffffff4104fce20e" ) ); // Challenge
 			
@@ -274,7 +273,7 @@
 			$this->assertEquals( $ExpectedOutput, $RealOutput );
 		}
 		
-		public function RulesProvider()
+		public function RulesProvider() : array
 		{
 			$DataProvider = [];
 			
@@ -295,7 +294,7 @@
 		/**
 		 * @dataProvider PlayersProvider
 		 */
-		public function testGetPlayers( $RawInput, $ExpectedOutput )
+		public function testGetPlayers( array $RawInput, array $ExpectedOutput ) : void
 		{
 			$this->Socket->Queue( hex2bin( "ffffffff4104fce20e" ) ); // Challenge
 			
@@ -309,7 +308,7 @@
 			$this->assertEquals( $ExpectedOutput, $RealOutput );
 		}
 		
-		public function PlayersProvider()
+		public function PlayersProvider() : array
 		{
 			$DataProvider = [];
 			
@@ -327,7 +326,7 @@
 			return $DataProvider;
 		}
 		
-		public function testPing()
+		public function testPing() : void
 		{
 			$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x6A\x00");
 			$this->assertTrue( $this->SourceQuery->Ping() );
