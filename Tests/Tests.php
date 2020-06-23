@@ -82,28 +82,28 @@
 		
 		public function testInvalidTimeout() : void
 		{
-			$this->expectException( 'xPaw\SourceQuery\Exception\InvalidArgumentException' );
+			$this->expectException( xPaw\SourceQuery\Exception\InvalidArgumentException::class );
 			$SourceQuery = new SourceQuery( );
 			$SourceQuery->Connect( '', 2, -1 );
 		}
 		
 		public function testNotConnectedGetInfo() : void
 		{
-			$this->expectException( 'xPaw\SourceQuery\Exception\SocketException' );
+			$this->expectException( xPaw\SourceQuery\Exception\SocketException::class );
 			$this->SourceQuery->Disconnect();
 			$this->SourceQuery->GetInfo();
 		}
 		
 		public function testNotConnectedPing() : void
 		{
-			$this->expectException( 'xPaw\SourceQuery\Exception\SocketException' );
+			$this->expectException( xPaw\SourceQuery\Exception\SocketException::class );
 			$this->SourceQuery->Disconnect();
 			$this->SourceQuery->Ping();
 		}
 		
 		public function testNotConnectedGetPlayers() : void
 		{
-			$this->expectException( 'xPaw\SourceQuery\Exception\SocketException' );
+			$this->expectException( xPaw\SourceQuery\Exception\SocketException::class );
 			$this->SourceQuery->Disconnect();
 			$this->SourceQuery->GetPlayers();
 		}
@@ -113,28 +113,28 @@
 		 */
 		public function testNotConnectedGetRules() : void
 		{
-			$this->expectException( 'xPaw\SourceQuery\Exception\SocketException' );
+			$this->expectException( xPaw\SourceQuery\Exception\SocketException::class );
 			$this->SourceQuery->Disconnect();
 			$this->SourceQuery->GetRules();
 		}
 		
 		public function testNotConnectedSetRconPassword() : void
 		{
-			$this->expectException( 'xPaw\SourceQuery\Exception\SocketException' );
+			$this->expectException( xPaw\SourceQuery\Exception\SocketException::class );
 			$this->SourceQuery->Disconnect();
 			$this->SourceQuery->SetRconPassword('a');
 		}
 		
 		public function testNotConnectedRcon() : void
 		{
-			$this->expectException( 'xPaw\SourceQuery\Exception\SocketException' );
+			$this->expectException( xPaw\SourceQuery\Exception\SocketException::class );
 			$this->SourceQuery->Disconnect();
 			$this->SourceQuery->Rcon('a');
 		}
 		
 		public function testRconWithoutPassword() : void
 		{
-			$this->expectException( 'xPaw\SourceQuery\Exception\SocketException' );
+			$this->expectException( xPaw\SourceQuery\Exception\SocketException::class );
 			$this->SourceQuery->Rcon('a');
 		}
 		
@@ -178,7 +178,7 @@
 		 */
 		public function testBadGetInfo( string $Data ) : void
 		{
-			$this->expectException( 'xPaw\SourceQuery\Exception\InvalidPacketException' );
+			$this->expectException( xPaw\SourceQuery\Exception\InvalidPacketException::class );
 			$this->Socket->Queue( $Data );
 			
 			$this->SourceQuery->GetInfo();
@@ -189,7 +189,7 @@
 		 */
 		public function testBadGetChallengeViaPlayers( string $Data ) : void
 		{
-			$this->expectException( 'xPaw\SourceQuery\Exception\InvalidPacketException' );
+			$this->expectException( xPaw\SourceQuery\Exception\InvalidPacketException::class );
 			$this->Socket->Queue( $Data );
 			
 			$this->SourceQuery->GetPlayers();
@@ -200,7 +200,7 @@
 		 */
 		public function testBadGetPlayersAfterCorrectChallenge( string $Data ) : void
 		{
-			$this->expectException( 'xPaw\SourceQuery\Exception\InvalidPacketException' );
+			$this->expectException( xPaw\SourceQuery\Exception\InvalidPacketException::class );
 			$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11" );
 			$this->Socket->Queue( $Data );
 			
@@ -212,7 +212,7 @@
 		 */
 		public function testBadGetRulesAfterCorrectChallenge( string $Data ) : void
 		{
-			$this->expectException( 'xPaw\SourceQuery\Exception\InvalidPacketException' );
+			$this->expectException( xPaw\SourceQuery\Exception\InvalidPacketException::class );
 			$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11" );
 			$this->Socket->Queue( $Data );
 			
