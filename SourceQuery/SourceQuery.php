@@ -12,6 +12,7 @@
 
 	namespace xPaw\SourceQuery;
 
+	use xPaw\SourceQuery\Exception\AuthenticationException;
 	use xPaw\SourceQuery\Exception\InvalidArgumentException;
 	use xPaw\SourceQuery\Exception\InvalidPacketException;
 	use xPaw\SourceQuery\Exception\SocketException;
@@ -21,6 +22,7 @@
 	 *
 	 * @package xPaw\SourceQuery
 	 *
+	 * @uses xPaw\SourceQuery\Exception\AuthenticationException
 	 * @uses xPaw\SourceQuery\Exception\InvalidArgumentException
 	 * @uses xPaw\SourceQuery\Exception\InvalidPacketException
 	 * @uses xPaw\SourceQuery\Exception\SocketException

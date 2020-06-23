@@ -13,6 +13,7 @@
 	namespace xPaw\SourceQuery;
 	
 	use xPaw\SourceQuery\Exception\AuthenticationException;
+	use xPaw\SourceQuery\Exception\InvalidPacketException;
 
 	/**
 	 * Class GoldSourceRcon
@@ -20,6 +21,7 @@
 	 * @package xPaw\SourceQuery
 	 *
 	 * @uses xPaw\SourceQuery\Exception\AuthenticationException
+	 * @uses xPaw\SourceQuery\Exception\InvalidPacketException
 	 */
 	class GoldSourceRcon
 	{
