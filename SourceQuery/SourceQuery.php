@@ -70,14 +70,14 @@
 		/**
 		 * Points to rcon class
 		 * 
-		 * @var SourceRcon
+		 * @var SourceRcon|GoldSourceRcon|null
 		 */
 		private $Rcon;
 		
 		/**
 		 * Points to socket class
 		 * 
-		 * @var Socket
+		 * @var BaseSocket
 		 */
 		private $Socket;
 		
@@ -159,7 +159,7 @@
 		public function Disconnect( )
 		{
 			$this->Connected = false;
-			$this->Challenge = 0;
+			$this->Challenge = '';
 			
 			$this->Socket->Close( );
 			
@@ -212,6 +212,7 @@
 			$Buffer = $this->Socket->Read( );
 			
 			$Type = $Buffer->GetByte( );
+			$Server = [];
 			
 			// Old GoldSource protocol, HLTV still uses it
 			if( $Type === self::S2A_INFO_OLD && $this->Socket->Engine === self::GOLDSOURCE )
@@ -237,6 +238,7 @@
 				
 				if( $Server[ 'IsMod' ] )
 				{
+					$Mod = [];
 					$Mod[ 'Url' ]        = $Buffer->GetString( );
 					$Mod[ 'Download' ]   = $Buffer->GetString( );
 					$Buffer->Get( 1 ); // NULL byte
@@ -391,6 +393,7 @@
 			
 			while( $Count-- > 0 && $Buffer->Remaining( ) > 0 )
 			{
+				$Player = [];
 				$Player[ 'Id' ]    = $Buffer->GetByte( ); // PlayerID, is it just always 0?
 				$Player[ 'Name' ]  = $Buffer->GetString( );
 				$Player[ 'Frags' ] = $Buffer->GetLong( );
@@ -526,6 +529,10 @@
 					$this->Rcon = new SourceRcon( $this->Socket );
 					
 					break;
+				}
+				default:
+				{
+					throw new SocketException( 'Unknown engine.', SocketException::INVALID_ENGINE );
 				}
 			}
 			

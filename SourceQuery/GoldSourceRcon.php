@@ -33,7 +33,6 @@
 		private $Socket;
 		
 		private $RconPassword;
-		private $RconRequestId;
 		private $RconChallenge;
 		
 		public function __construct( $Socket )
@@ -44,7 +43,6 @@
 		public function Close( )
 		{
 			$this->RconChallenge = 0;
-			$this->RconRequestId = 0;
 			$this->RconPassword  = 0;
 		}
 		
@@ -64,7 +62,7 @@
 		/**
 		 * @param int $Length
 		 * @throws AuthenticationException
-		 * @return bool
+		 * @return Buffer
 		 */
 		public function Read( $Length = 1400 )
 		{

@@ -71,7 +71,7 @@
 		{
 			$this->Socket = new TestableSocket();
 			$this->SourceQuery = new SourceQuery( $this->Socket );
-			$this->SourceQuery->Connect( 1, 2 );
+			$this->SourceQuery->Connect( '', 2 );
 		}
 		
 		public function tearDown()
@@ -87,7 +87,7 @@
 		public function testInvalidTimeout()
 		{
 			$SourceQuery = new SourceQuery( );
-			$SourceQuery->Connect( 1, 2, -1 );
+			$SourceQuery->Connect( '', 2, -1 );
 		}
 		
 		/**

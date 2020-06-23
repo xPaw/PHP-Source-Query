@@ -13,13 +13,15 @@
 	namespace xPaw\SourceQuery;
 	
 	use xPaw\SourceQuery\Exception\InvalidPacketException;
-	
+	use xPaw\SourceQuery\Exception\SocketException;
+
 	/**
 	 * Base socket interface
 	 *
 	 * @package xPaw\SourceQuery
 	 *
 	 * @uses xPaw\SourceQuery\Exception\InvalidPacketException
+	 * @uses xPaw\SourceQuery\Exception\SocketException
 	 */
 	abstract class BaseSocket
 	{
@@ -58,6 +60,7 @@
 				$Packets      = [];
 				$IsCompressed = false;
 				$ReadMore     = false;
+				$PacketChecksum = null;
 				
 				do
 				{
@@ -92,6 +95,10 @@
 							
 							break;
 						}
+						default:
+						{
+							throw new SocketException( 'Unknown engine.', SocketException::INVALID_ENGINE );
+						}
 					}
 					
 					$Packets[ $PacketNumber ] = $Buffer->Get( );
@@ -113,7 +120,7 @@
 					
 					$Data = bzdecompress( $Data );
 					
-					if( CRC32( $Data ) !== $PacketChecksum )
+					if( !is_string( $Data ) || CRC32( $Data ) !== $PacketChecksum )
 					{
 						throw new InvalidPacketException( 'CRC32 checksum mismatch of uncompressed packet data.', InvalidPacketException::CHECKSUM_MISMATCH );
 					}
