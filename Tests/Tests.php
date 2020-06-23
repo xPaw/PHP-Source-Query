@@ -61,7 +61,7 @@
 		}
 	}
 	
-	class SourceQueryTests extends TestCase
+	class Tests extends \PHPUnit\Framework\TestCase
 	{
 		private TestableSocket $Socket;
 		private SourceQuery $SourceQuery;
@@ -80,38 +80,30 @@
 			unset( $this->Socket, $this->SourceQuery );
 		}
 		
-		/**
-		 * @expectedException xPaw\SourceQuery\Exception\InvalidArgumentException
-		 */
 		public function testInvalidTimeout() : void
 		{
+			$this->expectException( 'xPaw\SourceQuery\Exception\InvalidArgumentException' );
 			$SourceQuery = new SourceQuery( );
 			$SourceQuery->Connect( '', 2, -1 );
 		}
 		
-		/**
-		 * @expectedException xPaw\SourceQuery\Exception\SocketException
-		 */
 		public function testNotConnectedGetInfo() : void
 		{
+			$this->expectException( 'xPaw\SourceQuery\Exception\SocketException' );
 			$this->SourceQuery->Disconnect();
 			$this->SourceQuery->GetInfo();
 		}
 		
-		/**
-		 * @expectedException xPaw\SourceQuery\Exception\SocketException
-		 */
 		public function testNotConnectedPing() : void
 		{
+			$this->expectException( 'xPaw\SourceQuery\Exception\SocketException' );
 			$this->SourceQuery->Disconnect();
 			$this->SourceQuery->Ping();
 		}
 		
-		/**
-		 * @expectedException xPaw\SourceQuery\Exception\SocketException
-		 */
 		public function testNotConnectedGetPlayers() : void
 		{
+			$this->expectException( 'xPaw\SourceQuery\Exception\SocketException' );
 			$this->SourceQuery->Disconnect();
 			$this->SourceQuery->GetPlayers();
 		}
@@ -121,33 +113,28 @@
 		 */
 		public function testNotConnectedGetRules() : void
 		{
+			$this->expectException( 'xPaw\SourceQuery\Exception\SocketException' );
 			$this->SourceQuery->Disconnect();
 			$this->SourceQuery->GetRules();
 		}
 		
-		/**
-		 * @expectedException xPaw\SourceQuery\Exception\SocketException
-		 */
 		public function testNotConnectedSetRconPassword() : void
 		{
+			$this->expectException( 'xPaw\SourceQuery\Exception\SocketException' );
 			$this->SourceQuery->Disconnect();
 			$this->SourceQuery->SetRconPassword('a');
 		}
 		
-		/**
-		 * @expectedException xPaw\SourceQuery\Exception\SocketException
-		 */
 		public function testNotConnectedRcon() : void
 		{
+			$this->expectException( 'xPaw\SourceQuery\Exception\SocketException' );
 			$this->SourceQuery->Disconnect();
 			$this->SourceQuery->Rcon('a');
 		}
 		
-		/**
-		 * @expectedException xPaw\SourceQuery\Exception\SocketException
-		 */
 		public function testRconWithoutPassword() : void
 		{
+			$this->expectException( 'xPaw\SourceQuery\Exception\SocketException' );
 			$this->SourceQuery->Rcon('a');
 		}
 		
@@ -187,33 +174,33 @@
 		}
 		
 		/**
-		 * @expectedException xPaw\SourceQuery\Exception\InvalidPacketException
 		 * @dataProvider BadPacketProvider
 		 */
 		public function testBadGetInfo( string $Data ) : void
 		{
+			$this->expectException( 'xPaw\SourceQuery\Exception\InvalidPacketException' );
 			$this->Socket->Queue( $Data );
 			
 			$this->SourceQuery->GetInfo();
 		}
 		
 		/**
-		 * @expectedException xPaw\SourceQuery\Exception\InvalidPacketException
 		 * @dataProvider BadPacketProvider
 		 */
 		public function testBadGetChallengeViaPlayers( string $Data ) : void
 		{
+			$this->expectException( 'xPaw\SourceQuery\Exception\InvalidPacketException' );
 			$this->Socket->Queue( $Data );
 			
 			$this->SourceQuery->GetPlayers();
 		}
 		
 		/**
-		 * @expectedException xPaw\SourceQuery\Exception\InvalidPacketException
 		 * @dataProvider BadPacketProvider
 		 */
 		public function testBadGetPlayersAfterCorrectChallenge( string $Data ) : void
 		{
+			$this->expectException( 'xPaw\SourceQuery\Exception\InvalidPacketException' );
 			$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11" );
 			$this->Socket->Queue( $Data );
 			
@@ -221,11 +208,11 @@
 		}
 		
 		/**
-		 * @expectedException xPaw\SourceQuery\Exception\InvalidPacketException
 		 * @dataProvider BadPacketProvider
 		 */
 		public function testBadGetRulesAfterCorrectChallenge( string $Data ) : void
 		{
+			$this->expectException( 'xPaw\SourceQuery\Exception\InvalidPacketException' );
 			$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11" );
 			$this->Socket->Queue( $Data );
 			
