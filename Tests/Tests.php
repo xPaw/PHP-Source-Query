@@ -38,6 +38,11 @@
 			return true;
 		}
 		
+		public function WritePadded( int $Header, string $String = '' ) : bool
+		{
+			return true;
+		}
+		
 		public function Read( int $Length = 1400 ) : Buffer
 		{
 			$Buffer = new Buffer( );

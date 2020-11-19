@@ -41,6 +41,7 @@
 		abstract public function Close( ) : void;
 		abstract public function Open( string $Address, int $Port, int $Timeout, int $Engine ) : void;
 		abstract public function Write( int $Header, string $String = '' ) : bool;
+		abstract public function WritePadded( int $Header, string $String = '' ) : bool;
 		abstract public function Read( int $Length = 1400 ) : Buffer;
 		
 		protected function ReadInternal( Buffer $Buffer, int $Length, callable $SherlockFunction ) : Buffer

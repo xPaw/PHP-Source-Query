@@ -62,6 +62,26 @@
 		}
 		
 		/**
+		 * Write a request packge to the socket. Pads it up to 1200 bytes to prevent reflective DoS.
+		 *
+		 * @see https://steamcommunity.com/discussions/forum/14/2989789048633291344/
+		 * @return bool Whether fwrite succeeded.
+		 */
+		public function WritePadded( int $Header, string $String = '' ) : bool
+		{
+			$Command = pack( 'ccccca*', 0xFF, 0xFF, 0xFF, 0xFF, $Header, $String );
+			$Length  = strlen( $Command );
+
+			if( $Length < 1200 )
+			{
+				$Command .= str_repeat( "\0", 1200 - $Length );
+				$Length = 1200;
+			}
+
+			return $Length === fwrite( $this->Socket, $Command, $Length );
+		}
+
+		/**
 		 * Reads from socket and returns Buffer.
 		 *
 		 * @throws InvalidPacketException

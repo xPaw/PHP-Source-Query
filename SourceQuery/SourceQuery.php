@@ -200,7 +200,7 @@
 				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
 			}
 			
-			$this->Socket->Write( self::A2S_INFO, "Source Engine Query\0" );
+			$this->Socket->WritePadded( self::A2S_INFO, "Source Engine Query\0" );
 			$Buffer = $this->Socket->Read( );
 			
 			$Type = $Buffer->GetByte( );
@@ -365,7 +365,7 @@
 			
 			$this->GetChallenge( self::A2S_PLAYER, self::S2A_PLAYER );
 			
-			$this->Socket->Write( self::A2S_PLAYER, $this->Challenge );
+			$this->Socket->WritePadded( self::A2S_PLAYER, $this->Challenge );
 			$Buffer = $this->Socket->Read( 14000 ); // Moronic Arma 3 developers do not split their packets, so we have to read more data
 			// This violates the protocol spec, and they probably should fix it: https://developer.valvesoftware.com/wiki/Server_queries#Protocol
 			
@@ -411,7 +411,7 @@
 			
 			$this->GetChallenge( self::A2S_RULES, self::S2A_RULES );
 			
-			$this->Socket->Write( self::A2S_RULES, $this->Challenge );
+			$this->Socket->WritePadded( self::A2S_RULES, $this->Challenge );
 			$Buffer = $this->Socket->Read( );
 			
 			$Type = $Buffer->GetByte( );
@@ -452,10 +452,13 @@
 			
 			if( $this->UseOldGetChallengeMethod )
 			{
-				$Header = self::A2S_SERVERQUERY_GETCHALLENGE;
+				$this->Socket->Write( self::A2S_SERVERQUERY_GETCHALLENGE, "\xFF\xFF\xFF\xFF" );
+			}
+			else
+			{
+				$this->Socket->WritePadded( $Header, "\xFF\xFF\xFF\xFF" );
 			}
 			
-			$this->Socket->Write( $Header, "\xFF\xFF\xFF\xFF" );
 			$Buffer = $this->Socket->Read( );
 			
 			$Type = $Buffer->GetByte( );
