@@ -87,13 +87,11 @@
 	</div>
 		
 	<div class="container">
-<?php if( isset( $Exception ) ): ?>
-		<div class="panel panel-primary">
-			<div class="panel-heading"><?php echo Get_Class( $Exception ); ?> at line <?php echo $Exception->getLine( ); ?></div>
-			<p><b><?php echo htmlspecialchars( $Exception->getMessage( ) ); ?></b></p>
-			<p><?php echo nl2br( $e->getTraceAsString(), false ); ?></p>
+<?php if( $Exception !== '' ): ?>
+		<div class="panel panel-error">
+			<pre class="panel-body"><?php echo htmlspecialchars( $Exception->__toString( ) ); ?></pre>
 		</div>
-<?php else: ?>
+<?php endif; ?>
 		<div class="row">
 			<div class="col-sm-6">
 				<table class="table table-bordered table-striped">
@@ -193,7 +191,6 @@
 				</table>
 			</div>
 		</div>
-<?php endif; ?>
 	</div>
 </body>
 </html>
