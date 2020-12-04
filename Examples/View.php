@@ -17,6 +17,7 @@
 	$Info    = Array( );
 	$Rules   = Array( );
 	$Players = Array( );
+	$Exception = null;
 	
 	try
 	{
@@ -87,7 +88,7 @@
 	</div>
 		
 	<div class="container">
-<?php if( $Exception !== '' ): ?>
+<?php if( $Exception !== null ): ?>
 		<div class="panel panel-error">
 			<pre class="panel-body"><?php echo htmlspecialchars( $Exception->__toString( ) ); ?></pre>
 		</div>
