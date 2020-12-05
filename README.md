@@ -9,12 +9,12 @@ The class also allows you to query servers using RCON although this only works f
 
 [Minecraft](http://www.minecraft.net) also uses Source RCON protocol, and this means you can use this class to send commands to your minecraft server while having engine set to Source engine.
 
-**:warning: Please do not create issues when you are unable to retrieve information from a server, unless you can prove that there is a bug within the library.**
+**:warning: Do not send me emails if this does not work for you, I will not help you.**
 
 ## Requirements
 * [Modern PHP version](https://php.net/supported-versions.php) (7.4 or newer)
 * 64-bit PHP or [gmp module](https://secure.php.net/manual/en/book.gmp.php)
-* Web server must allow UDP connections
+* Your server must allow UDP connections
 
 ## Protocol Specifications
 * https://developer.valvesoftware.com/wiki/Server_queries
