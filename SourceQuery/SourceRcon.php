@@ -145,7 +145,7 @@
 			// See https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Multiple-packet_Responses
 			if( StrLen( $Data ) >= 4000 )
 			{
-				$this->Write( SourceQuery::SERVERDATA_RESPONSE_VALUE );
+				$this->Write( SourceQuery::SERVERDATA_REQUESTVALUE );
 				
 				do
 				{	

@@ -58,6 +58,7 @@
 		/**
 		 * Source rcon sent
 		 */
+		const SERVERDATA_REQUESTVALUE   = 0;
 		const SERVERDATA_EXECCOMMAND    = 2;
 		const SERVERDATA_AUTH           = 3;
 		
