@@ -38,7 +38,7 @@
 		/**
 		 * Packets sent
 		 */
-		const A2S_PING      = 0x69;
+		const A2A_PING      = 0x69;
 		const A2S_INFO      = 0x54;
 		const A2S_PLAYER    = 0x55;
 		const A2S_RULES     = 0x56;
@@ -47,10 +47,10 @@
 		/**
 		 * Packets received
 		 */
-		const S2A_PING      = 0x6A;
-		const S2A_CHALLENGE = 0x41;
-		const S2A_INFO      = 0x49;
-		const S2A_INFO_OLD  = 0x6D; // Old GoldSource, HLTV uses it
+		const A2A_ACK       = 0x6A;
+		const S2C_CHALLENGE = 0x41;
+		const S2A_INFO_SRC  = 0x49;
+		const S2A_INFO_OLD  = 0x6D; // Old GoldSource, HLTV uses it (actually called S2A_INFO_DETAILED)
 		const S2A_PLAYER    = 0x44;
 		const S2A_RULES     = 0x45;
 		const S2A_RCON      = 0x6C;
@@ -180,10 +180,10 @@
 				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
 			}
 			
-			$this->Socket->Write( self::A2S_PING );
+			$this->Socket->Write( self::A2A_PING );
 			$Buffer = $this->Socket->Read( );
 			
-			return $Buffer->GetByte( ) === self::S2A_PING;
+			return $Buffer->GetByte( ) === self::A2A_ACK;
 		}
 		
 		/**
@@ -214,7 +214,7 @@
 			$Type = $Buffer->GetByte( );
 			$Server = [];
 			
-			if( $Type === self::S2A_CHALLENGE )
+			if( $Type === self::S2C_CHALLENGE )
 			{
 				$this->Challenge = $Buffer->Get( 4 );
 
@@ -264,7 +264,7 @@
 				return $Server;
 			}
 			
-			if( $Type !== self::S2A_INFO )
+			if( $Type !== self::S2A_INFO_SRC )
 			{
 				throw new InvalidPacketException( 'GetInfo: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 			}
@@ -479,7 +479,7 @@
 			
 			switch( $Type )
 			{
-				case self::S2A_CHALLENGE:
+				case self::S2C_CHALLENGE:
 				{
 					$this->Challenge = $Buffer->Get( 4 );
 					
