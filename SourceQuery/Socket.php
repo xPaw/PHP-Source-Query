@@ -27,7 +27,7 @@
 	{
 		public function Close( ) : void
 		{
-			if( $this->Socket !== null )
+			if( $this->Socket )
 			{
 				FClose( $this->Socket );
 				
