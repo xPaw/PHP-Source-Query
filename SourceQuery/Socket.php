@@ -42,13 +42,14 @@
 			$this->Port    = $Port;
 			$this->Address = $Address;
 			
-			$this->Socket = @FSockOpen( 'udp://' . $Address, $Port, $ErrNo, $ErrStr, $Timeout );
+			$Socket = @FSockOpen( 'udp://' . $Address, $Port, $ErrNo, $ErrStr, $Timeout );
 			
-			if( $ErrNo || $this->Socket === false )
+			if( $ErrNo || $Socket === false )
 			{
 				throw new SocketException( 'Could not create socket: ' . $ErrStr, SocketException::COULD_NOT_CREATE_SOCKET );
 			}
 			
+			$this->Socket = $Socket;
 			Stream_Set_Timeout( $this->Socket, $Timeout );
 			Stream_Set_Blocking( $this->Socket, true );
 		}

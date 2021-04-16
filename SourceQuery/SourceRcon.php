@@ -57,13 +57,14 @@
 		{
 			if( !$this->RconSocket )
 			{
-				$this->RconSocket = @FSockOpen( $this->Socket->Address, $this->Socket->Port, $ErrNo, $ErrStr, $this->Socket->Timeout );
+				$RconSocket = @FSockOpen( $this->Socket->Address, $this->Socket->Port, $ErrNo, $ErrStr, $this->Socket->Timeout );
 				
-				if( $ErrNo || !$this->RconSocket )
+				if( $ErrNo || !$RconSocket )
 				{
 					throw new SocketException( 'Can\'t connect to RCON server: ' . $ErrStr, SocketException::CONNECTION_FAILED );
 				}
 				
+				$this->RconSocket = $RconSocket;
 				Stream_Set_Timeout( $this->RconSocket, $this->Socket->Timeout );
 				Stream_Set_Blocking( $this->RconSocket, true );
 			}
