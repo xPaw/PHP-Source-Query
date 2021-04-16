@@ -22,8 +22,8 @@
 	},
 	"require-dev":
 	{
-		"phpunit/phpunit": "9.2",
-		"vimeo/psalm": "^3.12"
+		"phpunit/phpunit": "^9.5",
+		"vimeo/psalm": "^4.7"
 	},
 	"autoload":
 	{
