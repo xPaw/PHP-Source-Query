@@ -23,7 +23,8 @@
 	"require-dev":
 	{
 		"phpunit/phpunit": "^9.5",
-		"vimeo/psalm": "^4.7"
+		"vimeo/psalm": "^4.7",
+		"phpstan/phpstan": "^0.12.83"
 	},
 	"autoload":
 	{

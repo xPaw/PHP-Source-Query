@@ -25,7 +25,7 @@
 	 */
 	abstract class BaseSocket
 	{
-		/** @var resource */
+		/** @var ?resource */
 		public $Socket;
 		public int $Engine;
 		
@@ -108,30 +108,30 @@
 				}
 				while( $ReadMore && $SherlockFunction( $Buffer, $Length ) );
 				
-				$Data = Implode( $Packets );
+				$Data = implode( $Packets );
 				
 				// TODO: Test this
 				if( $IsCompressed )
 				{
 					// Let's make sure this function exists, it's not included in PHP by default
-					if( !Function_Exists( 'bzdecompress' ) )
+					if( !function_exists( 'bzdecompress' ) )
 					{
 						throw new \RuntimeException( 'Received compressed packet, PHP doesn\'t have Bzip2 library installed, can\'t decompress.' );
 					}
 					
 					$Data = bzdecompress( $Data );
 					
-					if( !is_string( $Data ) || CRC32( $Data ) !== $PacketChecksum )
+					if( !is_string( $Data ) || crc32( $Data ) !== $PacketChecksum )
 					{
 						throw new InvalidPacketException( 'CRC32 checksum mismatch of uncompressed packet data.', InvalidPacketException::CHECKSUM_MISMATCH );
 					}
 				}
 				
-				$Buffer->Set( SubStr( $Data, 4 ) );
+				$Buffer->Set( substr( $Data, 4 ) );
 			}
 			else
 			{
-				throw new InvalidPacketException( 'Socket read: Raw packet header mismatch. (0x' . DecHex( $Header ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
+				throw new InvalidPacketException( 'Socket read: Raw packet header mismatch. (0x' . dechex( $Header ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 			}
 			
 			return $Buffer;

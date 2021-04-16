@@ -29,7 +29,7 @@
 		{
 			if( $this->Socket !== null )
 			{
-				FClose( $this->Socket );
+				fclose( $this->Socket );
 				
 				$this->Socket = null;
 			}
@@ -42,7 +42,7 @@
 			$this->Port    = $Port;
 			$this->Address = $Address;
 			
-			$Socket = @FSockOpen( 'udp://' . $Address, $Port, $ErrNo, $ErrStr, $Timeout );
+			$Socket = @fsockopen( 'udp://' . $Address, $Port, $ErrNo, $ErrStr, $Timeout );
 			
 			if( $ErrNo || $Socket === false )
 			{
@@ -50,16 +50,16 @@
 			}
 			
 			$this->Socket = $Socket;
-			Stream_Set_Timeout( $this->Socket, $Timeout );
-			Stream_Set_Blocking( $this->Socket, true );
+			stream_set_timeout( $this->Socket, $Timeout );
+			stream_set_blocking( $this->Socket, true );
 		}
 		
 		public function Write( int $Header, string $String = '' ) : bool
 		{
-			$Command = Pack( 'ccccca*', 0xFF, 0xFF, 0xFF, 0xFF, $Header, $String );
-			$Length  = StrLen( $Command );
+			$Command = pack( 'ccccca*', 0xFF, 0xFF, 0xFF, 0xFF, $Header, $String );
+			$Length  = strlen( $Command );
 			
-			return $Length === FWrite( $this->Socket, $Command, $Length );
+			return $Length === fwrite( $this->Socket, $Command, $Length );
 		}
 		
 		/**
@@ -72,7 +72,7 @@
 		public function Read( int $Length = 1400 ) : Buffer
 		{
 			$Buffer = new Buffer( );
-			$Buffer->Set( FRead( $this->Socket, $Length ) );
+			$Buffer->Set( fread( $this->Socket, $Length ) );
 			
 			$this->ReadInternal( $Buffer, $Length, [ $this, 'Sherlock' ] );
 			
@@ -81,9 +81,9 @@
 		
 		public function Sherlock( Buffer $Buffer, int $Length ) : bool
 		{
-			$Data = FRead( $this->Socket, $Length );
+			$Data = fread( $this->Socket, $Length );
 			
-			if( StrLen( $Data ) < 4 )
+			if( strlen( $Data ) < 4 )
 			{
 				return false;
 			}

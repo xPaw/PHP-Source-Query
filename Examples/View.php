@@ -10,13 +10,13 @@
 	define( 'SQ_ENGINE',      SourceQuery::SOURCE );
 	// Edit this <-
 	
-	$Timer = MicroTime( true );
+	$Timer = microtime( true );
 	
 	$Query = new SourceQuery( );
 	
-	$Info    = Array( );
-	$Rules   = Array( );
-	$Players = Array( );
+	$Info    = [];
+	$Rules   = [];
+	$Players = [];
 	$Exception = null;
 	
 	try
@@ -37,7 +37,7 @@
 		$Query->Disconnect( );
 	}
 	
-	$Timer = Number_Format( MicroTime( true ) - $Timer, 4, '.', '' );
+	$Timer = number_format( microtime( true ) - $Timer, 4, '.', '' );
 ?>
 <!DOCTYPE html>
 <html>
@@ -103,12 +103,12 @@
 						</tr>
 					</thead>
 					<tbody>
-<?php if( Is_Array( $Info ) ): ?>
+<?php if( !empty( $Info ) ): ?>
 <?php foreach( $Info as $InfoKey => $InfoValue ): ?>
 						<tr>
 							<td><?php echo htmlspecialchars( $InfoKey ); ?></td>
 							<td><?php
-	if( Is_Array( $InfoValue ) )
+	if( is_array( $InfoValue ) )
 	{
 		echo "<pre>";
 		print_r( $InfoValue );
@@ -176,7 +176,7 @@
 						</tr>
 					</thead>
 					<tbody>
-<?php if( Is_Array( $Rules ) ): ?>
+<?php if( !empty( $Rules ) ): ?>
 <?php foreach( $Rules as $Rule => $Value ): ?>
 						<tr>
 							<td><?php echo htmlspecialchars( $Rule ); ?></td>

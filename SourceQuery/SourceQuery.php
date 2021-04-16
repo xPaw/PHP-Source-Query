@@ -240,8 +240,8 @@
 				$Server[ 'Players' ]    = $Buffer->GetByte( );
 				$Server[ 'MaxPlayers' ] = $Buffer->GetByte( );
 				$Server[ 'Protocol' ]   = $Buffer->GetByte( );
-				$Server[ 'Dedicated' ]  = Chr( $Buffer->GetByte( ) );
-				$Server[ 'Os' ]         = Chr( $Buffer->GetByte( ) );
+				$Server[ 'Dedicated' ]  = chr( $Buffer->GetByte( ) );
+				$Server[ 'Os' ]         = chr( $Buffer->GetByte( ) );
 				$Server[ 'Password' ]   = $Buffer->GetByte( ) === 1;
 				$Server[ 'IsMod' ]      = $Buffer->GetByte( ) === 1;
 				
@@ -266,7 +266,7 @@
 			
 			if( $Type !== self::S2A_INFO_SRC )
 			{
-				throw new InvalidPacketException( 'GetInfo: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
+				throw new InvalidPacketException( 'GetInfo: Packet header mismatch. (0x' . dechex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 			}
 			
 			$Server[ 'Protocol' ]   = $Buffer->GetByte( );
@@ -278,8 +278,8 @@
 			$Server[ 'Players' ]    = $Buffer->GetByte( );
 			$Server[ 'MaxPlayers' ] = $Buffer->GetByte( );
 			$Server[ 'Bots' ]       = $Buffer->GetByte( );
-			$Server[ 'Dedicated' ]  = Chr( $Buffer->GetByte( ) );
-			$Server[ 'Os' ]         = Chr( $Buffer->GetByte( ) );
+			$Server[ 'Dedicated' ]  = chr( $Buffer->GetByte( ) );
+			$Server[ 'Os' ]         = chr( $Buffer->GetByte( ) );
 			$Server[ 'Password' ]   = $Buffer->GetByte( ) === 1;
 			$Server[ 'Secure' ]     = $Buffer->GetByte( ) === 1;
 			
@@ -390,7 +390,7 @@
 			
 			if( $Type !== self::S2A_PLAYER )
 			{
-				throw new InvalidPacketException( 'GetPlayers: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
+				throw new InvalidPacketException( 'GetPlayers: Packet header mismatch. (0x' . dechex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 			}
 			
 			$Players = [];
@@ -403,7 +403,7 @@
 				$Player[ 'Name' ]  = $Buffer->GetString( );
 				$Player[ 'Frags' ] = $Buffer->GetLong( );
 				$Player[ 'Time' ]  = (int)$Buffer->GetFloat( );
-				$Player[ 'TimeF' ] = GMDate( ( $Player[ 'Time' ] > 3600 ? "H:i:s" : "i:s" ), $Player[ 'Time' ] );
+				$Player[ 'TimeF' ] = gmdate( ( $Player[ 'Time' ] > 3600 ? 'H:i:s' : 'i:s' ), $Player[ 'Time' ] );
 				
 				$Players[ ] = $Player;
 			}
@@ -435,7 +435,7 @@
 			
 			if( $Type !== self::S2A_RULES )
 			{
-				throw new InvalidPacketException( 'GetRules: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
+				throw new InvalidPacketException( 'GetRules: Packet header mismatch. (0x' . dechex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 			}
 			
 			$Rules = [];
@@ -446,7 +446,7 @@
 				$Rule  = $Buffer->GetString( );
 				$Value = $Buffer->GetString( );
 				
-				if( !Empty( $Rule ) )
+				if( !empty( $Rule ) )
 				{
 					$Rules[ $Rule ] = $Value;
 				}
@@ -497,7 +497,7 @@
 				}
 				default:
 				{
-					throw new InvalidPacketException( 'GetChallenge: Packet header mismatch. (0x' . DecHex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
+					throw new InvalidPacketException( 'GetChallenge: Packet header mismatch. (0x' . dechex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 				}
 			}
 		}

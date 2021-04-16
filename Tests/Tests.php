@@ -6,10 +6,12 @@
 	
 	class TestableSocket extends BaseSocket
 	{
+		/** @var \SplQueue<string> */
 		private \SplQueue $PacketQueue;
 		
 		public function __construct( )
 		{
+			/** @var \SplQueue<string> */
 			$this->PacketQueue = new \SplQueue();
 			$this->PacketQueue->setIteratorMode( \SplDoublyLinkedList::IT_MODE_DELETE );
 			
@@ -41,7 +43,7 @@
 		public function Read( int $Length = 1400 ) : Buffer
 		{
 			$Buffer = new Buffer( );
-			$Buffer->Set( (string)$this->PacketQueue->shift() );
+			$Buffer->Set( $this->PacketQueue->shift() );
 			
 			$this->ReadInternal( $Buffer, $Length, [ $this, 'Sherlock' ] );
 			
@@ -55,7 +57,7 @@
 				return false;
 			}
 			
-			$Buffer->Set( (string)$this->PacketQueue->shift() );
+			$Buffer->Set( $this->PacketQueue->shift() );
 			
 			return $Buffer->GetLong( ) === -2;
 		}
@@ -245,6 +247,7 @@
 		
 		/**
 		 * @dataProvider RulesProvider
+		 * @param array<string> $RawInput
 		 */
 		public function testGetRules( array $RawInput, array $ExpectedOutput ) : void
 		{
@@ -280,6 +283,7 @@
 		
 		/**
 		 * @dataProvider PlayersProvider
+		 * @param array<string> $RawInput
 		 */
 		public function testGetPlayers( array $RawInput, array $ExpectedOutput ) : void
 		{

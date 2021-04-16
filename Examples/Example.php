@@ -4,8 +4,8 @@
 	use xPaw\SourceQuery\SourceQuery;
 	
 	// For the sake of this example
-	Header( 'Content-Type: text/plain' );
-	Header( 'X-Content-Type-Options: nosniff' );
+	header( 'Content-Type: text/plain' );
+	header( 'X-Content-Type-Options: nosniff' );
 	
 	// Edit this ->
 	define( 'SQ_SERVER_ADDR', 'localhost' );

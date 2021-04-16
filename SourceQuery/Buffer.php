@@ -44,7 +44,7 @@
 		public function Set( string $Buffer ) : void
 		{
 			$this->Buffer   = $Buffer;
-			$this->Length   = StrLen( $Buffer );
+			$this->Length   = strlen( $Buffer );
 			$this->Position = 0;
 		}
 		
@@ -81,7 +81,7 @@
 				return '';
 			}
 			
-			$Data = SubStr( $this->Buffer, $this->Position, $Length );
+			$Data = substr( $this->Buffer, $this->Position, $Length );
 			
 			$this->Position += $Length;
 			
@@ -93,7 +93,7 @@
 		 */
 		public function GetByte( ) : int
 		{
-			return Ord( $this->Get( 1 ) );
+			return ord( $this->Get( 1 ) );
 		}
 		
 		/**
@@ -106,7 +106,7 @@
 				throw new InvalidPacketException( 'Not enough data to unpack a short.', InvalidPacketException::BUFFER_EMPTY );
 			}
 			
-			$Data = UnPack( 'v', $this->Get( 2 ) );
+			$Data = unpack( 'v', $this->Get( 2 ) );
 			
 			return (int)$Data[ 1 ];
 		}
@@ -121,7 +121,7 @@
 				throw new InvalidPacketException( 'Not enough data to unpack a long.', InvalidPacketException::BUFFER_EMPTY );
 			}
 			
-			$Data = UnPack( 'l', $this->Get( 4 ) );
+			$Data = unpack( 'l', $this->Get( 4 ) );
 			
 			return (int)$Data[ 1 ];
 		}
@@ -136,7 +136,7 @@
 				throw new InvalidPacketException( 'Not enough data to unpack a float.', InvalidPacketException::BUFFER_EMPTY );
 			}
 			
-			$Data = UnPack( 'f', $this->Get( 4 ) );
+			$Data = unpack( 'f', $this->Get( 4 ) );
 			
 			return (float)$Data[ 1 ];
 		}
@@ -151,7 +151,7 @@
 				throw new InvalidPacketException( 'Not enough data to unpack an usigned long.', InvalidPacketException::BUFFER_EMPTY );
 			}
 			
-			$Data = UnPack( 'V', $this->Get( 4 ) );
+			$Data = unpack( 'V', $this->Get( 4 ) );
 			
 			return (int)$Data[ 1 ];
 		}
@@ -161,7 +161,7 @@
 		 */
 		public function GetString( ) : string
 		{
-			$ZeroBytePosition = StrPos( $this->Buffer, "\0", $this->Position );
+			$ZeroBytePosition = strpos( $this->Buffer, "\0", $this->Position );
 			
 			if( $ZeroBytePosition === false )
 			{
