@@ -19,9 +19,9 @@
 	"require":
 	{
 		"php": ">=7.4",
-		"ext-bz2":  ">7.*",
-		"ext-gmp":  ">7.*",
-		"ext-json":  ">7.*"
+		"ext-bz2":  ">=7.4",
+		"ext-gmp":  ">=7.4",
+		"ext-json":  ">=7.4"
 	},
 	"require-dev":
 	{

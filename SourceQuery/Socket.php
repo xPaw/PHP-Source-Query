@@ -33,10 +33,10 @@ final class Socket extends BaseSocket
      */
     public function Close(): void
     {
-        if ($this->Socket !== null) {
+        if ($this->Socket !== null && $this->Socket !== 0) {
             fclose($this->Socket);
 
-            $this->Socket = 0;
+            $this->Socket = null;
         }
     }
 
@@ -94,7 +94,13 @@ final class Socket extends BaseSocket
     public function Read(int $Length = 1400): Buffer
     {
         $Buffer = new Buffer();
-        $Buffer->Set(fread($this->Socket, $Length));
+        $data = fread($this->Socket, $Length);
+
+        if (!$data) {
+            throw new SocketException('Failed to open socket.');
+        }
+
+        $Buffer->Set($data);
 
         $this->ReadInternal($Buffer, $Length, [ $this, 'Sherlock' ]);
 

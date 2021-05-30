@@ -29,7 +29,7 @@ use xPaw\SourceQuery\Exception\SocketException;
 abstract class BaseSocket
 {
     /**
-     * @var resource
+     * @var resource|null
      */
     public $Socket;
 

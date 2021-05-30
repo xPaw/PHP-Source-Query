@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/../SourceQuery/bootstrap.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 use xPaw\SourceQuery\SourceQuery;
 
@@ -115,6 +115,8 @@ $Timer = number_format(microtime(true) - $Timer, 4, '.', '');
         echo 'true';
     } elseif ($InfoValue === false) {
         echo 'false';
+    } elseif (is_int($InfoValue)) {
+        echo $InfoValue;
     } else {
         echo htmlspecialchars($InfoValue);
     }
