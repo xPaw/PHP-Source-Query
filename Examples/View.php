@@ -1,43 +1,42 @@
 <?php
-	require __DIR__ . '/../SourceQuery/bootstrap.php';
 
-	use xPaw\SourceQuery\SourceQuery;
-	
-	// Edit this ->
-	define( 'SQ_SERVER_ADDR', 'localhost' );
-	define( 'SQ_SERVER_PORT', 27015 );
-	define( 'SQ_TIMEOUT',     3 );
-	define( 'SQ_ENGINE',      SourceQuery::SOURCE );
-	// Edit this <-
-	
-	$Timer = microtime( true );
-	
-	$Query = new SourceQuery( );
-	
-	$Info    = [];
-	$Rules   = [];
-	$Players = [];
-	$Exception = null;
-	
-	try
-	{
-		$Query->Connect( SQ_SERVER_ADDR, SQ_SERVER_PORT, SQ_TIMEOUT, SQ_ENGINE );
-		//$Query->SetUseOldGetChallengeMethod( true ); // Use this when players/rules retrieval fails on games like Starbound
-		
-		$Info    = $Query->GetInfo( );
-		$Players = $Query->GetPlayers( );
-		$Rules   = $Query->GetRules( );
-	}
-	catch( Exception $e )
-	{
-		$Exception = $e;
-	}
-	finally
-	{
-		$Query->Disconnect( );
-	}
-	
-	$Timer = number_format( microtime( true ) - $Timer, 4, '.', '' );
+declare(strict_types=1);
+
+require __DIR__ . '/../SourceQuery/bootstrap.php';
+
+use xPaw\SourceQuery\SourceQuery;
+
+// Edit this ->
+define('SQ_SERVER_ADDR', 'localhost');
+define('SQ_SERVER_PORT', 27015);
+define('SQ_TIMEOUT', 3);
+define('SQ_ENGINE', SourceQuery::SOURCE);
+// Edit this <-
+
+$Timer = microtime(true);
+
+$Query = new SourceQuery();
+
+$Info    = [];
+$Rules   = [];
+$Players = [];
+$Exception = null;
+
+try {
+    $Query->Connect(SQ_SERVER_ADDR, SQ_SERVER_PORT, SQ_TIMEOUT, SQ_ENGINE);
+    //$Query->SetUseOldGetChallengeMethod( true ); // Use this when players/rules retrieval fails on games like Starbound
+
+    $Info    = $Query->GetInfo();
+    $Players = $Query->GetPlayers();
+    $Rules   = $Query->GetRules();
+} catch (Exception $e) {
+    $Exception = $e;
+} finally {
+    $Query->Disconnect();
+}
+
+$Timer = number_format(microtime(true) - $Timer, 4, '.', '');
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -88,9 +87,9 @@
 	</div>
 		
 	<div class="container">
-<?php if( $Exception !== null ): ?>
+<?php if ($Exception !== null): ?>
 		<div class="panel panel-error">
-			<pre class="panel-body"><?php echo htmlspecialchars( $Exception->__toString( ) ); ?></pre>
+			<pre class="panel-body"><?php echo htmlspecialchars($Exception->__toString()); ?></pre>
 		</div>
 <?php endif; ?>
 		<div class="row">
@@ -103,32 +102,24 @@
 						</tr>
 					</thead>
 					<tbody>
-<?php if( !empty( $Info ) ): ?>
-<?php foreach( $Info as $InfoKey => $InfoValue ): ?>
+<?php if (!empty($Info)): ?>
+<?php foreach ($Info as $InfoKey => $InfoValue): ?>
 						<tr>
-							<td><?php echo htmlspecialchars( $InfoKey ); ?></td>
+							<td><?php echo htmlspecialchars($InfoKey); ?></td>
 							<td><?php
-	if( is_array( $InfoValue ) )
-	{
-		echo "<pre>";
-		print_r( $InfoValue );
-		echo "</pre>";
-	}
-	else
-	{
-		if( $InfoValue === true )
-		{
-			echo 'true';
-		}
-		else if( $InfoValue === false )
-		{
-			echo 'false';
-		}
-		else
-		{
-			echo htmlspecialchars( $InfoValue );
-		}
-	}
+    if (is_array($InfoValue)) {
+        echo "<pre>";
+        print_r($InfoValue);
+        echo "</pre>";
+    } else {
+        if ($InfoValue === true) {
+            echo 'true';
+        } elseif ($InfoValue === false) {
+            echo 'false';
+        } else {
+            echo htmlspecialchars($InfoValue);
+        }
+    }
 ?></td>
 						</tr>
 <?php endforeach; ?>
@@ -144,16 +135,16 @@
 				<table class="table table-bordered table-striped">
 					<thead>
 						<tr>
-							<th>Player <span class="label label-info"><?php echo count( $Players ); ?></span></th>
+							<th>Player <span class="label label-info"><?php echo count($Players); ?></span></th>
 							<th class="frags-column">Frags</th>
 							<th class="frags-column">Time</th>
 						</tr>
 					</thead>
 					<tbody>
-<?php if( !empty( $Players ) ): ?>
-<?php foreach( $Players as $Player ): ?>
+<?php if (!empty($Players)): ?>
+<?php foreach ($Players as $Player): ?>
 						<tr>
-							<td><?php echo htmlspecialchars( $Player[ 'Name' ] ); ?></td>
+							<td><?php echo htmlspecialchars($Player[ 'Name' ]); ?></td>
 							<td><?php echo $Player[ 'Frags' ]; ?></td>
 							<td><?php echo $Player[ 'TimeF' ]; ?></td>
 						</tr>
@@ -172,15 +163,15 @@
 				<table class="table table-bordered table-striped">
 					<thead>
 						<tr>
-							<th colspan="2">Rules <span class="label label-info"><?php echo count( $Rules ); ?></span></th>
+							<th colspan="2">Rules <span class="label label-info"><?php echo count($Rules); ?></span></th>
 						</tr>
 					</thead>
 					<tbody>
-<?php if( !empty( $Rules ) ): ?>
-<?php foreach( $Rules as $Rule => $Value ): ?>
+<?php if (!empty($Rules)): ?>
+<?php foreach ($Rules as $Rule => $Value): ?>
 						<tr>
-							<td><?php echo htmlspecialchars( $Rule ); ?></td>
-							<td><?php echo htmlspecialchars( $Value ); ?></td>
+							<td><?php echo htmlspecialchars($Rule); ?></td>
+							<td><?php echo htmlspecialchars($Value); ?></td>
 						</tr>
 <?php endforeach; ?>
 <?php else: ?>

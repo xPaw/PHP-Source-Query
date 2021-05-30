@@ -1,19 +1,22 @@
 <?php
-	/**
-	 * @author Pavel Djundik
-	 *
-	 * @link https://xpaw.me
-	 * @link https://github.com/xPaw/PHP-Source-Query
-	 *
-	 * @license GNU Lesser General Public License, version 2.1
-	 *
-	 * @internal
-	 */
 
-	namespace xPaw\SourceQuery\Exception;
+declare(strict_types=1);
 
-	class AuthenticationException extends SourceQueryException
-	{
-		const BAD_PASSWORD = 1;
-		const BANNED = 2;
-	}
+/**
+ * @author Pavel Djundik
+ *
+ * @link https://xpaw.me
+ * @link https://github.com/xPaw/PHP-Source-Query
+ *
+ * @license GNU Lesser General Public License, version 2.1
+ *
+ * @internal
+ */
+
+namespace xPaw\SourceQuery\Exception;
+
+final class AuthenticationException extends SourceQueryException
+{
+    public const BAD_PASSWORD = 1;
+    public const BANNED = 2;
+}

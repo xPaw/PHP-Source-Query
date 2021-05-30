@@ -24,7 +24,8 @@
 	{
 		"phpunit/phpunit": "^9.5",
 		"vimeo/psalm": "^4.7",
-		"phpstan/phpstan": "^0.12.83"
+		"phpstan/phpstan": "^0.12.83",
+		"friendsofphp/php-cs-fixer": "^3.0"
 	},
 	"autoload":
 	{
