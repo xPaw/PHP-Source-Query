@@ -39,7 +39,7 @@ $Timer = number_format(microtime(true) - $Timer, 4, '.', '');
 
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 	<meta charset="utf-8">
 	<title>Source Query PHP Library</title>
@@ -111,14 +111,12 @@ $Timer = number_format(microtime(true) - $Timer, 4, '.', '');
         echo "<pre>";
         print_r($InfoValue);
         echo "</pre>";
+    } elseif ($InfoValue === true) {
+        echo 'true';
+    } elseif ($InfoValue === false) {
+        echo 'false';
     } else {
-        if ($InfoValue === true) {
-            echo 'true';
-        } elseif ($InfoValue === false) {
-            echo 'false';
-        } else {
-            echo htmlspecialchars($InfoValue);
-        }
+        echo htmlspecialchars($InfoValue);
     }
 ?></td>
 						</tr>

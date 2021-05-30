@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace xPaw\SourceQuery;
 
+use RuntimeException;
 use xPaw\SourceQuery\Exception\AuthenticationException;
 use xPaw\SourceQuery\Exception\InvalidArgumentException;
 use xPaw\SourceQuery\Exception\InvalidPacketException;
@@ -98,11 +99,17 @@ final class SourceQuery
      */
     private bool $UseOldGetChallengeMethod = false;
 
+    /**
+     * @param BaseSocket|null $Socket
+     */
     public function __construct(BaseSocket $Socket = null)
     {
         $this->Socket = $Socket ?: new Socket();
     }
 
+    /**
+     * Destructor
+     */
     public function __destruct()
     {
         $this->Disconnect();
@@ -137,7 +144,7 @@ final class SourceQuery
      *
      * @param bool $Value Set to true to force old method
      *
-     * @returns bool Previous value
+     * @return bool Previous value
      */
     public function SetUseOldGetChallengeMethod(bool $Value): bool
     {
@@ -299,7 +306,6 @@ final class SourceQuery
             if ($Flags & 0x10) {
                 $SteamIDLower    = $Buffer->GetUnsignedLong();
                 $SteamIDInstance = $Buffer->GetUnsignedLong(); // This gets shifted by 32 bits, which should be steamid instance
-                $SteamID = 0;
 
                 if (PHP_INT_SIZE === 4) {
                     if (extension_loaded('gmp')) {
@@ -307,7 +313,7 @@ final class SourceQuery
                         $SteamIDInstance = gmp_abs($SteamIDInstance);
                         $SteamID         = gmp_strval(gmp_or($SteamIDLower, gmp_mul($SteamIDInstance, gmp_pow(2, 32))));
                     } else {
-                        throw new \RuntimeException('Either 64-bit PHP installation or "gmp" module is required to correctly parse server\'s steamid.');
+                        throw new RuntimeException('Either 64-bit PHP installation or "gmp" module is required to correctly parse server\'s steamid.');
                     }
                 } else {
                     $SteamID = $SteamIDLower | ($SteamIDInstance << 32);
@@ -334,7 +340,7 @@ final class SourceQuery
                 $Server[ 'GameID' ] = $Buffer->GetUnsignedLong() | ($Buffer->GetUnsignedLong() << 32);
             }
 
-            if ($Buffer->Remaining() > 0) {
+            if (!$Buffer->isEmpty()) {
                 throw new InvalidPacketException(
                     'GetInfo: unread data? ' . $Buffer->Remaining() . ' bytes remaining in the buffer. Please report it to the library developer.',
                     InvalidPacketException::BUFFER_NOT_EMPTY
@@ -431,7 +437,11 @@ final class SourceQuery
     /**
      * Get challenge (used for players/rules packets)
      *
+     * @param int $Header
+     * @param int $ExpectedResult
+     *
      * @throws InvalidPacketException
+     * @throws SocketException
      */
     private function GetChallenge(int $Header, int $ExpectedResult): void
     {
@@ -488,13 +498,13 @@ final class SourceQuery
         }
 
         switch ($this->Socket->Engine) {
-            case SourceQuery::GOLDSOURCE:
+            case self::GOLDSOURCE:
             {
                 $this->Rcon = new GoldSourceRcon($this->Socket);
 
                 break;
             }
-            case SourceQuery::SOURCE:
+            case self::SOURCE:
             {
                 $this->Rcon = new SourceRcon($this->Socket);
 

@@ -18,7 +18,10 @@
 	],
 	"require":
 	{
-		"php": ">=7.4"
+		"php": ">=7.4",
+		"ext-bz2":  ">7.*",
+		"ext-gmp":  ">7.*",
+		"ext-json":  ">7.*"
 	},
 	"require-dev":
 	{

@@ -35,15 +35,27 @@ final class SourceRcon
      */
     private BaseSocket $Socket;
 
-    /** @var ?resource */
+    /**
+     * @var ?resource
+     */
     private $RconSocket;
+
+    /**
+     * @var int $RconRequestId
+     */
     private int $RconRequestId = 0;
 
+    /**
+     * @param BaseSocket $Socket
+     */
     public function __construct(BaseSocket $Socket)
     {
         $this->Socket = $Socket;
     }
 
+    /**
+     * Close
+     */
     public function Close(): void
     {
         if ($this->RconSocket) {
@@ -55,6 +67,9 @@ final class SourceRcon
         $this->RconRequestId = 0;
     }
 
+    /**
+     * @throws SocketException
+     */
     public function Open(): void
     {
         if (!$this->RconSocket) {
@@ -70,6 +85,12 @@ final class SourceRcon
         }
     }
 
+    /**
+     * @param int $Header
+     * @param string $String
+     *
+     * @return bool
+     */
     public function Write(int $Header, string $String = ''): bool
     {
         // Pack the packet together
@@ -82,6 +103,11 @@ final class SourceRcon
         return $Length === fwrite($this->RconSocket, $Command, $Length);
     }
 
+    /**
+     * @return Buffer
+     *
+     * @throws InvalidPacketException
+     */
     public function Read(): Buffer
     {
         $Buffer = new Buffer();
@@ -117,6 +143,14 @@ final class SourceRcon
         return $Buffer;
     }
 
+    /**
+     * @param string $Command
+     *
+     * @return string
+     *
+     * @throws AuthenticationException
+     * @throws InvalidPacketException
+     */
     public function Command(string $Command): string
     {
         $this->Write(SourceQuery::SERVERDATA_EXECCOMMAND, $Command);
@@ -161,6 +195,12 @@ final class SourceRcon
         return rtrim($Data, "\0");
     }
 
+    /**
+     * @param string $Password
+     *
+     * @throws AuthenticationException
+     * @throws InvalidPacketException
+     */
     public function Authorize(string $Password): void
     {
         $this->Write(SourceQuery::SERVERDATA_AUTH, $Password);

@@ -22,7 +22,7 @@ use xPaw\SourceQuery\Exception\InvalidPacketException;
  *
  * @package xPaw\SourceQuery
  *
- * @uses xPaw\SourceQuery\Exception\InvalidPacketException
+ * @uses InvalidPacketException
  */
 final class Buffer
 {
@@ -43,6 +43,8 @@ final class Buffer
 
     /**
      * Sets buffer
+     *
+     * @param string $Buffer
      */
     public function Set(string $Buffer): void
     {
@@ -62,9 +64,19 @@ final class Buffer
     }
 
     /**
+     * @return bool
+     */
+    public function isEmpty(): bool
+    {
+        return $this->Remaining() <= 0;
+    }
+
+    /**
      * Gets data from buffer
      *
      * @param int $Length Bytes to read
+     *
+     * @return string
      */
     public function Get(int $Length = -1): string
     {
@@ -97,6 +109,8 @@ final class Buffer
 
     /**
      * Get short from buffer
+     *
+     * @throws InvalidPacketException
      */
     public function GetShort(): int
     {
@@ -111,6 +125,8 @@ final class Buffer
 
     /**
      * Get long from buffer
+     *
+     * @throws InvalidPacketException
      */
     public function GetLong(): int
     {
@@ -125,6 +141,8 @@ final class Buffer
 
     /**
      * Get float from buffer
+     *
+     * @throws InvalidPacketException
      */
     public function GetFloat(): float
     {
@@ -139,6 +157,8 @@ final class Buffer
 
     /**
      * Get unsigned long from buffer
+     *
+     * @throws InvalidPacketException
      */
     public function GetUnsignedLong(): int
     {

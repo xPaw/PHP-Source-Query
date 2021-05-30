@@ -28,15 +28,26 @@ use xPaw\SourceQuery\Exception\SocketException;
  */
 final class Socket extends BaseSocket
 {
+    /**
+     * Close
+     */
     public function Close(): void
     {
         if ($this->Socket !== null) {
             fclose($this->Socket);
 
-            $this->Socket = null;
+            $this->Socket = 0;
         }
     }
 
+    /**
+     * @param string $Address
+     * @param int $Port
+     * @param int $Timeout
+     * @param int $Engine
+     *
+     * @throws SocketException
+     */
     public function Open(string $Address, int $Port, int $Timeout, int $Engine): void
     {
         $this->Timeout = $Timeout;
@@ -55,6 +66,12 @@ final class Socket extends BaseSocket
         stream_set_blocking($this->Socket, true);
     }
 
+    /**
+     * @param int $Header
+     * @param string $String
+     *
+     * @return bool
+     */
     public function Write(int $Header, string $String = ''): bool
     {
         $Command = pack('ccccca*', 0xFF, 0xFF, 0xFF, 0xFF, $Header, $String);
@@ -66,9 +83,13 @@ final class Socket extends BaseSocket
     /**
      * Reads from socket and returns Buffer.
      *
-     * @throws InvalidPacketException
+     * @param int $Length
      *
      * @return Buffer Buffer
+     *
+     * @throws InvalidPacketException
+     * @throws SocketException
+     *
      */
     public function Read(int $Length = 1400): Buffer
     {
@@ -80,6 +101,14 @@ final class Socket extends BaseSocket
         return $Buffer;
     }
 
+    /**
+     * @param Buffer $Buffer
+     * @param int $Length
+     *
+     * @return bool
+     *
+     * @throws InvalidPacketException
+     */
     public function Sherlock(Buffer $Buffer, int $Length): bool
     {
         $Data = fread($this->Socket, $Length);

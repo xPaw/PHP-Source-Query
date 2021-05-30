@@ -33,28 +33,48 @@ final class GoldSourceRcon
      *
      * @var BaseSocket
      */
-    private $Socket;
+    private BaseSocket $Socket;
 
+    /**
+     * @var string $RconPassword
+     */
     private string $RconPassword = '';
+
+    /**
+     * @var string $RconChallenge
+     */
     private string $RconChallenge = '';
 
+    /**
+     * @param BaseSocket $Socket
+     */
     public function __construct(BaseSocket $Socket)
     {
         $this->Socket = $Socket;
     }
 
+    /**
+     * Close
+     */
     public function Close(): void
     {
         $this->RconChallenge = '';
         $this->RconPassword  = '';
     }
 
+    /**
+     * Open
+     */
     public function Open(): void
     {
-        //
     }
 
-    public function Write(int $Header, string $String = ''): bool
+    /**
+     * @param string $String
+     *
+     * @return bool
+     */
+    public function Write(string $String = ''): bool
     {
         $Command = pack('cccca*', 0xFF, 0xFF, 0xFF, 0xFF, $String);
         $Length  = strlen($Command);
@@ -63,17 +83,17 @@ final class GoldSourceRcon
     }
 
     /**
-     * @param int $Length
      * @throws AuthenticationException
+     * @throws InvalidPacketException
+     *
      * @return Buffer
      */
-    public function Read(int $Length = 1400): Buffer
+    public function Read(): Buffer
     {
         // GoldSource RCON has same structure as Query
         $Buffer = $this->Socket->Read();
 
         $StringBuffer = '';
-        $ReadMore = false;
 
         // There is no indentifier of the end, so we just need to continue reading
         do {
@@ -110,23 +130,36 @@ final class GoldSourceRcon
         return $Buffer;
     }
 
+    /**
+     * @param string $Command
+     *
+     * @return string
+     *
+     * @throws AuthenticationException
+     * @throws InvalidPacketException
+     */
     public function Command(string $Command): string
     {
         if (!$this->RconChallenge) {
             throw new AuthenticationException('Tried to execute a RCON command before successful authorization.', AuthenticationException::BAD_PASSWORD);
         }
 
-        $this->Write(0, 'rcon ' . $this->RconChallenge . ' "' . $this->RconPassword . '" ' . $Command . "\0");
+        $this->Write('rcon ' . $this->RconChallenge . ' "' . $this->RconPassword . '" ' . $Command . "\0");
         $Buffer = $this->Read();
 
         return $Buffer->Get();
     }
 
+    /**
+     * @param string $Password
+     *
+     * @throws AuthenticationException
+     */
     public function Authorize(string $Password): void
     {
         $this->RconPassword = $Password;
 
-        $this->Write(0, 'challenge rcon');
+        $this->Write('challenge rcon');
         $Buffer = $this->Socket->Read();
 
         if ($Buffer->Get(14) !== 'challenge rcon') {

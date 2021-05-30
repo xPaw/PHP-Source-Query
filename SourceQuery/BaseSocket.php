@@ -23,29 +23,82 @@ use xPaw\SourceQuery\Exception\SocketException;
  *
  * @package xPaw\SourceQuery
  *
- * @uses xPaw\SourceQuery\Exception\InvalidPacketException
- * @uses xPaw\SourceQuery\Exception\SocketException
+ * @uses InvalidPacketException
+ * @uses SocketException
  */
 abstract class BaseSocket
 {
-    /** @var ?resource */
+    /**
+     * @var resource
+     */
     public $Socket;
-    public int $Engine;
 
-    public string $Address;
-    public int $Port;
-    public int $Timeout;
+    /**
+     * @var int $Engine
+     */
+    public int $Engine = SourceQuery::SOURCE;
 
+    /**
+     * @var string $Address
+     */
+    public string $Address = '';
+
+    /**
+     * @var int $Port
+     */
+    public int $Port = 0;
+
+    /**
+     * @var int $Timeout
+     */
+    public int $Timeout = 0;
+
+    /**
+     * Destructor
+     */
     public function __destruct()
     {
         $this->Close();
     }
 
+    /**
+     * Close
+     */
     abstract public function Close(): void;
+
+    /**
+     * @param string $Address
+     * @param int $Port
+     * @param int $Timeout
+     * @param int $Engine
+     */
     abstract public function Open(string $Address, int $Port, int $Timeout, int $Engine): void;
+
+    /**
+     * @param int $Header
+     * @param string $String
+     *
+     * @return bool
+     */
     abstract public function Write(int $Header, string $String = ''): bool;
+
+    /**
+     * @param int $Length
+     *
+     * @return Buffer
+     */
     abstract public function Read(int $Length = 1400): Buffer;
 
+    /**
+     * @param Buffer $Buffer
+     * @param int $Length
+     * @param callable $SherlockFunction
+     *
+     * @return Buffer
+     *
+     * @throws InvalidPacketException
+     * @throws SocketException
+     */
     protected function ReadInternal(Buffer $Buffer, int $Length, callable $SherlockFunction): Buffer
     {
         if ($Buffer->Remaining() === 0) {
@@ -54,12 +107,14 @@ abstract class BaseSocket
 
         $Header = $Buffer->GetLong();
 
-        if ($Header === -1) { // Single packet
-            // We don't have to do anything
-        } elseif ($Header === -2) { // Split packet
+        // Single packet, do nothing.
+        if ($Header === -1) {
+            return $Buffer;
+        }
+
+        if ($Header === -2) { // Split packet
             $Packets      = [];
             $IsCompressed = false;
-            $ReadMore     = false;
             $PacketChecksum = null;
 
             do {
@@ -98,18 +153,13 @@ abstract class BaseSocket
 
                 $Packets[ $PacketNumber ] = $Buffer->Get();
 
-                $ReadMore = $PacketCount > sizeof($Packets);
+                $ReadMore = $PacketCount > count($Packets);
             } while ($ReadMore && $SherlockFunction($Buffer, $Length));
 
             $Data = implode($Packets);
 
             // TODO: Test this
             if ($IsCompressed) {
-                // Let's make sure this function exists, it's not included in PHP by default
-                if (!function_exists('bzdecompress')) {
-                    throw new \RuntimeException('Received compressed packet, PHP doesn\'t have Bzip2 library installed, can\'t decompress.');
-                }
-
                 $Data = bzdecompress($Data);
 
                 if (!is_string($Data) || crc32($Data) !== $PacketChecksum) {

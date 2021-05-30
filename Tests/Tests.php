@@ -6,28 +6,48 @@ use PHPUnit\Framework\TestCase;
 use xPaw\SourceQuery\BaseSocket;
 use xPaw\SourceQuery\SourceQuery;
 use xPaw\SourceQuery\Buffer;
+use xPaw\SourceQuery\Exception\AuthenticationException;
+use xPaw\SourceQuery\Exception\InvalidArgumentException;
+use xPaw\SourceQuery\Exception\InvalidPacketException;
+use xPaw\SourceQuery\Exception\SocketException;
 
 final class TestableSocket extends BaseSocket
 {
-    /** @var \SplQueue<string> */
-    private \SplQueue $PacketQueue;
+    /**
+     * @var SplQueue<string>
+     */
+    private SplQueue $PacketQueue;
 
+    /**
+     * TestableSocket constructor.
+     */
     public function __construct()
     {
-        $this->PacketQueue = new \SplQueue();
-        $this->PacketQueue->setIteratorMode(\SplDoublyLinkedList::IT_MODE_DELETE);
+        $this->PacketQueue = new SplQueue();
+        $this->PacketQueue->setIteratorMode(SplDoublyLinkedList::IT_MODE_DELETE);
     }
 
+    /**
+     * @param string $Data
+     */
     public function Queue(string $Data): void
     {
         $this->PacketQueue->push($Data);
     }
 
+    /**
+     * Close.
+     */
     public function Close(): void
     {
-        //
     }
 
+    /**
+     * @param string $Address
+     * @param int $Port
+     * @param int $Timeout
+     * @param int $Engine
+     */
     public function Open(string $Address, int $Port, int $Timeout, int $Engine): void
     {
         $this->Timeout = $Timeout;
@@ -36,11 +56,25 @@ final class TestableSocket extends BaseSocket
         $this->Address = $Address;
     }
 
+    /**
+     * @param int $Header
+     * @param string $String
+     *
+     * @return bool
+     */
     public function Write(int $Header, string $String = ''): bool
     {
         return true;
     }
 
+    /**
+     * @param int $Length
+     *
+     * @return Buffer
+     *
+     * @throws InvalidPacketException
+     * @throws SocketException
+     */
     public function Read(int $Length = 1400): Buffer
     {
         $Buffer = new Buffer();
@@ -51,7 +85,14 @@ final class TestableSocket extends BaseSocket
         return $Buffer;
     }
 
-    public function Sherlock(Buffer $Buffer, int $Length): bool
+    /**
+     * @param Buffer $Buffer
+     *
+     * @return bool
+     *
+     * @throws InvalidPacketException
+     */
+    public function Sherlock(Buffer $Buffer): bool
     {
         if ($this->PacketQueue->isEmpty()) {
             return false;
@@ -65,9 +106,20 @@ final class TestableSocket extends BaseSocket
 
 final class Tests extends TestCase
 {
+    /**
+     * @var TestableSocket $Socket
+     */
     private TestableSocket $Socket;
+
+    /**
+     * @var SourceQuery $SourceQuery
+     */
     private SourceQuery $SourceQuery;
 
+    /**
+     * @throws SocketException
+     * @throws InvalidArgumentException
+     */
     public function setUp(): void
     {
         $this->Socket = new TestableSocket();
@@ -75,6 +127,9 @@ final class Tests extends TestCase
         $this->SourceQuery->Connect('', 2);
     }
 
+    /**
+     * tearDown
+     */
     public function tearDown(): void
     {
         $this->SourceQuery->Disconnect();
@@ -82,65 +137,103 @@ final class Tests extends TestCase
         unset($this->Socket, $this->SourceQuery);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     * @throws SocketException
+     */
     public function testInvalidTimeout(): void
     {
-        $this->expectException(xPaw\SourceQuery\Exception\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $SourceQuery = new SourceQuery();
         $SourceQuery->Connect('', 2, -1);
     }
 
+    /**
+     * @throws InvalidPacketException
+     * @throws SocketException
+     */
     public function testNotConnectedGetInfo(): void
     {
-        $this->expectException(xPaw\SourceQuery\Exception\SocketException::class);
+        $this->expectException(SocketException::class);
         $this->SourceQuery->Disconnect();
         $this->SourceQuery->GetInfo();
     }
 
+    /**
+     * @throws InvalidPacketException
+     * @throws SocketException
+     */
     public function testNotConnectedPing(): void
     {
-        $this->expectException(xPaw\SourceQuery\Exception\SocketException::class);
+        $this->expectException(SocketException::class);
         $this->SourceQuery->Disconnect();
         $this->SourceQuery->Ping();
     }
 
+    /**
+     * @throws InvalidPacketException
+     * @throws SocketException
+     */
     public function testNotConnectedGetPlayers(): void
     {
-        $this->expectException(xPaw\SourceQuery\Exception\SocketException::class);
+        $this->expectException(SocketException::class);
         $this->SourceQuery->Disconnect();
         $this->SourceQuery->GetPlayers();
     }
 
     /**
-     * @expectedException xPaw\SourceQuery\Exception\SocketException
+     * @throws InvalidPacketException
+     * @throws SocketException
      */
     public function testNotConnectedGetRules(): void
     {
-        $this->expectException(xPaw\SourceQuery\Exception\SocketException::class);
+        $this->expectException(SocketException::class);
         $this->SourceQuery->Disconnect();
         $this->SourceQuery->GetRules();
     }
 
+    /**
+     * @throws SocketException
+     * @throws AuthenticationException
+     * @throws InvalidPacketException
+     */
     public function testNotConnectedSetRconPassword(): void
     {
-        $this->expectException(xPaw\SourceQuery\Exception\SocketException::class);
+        $this->expectException(SocketException::class);
         $this->SourceQuery->Disconnect();
         $this->SourceQuery->SetRconPassword('a');
     }
 
+    /**
+     * @throws AuthenticationException
+     * @throws InvalidPacketException
+     * @throws SocketException
+     */
     public function testNotConnectedRcon(): void
     {
-        $this->expectException(xPaw\SourceQuery\Exception\SocketException::class);
+        $this->expectException(SocketException::class);
         $this->SourceQuery->Disconnect();
         $this->SourceQuery->Rcon('a');
     }
 
+    /**
+     * @throws AuthenticationException
+     * @throws InvalidPacketException
+     * @throws SocketException
+     */
     public function testRconWithoutPassword(): void
     {
-        $this->expectException(xPaw\SourceQuery\Exception\SocketException::class);
+        $this->expectException(SocketException::class);
         $this->SourceQuery->Rcon('a');
     }
 
     /**
+     * @param string $RawInput
+     * @param array $ExpectedOutput
+     *
+     * @throws InvalidPacketException
+     * @throws SocketException
+     *
      * @dataProvider InfoProvider
      */
     public function testGetInfo(string $RawInput, array $ExpectedOutput): void
@@ -156,6 +249,11 @@ final class Tests extends TestCase
         self::assertEquals($ExpectedOutput, $RealOutput);
     }
 
+    /**
+     * @return array
+     *
+     * @throws JsonException
+     */
     public function InfoProvider(): array
     {
         $DataProvider = [];
@@ -166,7 +264,14 @@ final class Tests extends TestCase
             $DataProvider[] =
             [
                 hex2bin(trim(file_get_contents($File))),
-                json_decode(file_get_contents(str_replace('.raw', '.json', $File)), true)
+                json_decode(
+                    file_get_contents(
+                        str_replace('.raw', '.json', $File)
+                    ),
+                    true,
+                    512,
+                    JSON_THROW_ON_ERROR
+                )
             ];
         }
 
@@ -174,33 +279,48 @@ final class Tests extends TestCase
     }
 
     /**
+     * @param string $Data
+     *
+     * @throws InvalidPacketException
+     * @throws SocketException
+     *
      * @dataProvider BadPacketProvider
      */
     public function testBadGetInfo(string $Data): void
     {
-        $this->expectException(xPaw\SourceQuery\Exception\InvalidPacketException::class);
+        $this->expectException(InvalidPacketException::class);
         $this->Socket->Queue($Data);
 
         $this->SourceQuery->GetInfo();
     }
 
     /**
+     * @param string $Data
+     *
+     * @throws InvalidPacketException
+     * @throws SocketException
+     *
      * @dataProvider BadPacketProvider
      */
     public function testBadGetChallengeViaPlayers(string $Data): void
     {
-        $this->expectException(xPaw\SourceQuery\Exception\InvalidPacketException::class);
+        $this->expectException(InvalidPacketException::class);
         $this->Socket->Queue($Data);
 
         $this->SourceQuery->GetPlayers();
     }
 
     /**
+     * @param string $Data
+     *
+     * @throws InvalidPacketException
+     * @throws SocketException
+     *
      * @dataProvider BadPacketProvider
      */
     public function testBadGetPlayersAfterCorrectChallenge(string $Data): void
     {
-        $this->expectException(xPaw\SourceQuery\Exception\InvalidPacketException::class);
+        $this->expectException(InvalidPacketException::class);
         $this->Socket->Queue("\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11");
         $this->Socket->Queue($Data);
 
@@ -208,17 +328,25 @@ final class Tests extends TestCase
     }
 
     /**
+     * @param string $Data
+     *
+     * @throws InvalidPacketException
+     * @throws SocketException
+     *
      * @dataProvider BadPacketProvider
      */
     public function testBadGetRulesAfterCorrectChallenge(string $Data): void
     {
-        $this->expectException(xPaw\SourceQuery\Exception\InvalidPacketException::class);
+        $this->expectException(InvalidPacketException::class);
         $this->Socket->Queue("\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11");
         $this->Socket->Queue($Data);
 
         $this->SourceQuery->GetRules();
     }
 
+    /**
+     * @return string[][]
+     */
     public function BadPacketProvider(): array
     {
         return
@@ -233,6 +361,10 @@ final class Tests extends TestCase
         ];
     }
 
+    /**
+     * @throws InvalidPacketException
+     * @throws SocketException
+     */
     public function testGetChallengeTwice(): void
     {
         $this->Socket->Queue("\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11");
@@ -244,8 +376,13 @@ final class Tests extends TestCase
     }
 
     /**
+     * @param array $RawInput
+     * @param array $ExpectedOutput
+     *
+     * @throws InvalidPacketException
+     * @throws SocketException
+     *
      * @dataProvider RulesProvider
-     * @param array<string> $RawInput
      */
     public function testGetRules(array $RawInput, array $ExpectedOutput): void
     {
@@ -260,6 +397,11 @@ final class Tests extends TestCase
         self::assertEquals($ExpectedOutput, $RealOutput);
     }
 
+    /**
+     * @return array
+     *
+     * @throws JsonException
+     */
     public function RulesProvider(): array
     {
         $DataProvider = [];
@@ -270,7 +412,14 @@ final class Tests extends TestCase
             $DataProvider[] =
             [
                 file($File, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES),
-                json_decode(file_get_contents(str_replace('.raw', '.json', $File)), true)
+                json_decode(
+                    file_get_contents(
+                        str_replace('.raw', '.json', $File)
+                    ),
+                    true,
+                    512,
+                    JSON_THROW_ON_ERROR
+                )
             ];
         }
 
@@ -278,8 +427,13 @@ final class Tests extends TestCase
     }
 
     /**
+     * @param string[] $RawInput
+     * @param array $ExpectedOutput
+     *
+     * @throws InvalidPacketException
+     * @throws SocketException
+     *
      * @dataProvider PlayersProvider
-     * @param array<string> $RawInput
      */
     public function testGetPlayers(array $RawInput, array $ExpectedOutput): void
     {
@@ -294,6 +448,11 @@ final class Tests extends TestCase
         self::assertEquals($ExpectedOutput, $RealOutput);
     }
 
+    /**
+     * @return array
+     *
+     * @throws JsonException
+     */
     public function PlayersProvider(): array
     {
         $DataProvider = [];
@@ -304,13 +463,24 @@ final class Tests extends TestCase
             $DataProvider[] =
             [
                 file($File, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES),
-                json_decode(file_get_contents(str_replace('.raw', '.json', $File)), true)
+                json_decode(
+                    file_get_contents(
+                        str_replace('.raw', '.json', $File)
+                    ),
+                    true,
+                    512,
+                    JSON_THROW_ON_ERROR
+                )
             ];
         }
 
         return $DataProvider;
     }
 
+    /**
+     * @throws InvalidPacketException
+     * @throws SocketException
+     */
     public function testPing(): void
     {
         $this->Socket->Queue("\xFF\xFF\xFF\xFF\x6A\x00");
