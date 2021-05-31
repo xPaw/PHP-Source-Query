@@ -5,8 +5,8 @@ declare(strict_types=1);
 /**
  * @author Pavel Djundik
  *
- * @link https://xpaw.me
- * @link https://github.com/xPaw/PHP-Source-Query
+ * @see https://xpaw.me
+ * @see https://github.com/xPaw/PHP-Source-Query
  *
  * @license GNU Lesser General Public License, version 2.1
  *
@@ -20,24 +20,22 @@ use xPaw\SourceQuery\Exception\InvalidPacketException;
 final class Buffer
 {
     /**
-     * Buffer
+     * Buffer.
      */
     private string $buffer = '';
 
     /**
-     * Buffer length
+     * Buffer length.
      */
     private int $length = 0;
 
     /**
-     * Current position in buffer
+     * Current position in buffer.
      */
     private int $position = 0;
 
     /**
-     * Sets buffer
-     *
-     * @param string $buffer
+     * Sets buffer.
      */
     public function set(string $buffer): void
     {
@@ -47,7 +45,7 @@ final class Buffer
     }
 
     /**
-     * Get remaining bytes
+     * Get remaining bytes.
      *
      * @return int Remaining bytes in buffer
      */
@@ -56,30 +54,25 @@ final class Buffer
         return $this->length - $this->position;
     }
 
-    /**
-     * @return bool
-     */
     public function isEmpty(): bool
     {
         return $this->remaining() <= 0;
     }
 
     /**
-     * Gets data from buffer
+     * Gets data from buffer.
      *
      * @param int $length Bytes to read
-     *
-     * @return string
      */
     public function get(int $length = -1): string
     {
-        if ($length === 0) {
+        if (0 === $length) {
             return '';
         }
 
         $remaining = $this->remaining();
 
-        if ($length === -1) {
+        if (-1 === $length) {
             $length = $remaining;
         } elseif ($length > $remaining) {
             return '';
@@ -93,7 +86,7 @@ final class Buffer
     }
 
     /**
-     * Get byte from buffer
+     * Get byte from buffer.
      */
     public function getByte(): int
     {
@@ -101,7 +94,7 @@ final class Buffer
     }
 
     /**
-     * Get short from buffer
+     * Get short from buffer.
      *
      * @throws InvalidPacketException
      */
@@ -121,7 +114,7 @@ final class Buffer
     }
 
     /**
-     * Get long from buffer
+     * Get long from buffer.
      *
      * @throws InvalidPacketException
      */
@@ -141,7 +134,7 @@ final class Buffer
     }
 
     /**
-     * Get float from buffer
+     * Get float from buffer.
      *
      * @throws InvalidPacketException
      */
@@ -161,7 +154,7 @@ final class Buffer
     }
 
     /**
-     * Get unsigned long from buffer
+     * Get unsigned long from buffer.
      *
      * @throws InvalidPacketException
      */
@@ -181,19 +174,19 @@ final class Buffer
     }
 
     /**
-     * Read one string from buffer ending with null byte
+     * Read one string from buffer ending with null byte.
      */
     public function getString(): string
     {
         $zeroBytePosition = strpos($this->buffer, "\0", $this->position);
 
-        if ($zeroBytePosition === false) {
+        if (false === $zeroBytePosition) {
             return '';
         }
 
         $string = $this->get($zeroBytePosition - $this->position);
 
-        $this->position++;
+        ++$this->position;
 
         return $string;
     }

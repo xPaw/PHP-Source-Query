@@ -5,8 +5,8 @@ declare(strict_types=1);
 /**
  * @author Pavel Djundik
  *
- * @link https://xpaw.me
- * @link https://github.com/xPaw/PHP-Source-Query
+ * @see https://xpaw.me
+ * @see https://github.com/xPaw/PHP-Source-Query
  *
  * @license GNU Lesser General Public License, version 2.1
  *
@@ -22,14 +22,8 @@ use xPaw\SourceQuery\Exception\SocketException;
 
 abstract class AbstractSocket implements SocketInterface
 {
-    /**
-     * @var string $address
-     */
     public string $address = '';
 
-    /**
-     * @var int $port
-     */
     public int $port = 0;
 
     /**
@@ -39,39 +33,30 @@ abstract class AbstractSocket implements SocketInterface
      */
     public $socket;
 
-    /**
-     * @var int $timeout
-     */
     public int $timeout = 0;
 
     /**
-     * Destructor
+     * Destructor.
      */
     public function __destruct()
     {
         $this->close();
     }
 
-    /**
-     * @return string
-     */
     public function getAddress(): string
     {
         return $this->address;
     }
 
-    /**
-     * @return int
-     */
     public function getPort(): int
     {
         return $this->port;
     }
 
     /**
-     * @return resource
-     *
      * @throws InvalidArgumentException
+     *
+     * @return resource
      */
     public function getSocket()
     {
@@ -82,30 +67,23 @@ abstract class AbstractSocket implements SocketInterface
         return $this->socket;
     }
 
-    /**
-     * @return int
-     */
     public function getTimeout(): int
     {
         return $this->timeout;
     }
 
     /**
-     * @param string $address
-     * @param int $port
-     * @param int $timeout
-     *
      * @throws SocketException
      */
     public function open(string $address, int $port, int $timeout): void
     {
         $this->timeout = $timeout;
-        $this->port    = $port;
+        $this->port = $port;
         $this->address = $address;
 
         $socket = @fsockopen('udp://' . $address, $port, $errNo, $errStr, $timeout);
 
-        if ($errNo || $socket === false) {
+        if ($errNo || false === $socket) {
             throw new SocketException('Could not create socket: ' . $errStr, SocketException::COULD_NOT_CREATE_SOCKET);
         }
 
@@ -115,7 +93,7 @@ abstract class AbstractSocket implements SocketInterface
     }
 
     /**
-     * Close
+     * Close.
      */
     public function close(): void
     {
@@ -129,13 +107,10 @@ abstract class AbstractSocket implements SocketInterface
     /**
      * Reads from socket and returns Buffer.
      *
-     * @param int $length
-     *
-     * @return Buffer Buffer
-     *
      * @throws InvalidPacketException
      * @throws SocketException
      *
+     * @return Buffer Buffer
      */
     public function read(int $length = 1400): Buffer
     {
@@ -152,17 +127,12 @@ abstract class AbstractSocket implements SocketInterface
 
         $buffer->set($data);
 
-        $this->readInternal($buffer, $length, [ $this, 'sherlock' ]);
+        $this->readInternal($buffer, $length, [$this, 'sherlock']);
 
         return $buffer;
     }
 
     /**
-     * @param int $header
-     * @param string $string
-     *
-     * @return bool
-     *
      * @throws InvalidPacketException
      */
     public function write(int $header, string $string = ''): bool
@@ -172,17 +142,12 @@ abstract class AbstractSocket implements SocketInterface
         }
 
         $command = pack('ccccca*', 0xFF, 0xFF, 0xFF, 0xFF, $header, $string);
-        $length  = strlen($command);
+        $length = strlen($command);
 
         return $length === fwrite($this->socket, $command, $length);
     }
 
     /**
-     * @param Buffer $buffer
-     * @param int $length
-     *
-     * @return bool
-     *
      * @throws InvalidPacketException
      */
     public function sherlock(Buffer $buffer, int $length): bool
@@ -203,18 +168,11 @@ abstract class AbstractSocket implements SocketInterface
 
         $buffer->set($data);
 
-        return $buffer->getLong() === -2;
+        return -2 === $buffer->getLong();
     }
 
     /**
-     *
      * Get packet data (count, number, checksum) from the buffer. Different for goldsrc/src.
-     *
-     * @param Buffer $buffer
-     * @param int $count
-     * @param int $number
-     * @param bool $isCompressed
-     * @param int|null $checksum
      */
     abstract protected function readInternalPacketData(
         Buffer $buffer,
@@ -225,12 +183,6 @@ abstract class AbstractSocket implements SocketInterface
     ): void;
 
     /**
-     * @param Buffer $buffer
-     * @param int $length
-     * @param callable $sherlockFunction
-     *
-     * @return Buffer
-     *
      * @throws InvalidPacketException
      */
     protected function readInternal(Buffer $buffer, int $length, callable $sherlockFunction): Buffer
@@ -242,11 +194,11 @@ abstract class AbstractSocket implements SocketInterface
         $header = $buffer->getLong();
 
         // Single packet, do nothing.
-        if ($header === -1) {
+        if (-1 === $header) {
             return $buffer;
         }
 
-        if ($header === -2) { // Split packet
+        if (-2 === $header) { // Split packet
             $packets = [];
             $packetCount = 0;
             $packetNumber = 0;
@@ -269,7 +221,7 @@ abstract class AbstractSocket implements SocketInterface
                 $readMore = $packetCount > count($packets);
             } while ($readMore && $sherlockFunction($buffer, $length));
 
-            $data = implode($packets);
+            $data = implode('', $packets);
 
             // TODO: Test this
             if ($isCompressed) {

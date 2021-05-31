@@ -5,8 +5,8 @@ declare(strict_types=1);
 /**
  * @author Pavel Djundik
  *
- * @link https://xpaw.me
- * @link https://github.com/xPaw/PHP-Source-Query
+ * @see https://xpaw.me
+ * @see https://github.com/xPaw/PHP-Source-Query
  *
  * @license GNU Lesser General Public License, version 2.1
  *
@@ -25,7 +25,7 @@ use xPaw\SourceQuery\SourceQuery;
 final class SourceRcon extends AbstractRcon
 {
     /**
-     * Points to socket class
+     * Points to socket class.
      */
     private SocketInterface $socket;
 
@@ -36,14 +36,8 @@ final class SourceRcon extends AbstractRcon
      */
     private $rconSocket;
 
-    /**
-     * @var int
-     */
     private int $rconRequestId = 0;
 
-    /**
-     * @param SocketInterface $socket
-     */
     public function __construct(SocketInterface $socket)
     {
         $this->socket = $socket;
@@ -74,7 +68,7 @@ final class SourceRcon extends AbstractRcon
     }
 
     /**
-     * Close
+     * Close.
      */
     public function close(): void
     {
@@ -88,8 +82,6 @@ final class SourceRcon extends AbstractRcon
     }
 
     /**
-     * @param string $password
-     *
      * @throws AuthenticationException
      * @throws InvalidPacketException
      */
@@ -104,23 +96,19 @@ final class SourceRcon extends AbstractRcon
         // If we receive SERVERDATA_RESPONSE_VALUE, then we need to read again.
         // More info: https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Additional_Comments
 
-        if ($type === SourceQuery::SERVERDATA_RESPONSE_VALUE) {
+        if (SourceQuery::SERVERDATA_RESPONSE_VALUE === $type) {
             $buffer = $this->read();
 
             $requestId = $buffer->getLong();
             $type = $buffer->getLong();
         }
 
-        if ($requestId === -1 || $type !== SourceQuery::SERVERDATA_AUTH_RESPONSE) {
+        if (-1 === $requestId || SourceQuery::SERVERDATA_AUTH_RESPONSE !== $type) {
             throw new AuthenticationException('RCON authorization failed.', AuthenticationException::BAD_PASSWORD);
         }
     }
 
     /**
-     * @param string $command
-     *
-     * @return string
-     *
      * @throws AuthenticationException
      * @throws InvalidPacketException
      */
@@ -133,9 +121,10 @@ final class SourceRcon extends AbstractRcon
 
         $type = $buffer->getLong();
 
-        if ($type === SourceQuery::SERVERDATA_AUTH_RESPONSE) {
+        if (SourceQuery::SERVERDATA_AUTH_RESPONSE === $type) {
             throw new AuthenticationException('Bad rcon_password.', AuthenticationException::BAD_PASSWORD);
-        } elseif ($type !== SourceQuery::SERVERDATA_RESPONSE_VALUE) {
+        }
+        if (SourceQuery::SERVERDATA_RESPONSE_VALUE !== $type) {
             throw new InvalidPacketException('Invalid rcon response.', InvalidPacketException::PACKET_HEADER_MISMATCH);
         }
 
@@ -151,13 +140,13 @@ final class SourceRcon extends AbstractRcon
 
                 $buffer->getLong(); // RequestID.
 
-                if ($buffer->getLong() !== SourceQuery::SERVERDATA_RESPONSE_VALUE) {
+                if (SourceQuery::SERVERDATA_RESPONSE_VALUE !== $buffer->getLong()) {
                     break;
                 }
 
                 $data2 = $buffer->get();
 
-                if ($data2 === "\x00\x01\x00\x00\x00\x00") {
+                if ("\x00\x01\x00\x00\x00\x00" === $data2) {
                     break;
                 }
 
@@ -169,8 +158,6 @@ final class SourceRcon extends AbstractRcon
     }
 
     /**
-     * @return Buffer
-     *
      * @throws InvalidPacketException
      */
     protected function read(): Buffer
@@ -229,11 +216,6 @@ final class SourceRcon extends AbstractRcon
     }
 
     /**
-     * @param int|null $header
-     * @param string $string
-     *
-     * @return bool
-     *
      * @throws InvalidPacketException
      */
     protected function write(?int $header, string $string = ''): bool
@@ -247,7 +229,7 @@ final class SourceRcon extends AbstractRcon
 
         // Prepend packet length.
         $command = pack('V', strlen($command)) . $command;
-        $length  = strlen($command);
+        $length = strlen($command);
 
         return $length === fwrite($this->rconSocket, $command, $length);
     }

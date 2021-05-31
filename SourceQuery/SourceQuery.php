@@ -7,8 +7,8 @@ declare(strict_types=1);
  *
  * @author Pavel Djundik
  *
- * @link https://xpaw.me
- * @link https://github.com/xPaw/PHP-Source-Query
+ * @see https://xpaw.me
+ * @see https://github.com/xPaw/PHP-Source-Query
  *
  * @license GNU Lesser General Public License, version 2.1
  */
@@ -29,68 +29,63 @@ use xPaw\SourceQuery\Socket\SocketType;
 final class SourceQuery
 {
     /**
-     * Packets sent
+     * Packets sent.
      */
-    private const A2A_PING      = 0x69;
-    private const A2S_INFO      = 0x54;
-    private const A2S_PLAYER    = 0x55;
-    private const A2S_RULES     = 0x56;
+    private const A2A_PING = 0x69;
+    private const A2S_INFO = 0x54;
+    private const A2S_PLAYER = 0x55;
+    private const A2S_RULES = 0x56;
     private const A2S_SERVERQUERY_GETCHALLENGE = 0x57;
 
     /**
-     * Packets received
+     * Packets received.
      */
-    private const A2A_ACK       = 0x6A;
+    private const A2A_ACK = 0x6A;
     private const S2C_CHALLENGE = 0x41;
-    private const S2A_INFO_SRC  = 0x49;
-    private const S2A_INFO_OLD  = 0x6D; // Old GoldSource, HLTV uses it (actually called S2A_INFO_DETAILED).
-    private const S2A_PLAYER    = 0x44;
-    private const S2A_RULES     = 0x45;
-    public const S2A_RCON      = 0x6C;
+    private const S2A_INFO_SRC = 0x49;
+    private const S2A_INFO_OLD = 0x6D; // Old GoldSource, HLTV uses it (actually called S2A_INFO_DETAILED).
+    private const S2A_PLAYER = 0x44;
+    private const S2A_RULES = 0x45;
+    public const S2A_RCON = 0x6C;
 
     /**
-     * Source rcon sent
+     * Source rcon sent.
      */
-    public const SERVERDATA_REQUESTVALUE   = 0;
-    public const SERVERDATA_EXECCOMMAND    = 2;
-    public const SERVERDATA_AUTH           = 3;
+    public const SERVERDATA_REQUESTVALUE = 0;
+    public const SERVERDATA_EXECCOMMAND = 2;
+    public const SERVERDATA_AUTH = 3;
 
     /**
-     * Source rcon received
+     * Source rcon received.
      */
     public const SERVERDATA_RESPONSE_VALUE = 0;
-    public const SERVERDATA_AUTH_RESPONSE  = 2;
+    public const SERVERDATA_AUTH_RESPONSE = 2;
 
     /**
-     * Points to rcon class
-     *
-     * @var RconInterface|null
+     * Points to rcon class.
      */
     private ?RconInterface $rcon;
 
     /**
-     * Points to socket class
+     * Points to socket class.
      */
     private SocketInterface $socket;
 
     /**
-     * True if connection is open, false if not
+     * True if connection is open, false if not.
      */
     private bool $connected = false;
 
     /**
-     * Contains challenge
+     * Contains challenge.
      */
     private string $challenge = '';
 
     /**
-     * Use old method for getting challenge number
+     * Use old method for getting challenge number.
      */
     private bool $useOldGetChallengeMethod = false;
 
-    /**
-     * @param SocketInterface $socket
-     */
     public function __construct(SocketInterface $socket)
     {
         $this->socket = $socket;
@@ -98,7 +93,7 @@ final class SourceQuery
     }
 
     /**
-     * Destructor
+     * Destructor.
      */
     public function __destruct()
     {
@@ -106,11 +101,11 @@ final class SourceQuery
     }
 
     /**
-     * Opens connection to server
+     * Opens connection to server.
      *
      * @param string $address Server ip
-     * @param int $port Server port
-     * @param int $timeout Timeout period
+     * @param int    $port    Server port
+     * @param int    $timeout Timeout period
      *
      * @throws InvalidArgumentException
      */
@@ -128,7 +123,7 @@ final class SourceQuery
     }
 
     /**
-     * Closes all open connections
+     * Closes all open connections.
      */
     public function disconnect(): void
     {
@@ -145,7 +140,7 @@ final class SourceQuery
     }
 
     /**
-     * Forces GetChallenge to use old method for challenge retrieval because some games use outdated protocol (e.g Starbound)
+     * Forces GetChallenge to use old method for challenge retrieval because some games use outdated protocol (e.g Starbound).
      *
      * @param bool $value Set to true to force old method
      *
@@ -155,14 +150,14 @@ final class SourceQuery
     {
         $previous = $this->useOldGetChallengeMethod;
 
-        $this->useOldGetChallengeMethod = $value === true;
+        $this->useOldGetChallengeMethod = true === $value;
 
         return $previous;
     }
 
     /**
      * Sends ping packet to the server
-     * NOTE: This may not work on some games (TF2 for example)
+     * NOTE: This may not work on some games (TF2 for example).
      *
      * @throws SocketException
      *
@@ -177,11 +172,11 @@ final class SourceQuery
         $this->socket->write(self::A2A_PING);
         $buffer = $this->socket->read();
 
-        return $buffer->getByte() === self::A2A_ACK;
+        return self::A2A_ACK === $buffer->getByte();
     }
 
     /**
-     * Get server information
+     * Get server information.
      *
      * @throws InvalidPacketException
      * @throws SocketException
@@ -204,7 +199,7 @@ final class SourceQuery
         $type = $buffer->getByte();
         $server = [];
 
-        if ($type === self::S2C_CHALLENGE) {
+        if (self::S2C_CHALLENGE === $type) {
             $this->challenge = $buffer->get(4);
 
             $this->socket->write(self::A2S_INFO, "Source Engine Query\0" . $this->challenge);
@@ -213,78 +208,78 @@ final class SourceQuery
         }
 
         // Old GoldSource protocol, HLTV still uses it.
-        if ($type === self::S2A_INFO_OLD && $this->socket->getType() === SocketType::GOLDSOURCE) {
-            /**
+        if (self::S2A_INFO_OLD === $type && SocketType::GOLDSOURCE === $this->socket->getType()) {
+            /*
              * If we try to read data again, and we get the result with type S2A_INFO (0x49)
              * That means this server is running dproto,
              * Because it sends answer for both protocols
              */
 
-            $server[ 'Address' ]    = $buffer->getString();
-            $server[ 'HostName' ]   = $buffer->getString();
-            $server[ 'Map' ]        = $buffer->getString();
-            $server[ 'ModDir' ]     = $buffer->getString();
-            $server[ 'ModDesc' ]    = $buffer->getString();
-            $server[ 'Players' ]    = $buffer->getByte();
-            $server[ 'MaxPlayers' ] = $buffer->getByte();
-            $server[ 'Protocol' ]   = $buffer->getByte();
-            $server[ 'Dedicated' ]  = chr($buffer->getByte());
-            $server[ 'Os' ]         = chr($buffer->getByte());
-            $server[ 'Password' ]   = $buffer->getByte() === 1;
-            $server[ 'IsMod' ]      = $buffer->getByte() === 1;
+            $server['Address'] = $buffer->getString();
+            $server['HostName'] = $buffer->getString();
+            $server['Map'] = $buffer->getString();
+            $server['ModDir'] = $buffer->getString();
+            $server['ModDesc'] = $buffer->getString();
+            $server['Players'] = $buffer->getByte();
+            $server['MaxPlayers'] = $buffer->getByte();
+            $server['Protocol'] = $buffer->getByte();
+            $server['Dedicated'] = chr($buffer->getByte());
+            $server['Os'] = chr($buffer->getByte());
+            $server['Password'] = 1 === $buffer->getByte();
+            $server['IsMod'] = 1 === $buffer->getByte();
 
-            if ($server[ 'IsMod' ]) {
+            if ($server['IsMod']) {
                 $Mod = [];
-                $Mod[ 'Url' ]        = $buffer->getString();
-                $Mod[ 'Download' ]   = $buffer->getString();
+                $Mod['Url'] = $buffer->getString();
+                $Mod['Download'] = $buffer->getString();
                 $buffer->get(1); // NULL byte
-                $Mod[ 'Version' ]    = $buffer->getLong();
-                $Mod[ 'Size' ]       = $buffer->getLong();
-                $Mod[ 'ServerSide' ] = $buffer->getByte() === 1;
-                $Mod[ 'CustomDLL' ]  = $buffer->getByte() === 1;
-                $server[ 'Mod' ] = $Mod;
+                $Mod['Version'] = $buffer->getLong();
+                $Mod['Size'] = $buffer->getLong();
+                $Mod['ServerSide'] = 1 === $buffer->getByte();
+                $Mod['CustomDLL'] = 1 === $buffer->getByte();
+                $server['Mod'] = $Mod;
             }
 
-            $server[ 'Secure' ]   = $buffer->getByte() === 1;
-            $server[ 'Bots' ]     = $buffer->getByte();
+            $server['Secure'] = 1 === $buffer->getByte();
+            $server['Bots'] = $buffer->getByte();
 
             return $server;
         }
 
-        if ($type !== self::S2A_INFO_SRC) {
+        if (self::S2A_INFO_SRC !== $type) {
             throw new InvalidPacketException('GetInfo: Packet header mismatch. (0x' . dechex($type) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH);
         }
 
-        $server[ 'Protocol' ]   = $buffer->getByte();
-        $server[ 'HostName' ]   = $buffer->getString();
-        $server[ 'Map' ]        = $buffer->getString();
-        $server[ 'ModDir' ]     = $buffer->getString();
-        $server[ 'ModDesc' ]    = $buffer->getString();
-        $server[ 'AppID' ]      = $buffer->getShort();
-        $server[ 'Players' ]    = $buffer->getByte();
-        $server[ 'MaxPlayers' ] = $buffer->getByte();
-        $server[ 'Bots' ]       = $buffer->getByte();
-        $server[ 'Dedicated' ]  = chr($buffer->getByte());
-        $server[ 'Os' ]         = chr($buffer->getByte());
-        $server[ 'Password' ]   = $buffer->getByte() === 1;
-        $server[ 'Secure' ]     = $buffer->getByte() === 1;
+        $server['Protocol'] = $buffer->getByte();
+        $server['HostName'] = $buffer->getString();
+        $server['Map'] = $buffer->getString();
+        $server['ModDir'] = $buffer->getString();
+        $server['ModDesc'] = $buffer->getString();
+        $server['AppID'] = $buffer->getShort();
+        $server['Players'] = $buffer->getByte();
+        $server['MaxPlayers'] = $buffer->getByte();
+        $server['Bots'] = $buffer->getByte();
+        $server['Dedicated'] = chr($buffer->getByte());
+        $server['Os'] = chr($buffer->getByte());
+        $server['Password'] = 1 === $buffer->getByte();
+        $server['Secure'] = 1 === $buffer->getByte();
 
         // The Ship (they violate query protocol spec by modifying the response)
-        if ($server[ 'AppID' ] === 2400) {
-            $server[ 'GameMode' ]     = $buffer->getByte();
-            $server[ 'WitnessCount' ] = $buffer->getByte();
-            $server[ 'WitnessTime' ]  = $buffer->getByte();
+        if (2400 === $server['AppID']) {
+            $server['GameMode'] = $buffer->getByte();
+            $server['WitnessCount'] = $buffer->getByte();
+            $server['WitnessTime'] = $buffer->getByte();
         }
 
-        $server[ 'Version' ] = $buffer->getString();
+        $server['Version'] = $buffer->getString();
 
         // Extra Data Flags.
         if ($buffer->remaining() > 0) {
-            $server[ 'ExtraDataFlags' ] = $Flags = $buffer->getByte();
+            $server['ExtraDataFlags'] = $Flags = $buffer->getByte();
 
             // S2A_EXTRA_DATA_HAS_GAME_PORT - Next 2 bytes include the game port.
             if ($Flags & 0x80) {
-                $server[ 'GamePort' ] = $buffer->getShort();
+                $server['GamePort'] = $buffer->getShort();
             }
 
             // S2A_EXTRA_DATA_HAS_STEAMID - Next 8 bytes are the steamID.
@@ -306,32 +301,29 @@ final class SourceQuery
                     $steamId = $steamIdLower | ($steamIdInstance << 32);
                 }
 
-                $server[ 'SteamID' ] = $steamId;
+                $server['SteamID'] = $steamId;
 
                 unset($steamIdLower, $steamIdInstance, $steamId);
             }
 
             // S2A_EXTRA_DATA_HAS_SPECTATOR_DATA - Next 2 bytes include the spectator port, then the spectator server name.
             if ($Flags & 0x40) {
-                $server[ 'SpecPort' ] = $buffer->getShort();
-                $server[ 'SpecName' ] = $buffer->getString();
+                $server['SpecPort'] = $buffer->getShort();
+                $server['SpecName'] = $buffer->getString();
             }
 
             // S2A_EXTRA_DATA_HAS_GAMETAG_DATA - Next bytes are the game tag string.
             if ($Flags & 0x20) {
-                $server[ 'GameTags' ] = $buffer->getString();
+                $server['GameTags'] = $buffer->getString();
             }
 
             // S2A_EXTRA_DATA_GAMEID - Next 8 bytes are the gameID of the server.
             if ($Flags & 0x01) {
-                $server[ 'GameID' ] = $buffer->getUnsignedLong() | ($buffer->getUnsignedLong() << 32);
+                $server['GameID'] = $buffer->getUnsignedLong() | ($buffer->getUnsignedLong() << 32);
             }
 
             if (!$buffer->isEmpty()) {
-                throw new InvalidPacketException(
-                    'GetInfo: unread data? ' . $buffer->remaining() . ' bytes remaining in the buffer. Please report it to the library developer.',
-                    InvalidPacketException::BUFFER_NOT_EMPTY
-                );
+                throw new InvalidPacketException('GetInfo: unread data? ' . $buffer->remaining() . ' bytes remaining in the buffer. Please report it to the library developer.', InvalidPacketException::BUFFER_NOT_EMPTY);
             }
         }
 
@@ -339,7 +331,7 @@ final class SourceQuery
     }
 
     /**
-     * Get players on the server
+     * Get players on the server.
      *
      * @throws InvalidPacketException
      * @throws SocketException
@@ -360,7 +352,7 @@ final class SourceQuery
 
         $type = $buffer->getByte();
 
-        if ($type !== self::S2A_PLAYER) {
+        if (self::S2A_PLAYER !== $type) {
             throw new InvalidPacketException('GetPlayers: Packet header mismatch. (0x' . dechex($type) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH);
         }
 
@@ -369,11 +361,11 @@ final class SourceQuery
 
         while ($count-- > 0 && !$buffer->isEmpty()) {
             $player = [];
-            $player[ 'Id' ]    = $buffer->getByte(); // PlayerID, is it just always 0?
-            $player[ 'Name' ]  = $buffer->getString();
-            $player[ 'Frags' ] = $buffer->getLong();
-            $player[ 'Time' ]  = (int)$buffer->getFloat();
-            $player[ 'TimeF' ] = gmdate(($player[ 'Time' ] > 3600 ? 'H:i:s' : 'i:s'), $player[ 'Time' ]);
+            $player['Id'] = $buffer->getByte(); // PlayerID, is it just always 0?
+            $player['Name'] = $buffer->getString();
+            $player['Frags'] = $buffer->getLong();
+            $player['Time'] = (int) $buffer->getFloat();
+            $player['TimeF'] = gmdate(($player['Time'] > 3600 ? 'H:i:s' : 'i:s'), $player['Time']);
 
             $players[] = $player;
         }
@@ -382,7 +374,7 @@ final class SourceQuery
     }
 
     /**
-     * Get rules (cvars) from the server
+     * Get rules (cvars) from the server.
      *
      * @throws InvalidPacketException
      * @throws SocketException
@@ -402,7 +394,7 @@ final class SourceQuery
 
         $type = $buffer->getByte();
 
-        if ($type !== self::S2A_RULES) {
+        if (self::S2A_RULES !== $type) {
             throw new InvalidPacketException('GetRules: Packet header mismatch. (0x' . dechex($type) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH);
         }
 
@@ -422,7 +414,7 @@ final class SourceQuery
     }
 
     /**
-     * Sets rcon password, for future use in Rcon()
+     * Sets rcon password, for future use in Rcon().
      *
      * @param string $password Rcon Password
      *
@@ -438,21 +430,17 @@ final class SourceQuery
 
         switch ($this->socket->getType()) {
             case SocketType::GOLDSOURCE:
-            {
                 $this->rcon = new GoldSourceRcon($this->socket);
 
                 break;
-            }
+
             case SocketType::SOURCE:
-            {
                 $this->rcon = new SourceRcon($this->socket);
 
                 break;
-            }
+
             default:
-            {
                 throw new SocketException('Unknown engine.', SocketException::INVALID_ENGINE);
-            }
         }
 
         $this->rcon->open();
@@ -464,11 +452,11 @@ final class SourceQuery
      *
      * @param string $command Command to execute
      *
-     * @return string Answer from server in string
      * @throws InvalidPacketException
      * @throws SocketException
-     *
      * @throws AuthenticationException
+     *
+     * @return string Answer from server in string
      */
     public function rcon(string $command): string
     {
@@ -476,7 +464,7 @@ final class SourceQuery
             throw new SocketException('Not connected.', SocketException::NOT_CONNECTED);
         }
 
-        if ($this->rcon === null) {
+        if (null === $this->rcon) {
             throw new SocketException('You must set a RCON password before trying to execute a RCON command.', SocketException::NOT_CONNECTED);
         }
 
@@ -484,10 +472,7 @@ final class SourceQuery
     }
 
     /**
-     * Get challenge (used for players/rules packets)
-     *
-     * @param int $header
-     * @param int $expectedResult
+     * Get challenge (used for players/rules packets).
      *
      * @throws InvalidPacketException
      */
@@ -508,24 +493,18 @@ final class SourceQuery
 
         switch ($type) {
             case self::S2C_CHALLENGE:
-            {
                 $this->challenge = $buffer->get(4);
 
                 return;
-            }
+
             case $expectedResult:
-            {
                 // Goldsource (HLTV).
                 return;
-            }
+
             case 0:
-            {
                 throw new InvalidPacketException('GetChallenge: Failed to get challenge.');
-            }
             default:
-            {
                 throw new InvalidPacketException('GetChallenge: Packet header mismatch. (0x' . dechex($type) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH);
-            }
         }
     }
 }

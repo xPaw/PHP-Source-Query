@@ -5,8 +5,8 @@ declare(strict_types=1);
 /**
  * @author Pavel Djundik
  *
- * @link https://xpaw.me
- * @link https://github.com/xPaw/PHP-Source-Query
+ * @see https://xpaw.me
+ * @see https://github.com/xPaw/PHP-Source-Query
  *
  * @license GNU Lesser General Public License, version 2.1
  *
@@ -24,49 +24,36 @@ use xPaw\SourceQuery\SourceQuery;
 final class GoldSourceRcon extends AbstractRcon
 {
     /**
-     * Points to socket class
-     *
-     * @var SocketInterface
+     * Points to socket class.
      */
     private SocketInterface $socket;
 
-    /**
-     * @var string
-     */
     private string $rconPassword = '';
 
-    /**
-     * @var string
-     */
     private string $rconChallenge = '';
 
-    /**
-     * @param SocketInterface $socket
-     */
     public function __construct(SocketInterface $socket)
     {
         $this->socket = $socket;
     }
 
     /**
-     * Open
+     * Open.
      */
     public function open(): void
     {
     }
 
     /**
-     * Close
+     * Close.
      */
     public function close(): void
     {
         $this->rconChallenge = '';
-        $this->rconPassword  = '';
+        $this->rconPassword = '';
     }
 
     /**
-     * @param string $password
-     *
      * @throws AuthenticationException
      */
     public function authorize(string $password): void
@@ -76,7 +63,7 @@ final class GoldSourceRcon extends AbstractRcon
         $this->write(null, 'challenge rcon');
         $buffer = $this->socket->read();
 
-        if ($buffer->get(14) !== 'challenge rcon') {
+        if ('challenge rcon' !== $buffer->get(14)) {
             throw new AuthenticationException('Failed to get RCON challenge.', AuthenticationException::BAD_PASSWORD);
         }
 
@@ -84,10 +71,6 @@ final class GoldSourceRcon extends AbstractRcon
     }
 
     /**
-     * @param string $command
-     *
-     * @return string
-     *
      * @throws AuthenticationException
      * @throws InvalidPacketException
      */
@@ -106,8 +89,6 @@ final class GoldSourceRcon extends AbstractRcon
     /**
      * @throws AuthenticationException
      * @throws InvalidPacketException
-     *
-     * @return Buffer
      */
     protected function read(): Buffer
     {
@@ -121,7 +102,7 @@ final class GoldSourceRcon extends AbstractRcon
             $readMore = !$buffer->isEmpty();
 
             if ($readMore) {
-                if ($buffer->getByte() !== SourceQuery::S2A_RCON) {
+                if (SourceQuery::S2A_RCON !== $buffer->getByte()) {
                     throw new InvalidPacketException('Invalid rcon response.', InvalidPacketException::PACKET_HEADER_MISMATCH);
                 }
 
@@ -140,9 +121,10 @@ final class GoldSourceRcon extends AbstractRcon
 
         $trimmed = trim($stringBuffer);
 
-        if ($trimmed === 'Bad rcon_password.') {
+        if ('Bad rcon_password.' === $trimmed) {
             throw new AuthenticationException($trimmed, AuthenticationException::BAD_PASSWORD);
-        } elseif ($trimmed === 'You have been banned from this server.') {
+        }
+        if ('You have been banned from this server.' === $trimmed) {
             throw new AuthenticationException($trimmed, AuthenticationException::BANNED);
         }
 
@@ -151,12 +133,6 @@ final class GoldSourceRcon extends AbstractRcon
         return $buffer;
     }
 
-    /**
-     * @param int|null $header
-     * @param string $string
-     *
-     * @return bool
-     */
     protected function write(?int $header, string $string = ''): bool
     {
         $command = pack('cccca*', 0xFF, 0xFF, 0xFF, 0xFF, $string);

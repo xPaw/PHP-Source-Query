@@ -5,8 +5,8 @@ declare(strict_types=1);
 /**
  * @author Pavel Djundik
  *
- * @link https://xpaw.me
- * @link https://github.com/xPaw/PHP-Source-Query
+ * @see https://xpaw.me
+ * @see https://github.com/xPaw/PHP-Source-Query
  *
  * @license GNU Lesser General Public License, version 2.1
  *
@@ -21,33 +21,24 @@ use xPaw\SourceQuery\Socket\SocketInterface;
 
 interface RconInterface
 {
-    /**
-     * @param SocketInterface $socket
-     */
     public function __construct(SocketInterface $socket);
 
     /**
-     * Open
+     * Open.
      */
     public function open(): void;
 
     /**
-     * Close
+     * Close.
      */
     public function close(): void;
 
     /**
-     * @param string $password
-     *
      * @throws AuthenticationException
      */
     public function authorize(string $password): void;
 
     /**
-     * @param string $command
-     *
-     * @return string
-     *
      * @throws AuthenticationException
      * @throws InvalidPacketException
      */

@@ -3,30 +3,28 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
-use xPaw\SourceQuery\SourceQuery;
 use xPaw\SourceQuery\Exception\AuthenticationException;
 use xPaw\SourceQuery\Exception\InvalidArgumentException;
 use xPaw\SourceQuery\Exception\InvalidPacketException;
 use xPaw\SourceQuery\Exception\SocketException;
 use xPaw\SourceQuery\Socket\SocketType;
 use xPaw\SourceQuery\Socket\TestableSocket;
+use xPaw\SourceQuery\SourceQuery;
 
+/**
+ * @internal
+ * @coversNothing
+ */
 final class Tests extends TestCase
 {
-    /**
-     * @var TestableSocket
-     */
     private TestableSocket $socket;
 
-    /**
-     * @var SourceQuery
-     */
     private SourceQuery $sourceQuery;
 
     /**
      * @throws InvalidArgumentException
      */
-    public function setUp(): void
+    protected function setUp(): void
     {
         $this->socket = new TestableSocket(SocketType::SOURCE);
         $this->sourceQuery = new SourceQuery($this->socket);
@@ -34,13 +32,14 @@ final class Tests extends TestCase
     }
 
     /**
-     * tearDown
+     * tearDown.
      */
-    public function tearDown(): void
+    protected function tearDown(): void
     {
         $this->sourceQuery->disconnect();
 
-        unset($this->socket, $this->sourceQuery);
+        $this->socket = null;
+        $this->sourceQuery = null;
     }
 
     /**
@@ -132,9 +131,6 @@ final class Tests extends TestCase
     }
 
     /**
-     * @param string $rawInput
-     * @param array $expectedOutput
-     *
      * @throws InvalidArgumentException
      * @throws InvalidPacketException
      * @throws SocketException
@@ -143,7 +139,7 @@ final class Tests extends TestCase
      */
     public function testGetInfo(string $rawInput, array $expectedOutput): void
     {
-        if (isset($expectedOutput[ 'IsMod' ])) {
+        if (isset($expectedOutput['IsMod'])) {
             $this->socket = new TestableSocket(SocketType::GOLDSOURCE);
             $this->sourceQuery = new SourceQuery($this->socket);
             $this->sourceQuery->connect('', 2);
@@ -153,12 +149,10 @@ final class Tests extends TestCase
 
         $realOutput = $this->sourceQuery->getInfo();
 
-        self::assertEquals($expectedOutput, $realOutput);
+        static::assertSame($expectedOutput, $realOutput);
     }
 
     /**
-     * @return array
-     *
      * @throws JsonException
      */
     public function infoProvider(): array
@@ -167,8 +161,6 @@ final class Tests extends TestCase
     }
 
     /**
-     * @param string $data
-     *
      * @throws InvalidPacketException
      * @throws SocketException
      *
@@ -183,8 +175,6 @@ final class Tests extends TestCase
     }
 
     /**
-     * @param string $data
-     *
      * @throws InvalidPacketException
      * @throws SocketException
      *
@@ -199,8 +189,6 @@ final class Tests extends TestCase
     }
 
     /**
-     * @param string $data
-     *
      * @throws InvalidPacketException
      * @throws SocketException
      *
@@ -216,8 +204,6 @@ final class Tests extends TestCase
     }
 
     /**
-     * @param string $data
-     *
      * @throws InvalidPacketException
      * @throws SocketException
      *
@@ -239,13 +225,13 @@ final class Tests extends TestCase
     {
         return
         [
-            [ '' ],
-            [ "\xff\xff\xff\xff" ], // No type.
-            [ "\xff\xff\xff\xff\x49" ], // Correct type, but no data after.
-            [ "\xff\xff\xff\xff\x6D" ], // Old info packet, but tests are done for source.
-            [ "\xff\xff\xff\xff\x11" ], // Wrong type.
-            [ "\x11\x11\x11\x11" ], // Wrong header.
-            [ "\xff" ], // Should be 4 bytes, but it's 1.
+            [''],
+            ["\xff\xff\xff\xff"], // No type.
+            ["\xff\xff\xff\xff\x49"], // Correct type, but no data after.
+            ["\xff\xff\xff\xff\x6D"], // Old info packet, but tests are done for source.
+            ["\xff\xff\xff\xff\x11"], // Wrong type.
+            ["\x11\x11\x11\x11"], // Wrong header.
+            ["\xff"], // Should be 4 bytes, but it's 1.
         ];
     }
 
@@ -257,15 +243,14 @@ final class Tests extends TestCase
     {
         $this->socket->queue("\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11");
         $this->socket->queue("\xFF\xFF\xFF\xFF\x45\x01\x00ayy\x00lmao\x00");
-        self::assertEquals([ 'ayy' => 'lmao' ], $this->sourceQuery->getRules());
+        static::assertSame(['ayy' => 'lmao'], $this->sourceQuery->getRules());
 
         $this->socket->queue("\xFF\xFF\xFF\xFF\x45\x01\x00wow\x00much\x00");
-        self::assertEquals([ 'wow' => 'much' ], $this->sourceQuery->getRules());
+        static::assertSame(['wow' => 'much'], $this->sourceQuery->getRules());
     }
 
     /**
      * @param string[] $rawInput
-     * @param array $expectedOutput
      *
      * @throws InvalidPacketException
      * @throws SocketException
@@ -294,12 +279,10 @@ final class Tests extends TestCase
 
         $realOutput = $this->sourceQuery->getRules();
 
-        self::assertEquals($expectedOutput, $realOutput);
+        static::assertSame($expectedOutput, $realOutput);
     }
 
     /**
-     * @return array
-     *
      * @throws JsonException
      */
     public function rulesProvider(): array
@@ -309,7 +292,6 @@ final class Tests extends TestCase
 
     /**
      * @param string[] $rawInput
-     * @param array $expectedOutput
      *
      * @throws InvalidPacketException
      * @throws SocketException
@@ -338,12 +320,10 @@ final class Tests extends TestCase
 
         $realOutput = $this->sourceQuery->getPlayers();
 
-        self::assertEquals($expectedOutput, $realOutput);
+        static::assertSame($expectedOutput, $realOutput);
     }
 
     /**
-     * @return array
-     *
      * @throws JsonException
      */
     public function playersProvider(): array
@@ -357,18 +337,13 @@ final class Tests extends TestCase
     public function testPing(): void
     {
         $this->socket->queue("\xFF\xFF\xFF\xFF\x6A\x00");
-        self::assertTrue($this->sourceQuery->ping());
+        static::assertTrue($this->sourceQuery->ping());
 
         $this->socket->queue("\xFF\xFF\xFF\xFF\xEE");
-        self::assertFalse($this->sourceQuery->ping());
+        static::assertFalse($this->sourceQuery->ping());
     }
 
     /**
-     * @param string $path
-     * @param bool $hexToBin
-     *
-     * @return array
-     *
      * @throws JsonException
      */
     private function getData(string $path, bool $hexToBin = false): array
@@ -410,7 +385,7 @@ final class Tests extends TestCase
                         true,
                         512,
                         JSON_THROW_ON_ERROR
-                    )
+                    ),
                 ];
         }
 

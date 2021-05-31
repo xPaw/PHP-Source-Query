@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use xPaw\SourceQuery\SourceQuery;
 use xPaw\SourceQuery\Socket\SourceSocket;
+use xPaw\SourceQuery\SourceQuery;
 
 // For the sake of this example
 header('Content-Type: text/plain');

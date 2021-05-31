@@ -5,8 +5,8 @@ declare(strict_types=1);
 /**
  * @author Pavel Djundik
  *
- * @link https://xpaw.me
- * @link https://github.com/xPaw/PHP-Source-Query
+ * @see https://xpaw.me
+ * @see https://github.com/xPaw/PHP-Source-Query
  *
  * @license GNU Lesser General Public License, version 2.1
  *
@@ -25,15 +25,10 @@ final class TestableSocket extends AbstractSocket
      */
     private array $packetQueue;
 
-    /**
-     * @var int
-     */
     private int $type;
 
     /**
      * TestableSocket constructor.
-     *
-     * @param int $type
      */
     public function __construct(int $type)
     {
@@ -41,31 +36,20 @@ final class TestableSocket extends AbstractSocket
         $this->type = $type;
     }
 
-    /**
-     * @return int
-     */
     public function getType(): int
     {
         return $this->type;
     }
 
-    /**
-     * @param string $data
-     */
     public function queue(string $data): void
     {
         $this->packetQueue[] = $data;
     }
 
-    /**
-     * @param string $address
-     * @param int $port
-     * @param int $timeout
-     */
     public function open(string $address, int $port, int $timeout): void
     {
         $this->timeout = $timeout;
-        $this->port    = $port;
+        $this->port = $port;
         $this->address = $address;
     }
 
@@ -77,10 +61,6 @@ final class TestableSocket extends AbstractSocket
     }
 
     /**
-     * @param int $length
-     *
-     * @return Buffer
-     *
      * @throws InvalidPacketException
      */
     public function read(int $length = 1400): Buffer
@@ -95,48 +75,31 @@ final class TestableSocket extends AbstractSocket
 
         $buffer->set($packet);
 
-        $this->readInternal($buffer, $length, [ $this, 'sherlock' ]);
+        $this->readInternal($buffer, $length, [$this, 'sherlock']);
 
         return $buffer;
     }
 
-    /**
-     * @param int $header
-     * @param string $string
-     *
-     * @return bool
-     */
     public function write(int $header, string $string = ''): bool
     {
         return true;
     }
 
     /**
-     * @param Buffer $buffer
-     * @param int $length
-     *
-     * @return bool
-     *
      * @throws InvalidPacketException
      */
     public function sherlock(Buffer $buffer, int $length): bool
     {
-        if (count($this->packetQueue) === 0) {
+        if (0 === count($this->packetQueue)) {
             return false;
         }
 
         $buffer->set(array_shift($this->packetQueue));
 
-        return $buffer->getLong() === -2;
+        return -2 === $buffer->getLong();
     }
 
     /**
-     * @param Buffer $buffer
-     * @param int $count
-     * @param int $number
-     * @param bool $isCompressed
-     * @param int|null $checksum
-     *
      * @throws InvalidPacketException
      */
     protected function readInternalPacketData(
@@ -172,12 +135,6 @@ final class TestableSocket extends AbstractSocket
 
     /**
      * Same as GoldSourceSocket::readInternalPacketData.
-     *
-     * @param Buffer $buffer
-     * @param int $count
-     * @param int $number
-     * @param bool $isCompressed
-     * @param int|null $checksum
      */
     private function readInternalPacketDataGoldSource(
         Buffer $buffer,
@@ -194,12 +151,6 @@ final class TestableSocket extends AbstractSocket
 
     /**
      * Same as SourceSocket::readInternalPacketData.
-     *
-     * @param Buffer $buffer
-     * @param int $count
-     * @param int $number
-     * @param bool $isCompressed
-     * @param int|null $checksum
      *
      * @throws InvalidPacketException
      */

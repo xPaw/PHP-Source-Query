@@ -5,8 +5,8 @@ declare(strict_types=1);
 /**
  * @author Pavel Djundik
  *
- * @link https://xpaw.me
- * @link https://github.com/xPaw/PHP-Source-Query
+ * @see https://xpaw.me
+ * @see https://github.com/xPaw/PHP-Source-Query
  *
  * @license GNU Lesser General Public License, version 2.1
  *
@@ -19,21 +19,11 @@ use xPaw\SourceQuery\Buffer;
 
 final class GoldSourceSocket extends AbstractSocket
 {
-    /**
-     * @return int
-     */
     public function getType(): int
     {
         return SocketType::GOLDSOURCE;
     }
 
-    /**
-     * @param Buffer $buffer
-     * @param int $count
-     * @param int $number
-     * @param bool $isCompressed
-     * @param int|null $checksum
-     */
     protected function readInternalPacketData(
         Buffer $buffer,
         int &$count,

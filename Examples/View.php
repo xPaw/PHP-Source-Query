@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use xPaw\SourceQuery\SourceQuery;
 use xPaw\SourceQuery\Socket\SourceSocket;
+use xPaw\SourceQuery\SourceQuery;
 
 $timer = microtime(true);
 
@@ -37,28 +37,28 @@ $timer = number_format(microtime(true) - $timer, 4, '.', '');
 <head>
 	<meta charset="utf-8">
 	<title>Source Query PHP Library</title>
-	
+
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
 	<style>
 		.table {
 			table-layout: fixed;
 			border-top-color: #428BCA;
 		}
-		
+
 		.table td {
 			overflow-x: auto;
 		}
-		
+
 		.table thead th {
 			background-color: #428BCA;
 			border-color: #428BCA !important;
 			color: #FFF;
 		}
-		
+
 		.info-column {
 			width: 120px;
 		}
-		
+
 		.frags-column {
 			width: 80px;
 		}
@@ -69,9 +69,9 @@ $timer = number_format(microtime(true) - $timer, 4, '.', '');
 	<div class="jumbotron">
 		<div class="container">
 			<h1>Source Query PHP Library</h1>
-			
+
 			<p class="lead">This library was created to query game server which use the Source (Steamworks) query protocol.</p>
-			
+
 			<p>
 				<a class="btn btn-large btn-primary" href="https://xpaw.me">Made by xPaw</a>
 				<a class="btn btn-large btn-primary" href="https://github.com/xPaw/PHP-Source-Query">View on GitHub</a>
@@ -79,13 +79,13 @@ $timer = number_format(microtime(true) - $timer, 4, '.', '');
 			</p>
 		</div>
 	</div>
-		
+
 	<div class="container">
-<?php if ($exception !== null): ?>
+<?php if (null !== $exception) { ?>
 		<div class="panel panel-error">
 			<pre class="panel-body"><?php echo htmlspecialchars($exception->__toString()); ?></pre>
 		</div>
-<?php endif; ?>
+<?php } ?>
 		<div class="row">
 			<div class="col-sm-6">
 				<table class="table table-bordered table-striped">
@@ -96,18 +96,18 @@ $timer = number_format(microtime(true) - $timer, 4, '.', '');
 						</tr>
 					</thead>
 					<tbody>
-<?php if (!empty($info)): ?>
-<?php foreach ($info as $infoKey => $infoValue): ?>
+<?php if (!empty($info)) { ?>
+<?php foreach ($info as $infoKey => $infoValue) { ?>
 						<tr>
 							<td><?php echo htmlspecialchars($infoKey); ?></td>
 							<td><?php
     if (is_array($infoValue)) {
-        echo "<pre>";
+        echo '<pre>';
         print_r($infoValue);
-        echo "</pre>";
-    } elseif ($infoValue === true) {
+        echo '</pre>';
+    } elseif (true === $infoValue) {
         echo 'true';
-    } elseif ($infoValue === false) {
+    } elseif (false === $infoValue) {
         echo 'false';
     } elseif (is_int($infoValue)) {
         echo $infoValue;
@@ -116,12 +116,12 @@ $timer = number_format(microtime(true) - $timer, 4, '.', '');
     }
 ?></td>
 						</tr>
-<?php endforeach; ?>
-<?php else: ?>
+<?php } ?>
+<?php } else { ?>
 						<tr>
 							<td colspan="2">No information received</td>
 						</tr>
-<?php endif; ?>
+<?php } ?>
 					</tbody>
 				</table>
 			</div>
@@ -135,19 +135,19 @@ $timer = number_format(microtime(true) - $timer, 4, '.', '');
 						</tr>
 					</thead>
 					<tbody>
-<?php if (!empty($players)): ?>
-<?php foreach ($players as $player): ?>
+<?php if (!empty($players)) { ?>
+<?php foreach ($players as $player) { ?>
 						<tr>
-							<td><?php echo htmlspecialchars($player[ 'Name' ]); ?></td>
-							<td><?php echo $player[ 'Frags' ]; ?></td>
-							<td><?php echo $player[ 'TimeF' ]; ?></td>
+							<td><?php echo htmlspecialchars($player['Name']); ?></td>
+							<td><?php echo $player['Frags']; ?></td>
+							<td><?php echo $player['TimeF']; ?></td>
 						</tr>
-<?php endforeach; ?>
-<?php else: ?>
+<?php } ?>
+<?php } else { ?>
 						<tr>
 							<td colspan="3">No players received</td>
 						</tr>
-<?php endif; ?>
+<?php } ?>
 					</tbody>
 				</table>
 			</div>
@@ -161,18 +161,18 @@ $timer = number_format(microtime(true) - $timer, 4, '.', '');
 						</tr>
 					</thead>
 					<tbody>
-<?php if (!empty($rules)): ?>
-<?php foreach ($rules as $ruleKey => $ruleValue): ?>
+<?php if (!empty($rules)) { ?>
+<?php foreach ($rules as $ruleKey => $ruleValue) { ?>
 						<tr>
 							<td><?php echo htmlspecialchars($ruleKey); ?></td>
 							<td><?php echo htmlspecialchars($ruleValue); ?></td>
 						</tr>
-<?php endforeach; ?>
-<?php else: ?>
+<?php } ?>
+<?php } else { ?>
 						<tr>
 							<td colspan="2">No rules received</td>
 						</tr>
-<?php endif; ?>
+<?php } ?>
 					</tbody>
 				</table>
 			</div>

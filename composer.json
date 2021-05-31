@@ -36,5 +36,11 @@
 		{
 			"xPaw\\SourceQuery\\": "SourceQuery/"
 		}
+	},
+	"scripts": {
+		"psalm": "psalm",
+		"phpstan": "phpstan",
+		"phpunit": "phpunit Tests/Tests.php",
+		"php-cs-fixer": "php-cs-fixer fix --config=.php-cs-fixer.php"
 	}
 }
