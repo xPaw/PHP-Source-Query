@@ -17,85 +17,75 @@ use xPaw\SourceQuery\SourceQuery;
  */
 final class Tests extends TestCase
 {
-    private TestableSocket $socket;
-
-    private SourceQuery $sourceQuery;
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    protected function setUp(): void
-    {
-        $this->socket = new TestableSocket(SocketType::SOURCE);
-        $this->sourceQuery = new SourceQuery($this->socket);
-        $this->sourceQuery->connect('', 2);
-    }
-
-    /**
-     * tearDown.
-     */
-    protected function tearDown(): void
-    {
-        $this->sourceQuery->disconnect();
-
-        $this->socket = null;
-        $this->sourceQuery = null;
-    }
-
     /**
      * @throws InvalidArgumentException
      */
     public function testInvalidTimeout(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $SourceQuery = new SourceQuery($this->socket);
-        $SourceQuery->connect('', 2, -1);
+        $socket = new TestableSocket(SocketType::SOURCE);
+        $sourceQuery = $this->create($socket);
+        $sourceQuery->disconnect();
+        $sourceQuery->connect('', 2, -1);
     }
 
     /**
+     * @throws InvalidArgumentException
      * @throws InvalidPacketException
      * @throws SocketException
      */
     public function testNotConnectedGetInfo(): void
     {
         $this->expectException(SocketException::class);
-        $this->sourceQuery->disconnect();
-        $this->sourceQuery->getInfo();
+        $socket = new TestableSocket(SocketType::SOURCE);
+        $sourceQuery = $this->create($socket);
+        $sourceQuery->disconnect();
+        $sourceQuery->getInfo();
     }
 
     /**
+     * @throws InvalidArgumentException
      * @throws SocketException
      */
     public function testNotConnectedPing(): void
     {
         $this->expectException(SocketException::class);
-        $this->sourceQuery->disconnect();
-        $this->sourceQuery->ping();
+        $socket = new TestableSocket(SocketType::SOURCE);
+        $sourceQuery = $this->create($socket);
+        $sourceQuery->disconnect();
+        $sourceQuery->ping();
     }
 
     /**
+     * @throws InvalidArgumentException
      * @throws InvalidPacketException
      * @throws SocketException
      */
     public function testNotConnectedGetPlayers(): void
     {
         $this->expectException(SocketException::class);
-        $this->sourceQuery->disconnect();
-        $this->sourceQuery->getPlayers();
+        $socket = new TestableSocket(SocketType::SOURCE);
+        $sourceQuery = $this->create($socket);
+        $sourceQuery->disconnect();
+        $sourceQuery->getPlayers();
     }
 
     /**
+     * @throws InvalidArgumentException
      * @throws InvalidPacketException
      * @throws SocketException
      */
     public function testNotConnectedGetRules(): void
     {
         $this->expectException(SocketException::class);
-        $this->sourceQuery->disconnect();
-        $this->sourceQuery->getRules();
+        $socket = new TestableSocket(SocketType::SOURCE);
+        $sourceQuery = $this->create($socket);
+        $sourceQuery->disconnect();
+        $sourceQuery->getRules();
     }
 
     /**
+     * @throws InvalidArgumentException
      * @throws SocketException
      * @throws AuthenticationException
      * @throws InvalidPacketException
@@ -103,11 +93,14 @@ final class Tests extends TestCase
     public function testNotConnectedSetRconPassword(): void
     {
         $this->expectException(SocketException::class);
-        $this->sourceQuery->disconnect();
-        $this->sourceQuery->setRconPassword('a');
+        $socket = new TestableSocket(SocketType::SOURCE);
+        $sourceQuery = $this->create($socket);
+        $sourceQuery->disconnect();
+        $sourceQuery->setRconPassword('a');
     }
 
     /**
+     * @throws InvalidArgumentException
      * @throws AuthenticationException
      * @throws InvalidPacketException
      * @throws SocketException
@@ -115,11 +108,14 @@ final class Tests extends TestCase
     public function testNotConnectedRcon(): void
     {
         $this->expectException(SocketException::class);
-        $this->sourceQuery->disconnect();
-        $this->sourceQuery->rcon('a');
+        $socket = new TestableSocket(SocketType::SOURCE);
+        $sourceQuery = $this->create($socket);
+        $sourceQuery->disconnect();
+        $sourceQuery->rcon('a');
     }
 
     /**
+     * @throws InvalidArgumentException
      * @throws AuthenticationException
      * @throws InvalidPacketException
      * @throws SocketException
@@ -127,7 +123,9 @@ final class Tests extends TestCase
     public function testRconWithoutPassword(): void
     {
         $this->expectException(SocketException::class);
-        $this->sourceQuery->rcon('a');
+        $socket = new TestableSocket(SocketType::SOURCE);
+        $sourceQuery = $this->create($socket);
+        $sourceQuery->rcon('a');
     }
 
     /**
@@ -139,17 +137,18 @@ final class Tests extends TestCase
      */
     public function testGetInfo(string $rawInput, array $expectedOutput): void
     {
-        if (isset($expectedOutput['IsMod'])) {
-            $this->socket = new TestableSocket(SocketType::GOLDSOURCE);
-            $this->sourceQuery = new SourceQuery($this->socket);
-            $this->sourceQuery->connect('', 2);
-        }
+        $socketType = isset($expectedOutput['IsMod'])
+            ? SocketType::GOLDSOURCE
+            : SocketType::SOURCE;
 
-        $this->socket->queue($rawInput);
+        $socket = new TestableSocket($socketType);
+        $sourceQuery = $this->create($socket);
 
-        $realOutput = $this->sourceQuery->getInfo();
+        $socket->queue($rawInput);
 
-        static::assertSame($expectedOutput, $realOutput);
+        $realOutput = $sourceQuery->getInfo();
+
+        self::assertSame($expectedOutput, $realOutput);
     }
 
     /**
@@ -161,6 +160,7 @@ final class Tests extends TestCase
     }
 
     /**
+     * @throws InvalidArgumentException
      * @throws InvalidPacketException
      * @throws SocketException
      *
@@ -169,12 +169,15 @@ final class Tests extends TestCase
     public function testBadGetInfo(string $data): void
     {
         $this->expectException(InvalidPacketException::class);
-        $this->socket->queue($data);
+        $socket = new TestableSocket(SocketType::SOURCE);
+        $sourceQuery = $this->create($socket);
+        $socket->queue($data);
 
-        $this->sourceQuery->getInfo();
+        $sourceQuery->getInfo();
     }
 
     /**
+     * @throws InvalidArgumentException
      * @throws InvalidPacketException
      * @throws SocketException
      *
@@ -183,12 +186,15 @@ final class Tests extends TestCase
     public function testBadGetChallengeViaPlayers(string $data): void
     {
         $this->expectException(InvalidPacketException::class);
-        $this->socket->queue($data);
+        $socket = new TestableSocket(SocketType::SOURCE);
+        $sourceQuery = $this->create($socket);
+        $socket->queue($data);
 
-        $this->sourceQuery->getPlayers();
+        $sourceQuery->getPlayers();
     }
 
     /**
+     * @throws InvalidArgumentException
      * @throws InvalidPacketException
      * @throws SocketException
      *
@@ -197,13 +203,16 @@ final class Tests extends TestCase
     public function testBadGetPlayersAfterCorrectChallenge(string $data): void
     {
         $this->expectException(InvalidPacketException::class);
-        $this->socket->queue("\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11");
-        $this->socket->queue($data);
+        $socket = new TestableSocket(SocketType::SOURCE);
+        $sourceQuery = $this->create($socket);
+        $socket->queue("\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11");
+        $socket->queue($data);
 
-        $this->sourceQuery->getPlayers();
+        $sourceQuery->getPlayers();
     }
 
     /**
+     * @throws InvalidArgumentException
      * @throws InvalidPacketException
      * @throws SocketException
      *
@@ -212,10 +221,12 @@ final class Tests extends TestCase
     public function testBadGetRulesAfterCorrectChallenge(string $data): void
     {
         $this->expectException(InvalidPacketException::class);
-        $this->socket->queue("\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11");
-        $this->socket->queue($data);
+        $socket = new TestableSocket(SocketType::SOURCE);
+        $sourceQuery = $this->create($socket);
+        $socket->queue("\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11");
+        $socket->queue($data);
 
-        $this->sourceQuery->getRules();
+        $sourceQuery->getRules();
     }
 
     /**
@@ -236,22 +247,26 @@ final class Tests extends TestCase
     }
 
     /**
+     * @throws InvalidArgumentException
      * @throws InvalidPacketException
      * @throws SocketException
      */
     public function testGetChallengeTwice(): void
     {
-        $this->socket->queue("\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11");
-        $this->socket->queue("\xFF\xFF\xFF\xFF\x45\x01\x00ayy\x00lmao\x00");
-        static::assertSame(['ayy' => 'lmao'], $this->sourceQuery->getRules());
+        $socket = new TestableSocket(SocketType::SOURCE);
+        $sourceQuery = $this->create($socket);
+        $socket->queue("\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11");
+        $socket->queue("\xFF\xFF\xFF\xFF\x45\x01\x00ayy\x00lmao\x00");
+        self::assertSame(['ayy' => 'lmao'], $sourceQuery->getRules());
 
-        $this->socket->queue("\xFF\xFF\xFF\xFF\x45\x01\x00wow\x00much\x00");
-        static::assertSame(['wow' => 'much'], $this->sourceQuery->getRules());
+        $socket->queue("\xFF\xFF\xFF\xFF\x45\x01\x00wow\x00much\x00");
+        self::assertSame(['wow' => 'much'], $sourceQuery->getRules());
     }
 
     /**
      * @param string[] $rawInput
      *
+     * @throws InvalidArgumentException
      * @throws InvalidPacketException
      * @throws SocketException
      *
@@ -259,27 +274,11 @@ final class Tests extends TestCase
      */
     public function testGetRules(array $rawInput, array $expectedOutput): void
     {
-        $data = hex2bin('ffffffff4104fce20e');
+        $sourceQuery = $this->putDataOnSocket($rawInput);
 
-        if (!$data) {
-            throw new InvalidPacketException('Bad packet data');
-        }
+        $realOutput = $sourceQuery->getRules();
 
-        $this->socket->queue($data); // Challenge.
-
-        foreach ($rawInput as $packet) {
-            $data = hex2bin($packet);
-
-            if (!$data) {
-                throw new InvalidPacketException('Bad packet data');
-            }
-
-            $this->socket->queue($data);
-        }
-
-        $realOutput = $this->sourceQuery->getRules();
-
-        static::assertSame($expectedOutput, $realOutput);
+        self::assertSame($expectedOutput, $realOutput);
     }
 
     /**
@@ -293,6 +292,7 @@ final class Tests extends TestCase
     /**
      * @param string[] $rawInput
      *
+     * @throws InvalidArgumentException
      * @throws InvalidPacketException
      * @throws SocketException
      *
@@ -300,27 +300,11 @@ final class Tests extends TestCase
      */
     public function testGetPlayers(array $rawInput, array $expectedOutput): void
     {
-        $data = hex2bin('ffffffff4104fce20e');
+        $sourceQuery = $this->putDataOnSocket($rawInput);
 
-        if (!$data) {
-            throw new InvalidPacketException('Bad packet data');
-        }
+        $realOutput = $sourceQuery->getPlayers();
 
-        $this->socket->queue($data); // Challenge.
-
-        foreach ($rawInput as $packet) {
-            $data = hex2bin($packet);
-
-            if (!$data) {
-                throw new InvalidPacketException('Bad packet data');
-            }
-
-            $this->socket->queue($data);
-        }
-
-        $realOutput = $this->sourceQuery->getPlayers();
-
-        static::assertSame($expectedOutput, $realOutput);
+        self::assertSame($expectedOutput, $realOutput);
     }
 
     /**
@@ -332,15 +316,30 @@ final class Tests extends TestCase
     }
 
     /**
+     * @throws InvalidArgumentException
      * @throws SocketException
      */
     public function testPing(): void
     {
-        $this->socket->queue("\xFF\xFF\xFF\xFF\x6A\x00");
-        static::assertTrue($this->sourceQuery->ping());
+        $socket = new TestableSocket(SocketType::SOURCE);
+        $sourceQuery = $this->create($socket);
 
-        $this->socket->queue("\xFF\xFF\xFF\xFF\xEE");
-        static::assertFalse($this->sourceQuery->ping());
+        $socket->queue("\xFF\xFF\xFF\xFF\x6A\x00");
+        self::assertTrue($sourceQuery->ping());
+
+        $socket->queue("\xFF\xFF\xFF\xFF\xEE");
+        self::assertFalse($sourceQuery->ping());
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    private function create(TestableSocket $socket): SourceQuery
+    {
+        $sourceQuery = new SourceQuery($socket);
+        $sourceQuery->connect('', 2);
+
+        return $sourceQuery;
     }
 
     /**
@@ -390,5 +389,37 @@ final class Tests extends TestCase
         }
 
         return $dataProvider;
+    }
+
+    /**
+     * @param string[] $rawInput
+     *
+     * @throws InvalidArgumentException
+     * @throws InvalidPacketException
+     */
+    private function putDataOnSocket(array $rawInput): SourceQuery
+    {
+        $data = hex2bin('ffffffff4104fce20e');
+
+        if (!$data) {
+            throw new InvalidPacketException('Bad packet data');
+        }
+
+        $socket = new TestableSocket(SocketType::SOURCE);
+        $sourceQuery = $this->create($socket);
+
+        $socket->queue($data); // Challenge.
+
+        foreach ($rawInput as $packet) {
+            $data = hex2bin($packet);
+
+            if (!$data) {
+                throw new InvalidPacketException('Bad packet data');
+            }
+
+            $socket->queue($data);
+        }
+        
+        return $sourceQuery;
     }
 }

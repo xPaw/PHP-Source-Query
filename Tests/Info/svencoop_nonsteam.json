@@ -11,8 +11,6 @@
     "Os": "w",
     "Password": true,
     "IsMod": true,
-    "Secure": false,
-    "Bots": 0,
     "Mod": {
         "Url": "",
         "Download": "",
@@ -20,5 +18,7 @@
         "Size": 0,
         "ServerSide": true,
         "CustomDLL": false
-    }
+    },
+    "Secure": false,
+    "Bots": 0
 }
