@@ -146,7 +146,7 @@ final class SourceQuery
      *
      * @return bool Previous value
      */
-    public function SetUseOldGetChallengeMethod(bool $value): bool
+    public function setUseOldGetChallengeMethod(bool $value): bool
     {
         $previous = $this->useOldGetChallengeMethod;
 

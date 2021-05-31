@@ -1,8 +1,12 @@
 # PHP Source Query
+A fork of [xPaw's PHP Source Query library.](https://github.com/xPaw/PHP-Source-Query)
 
-[![Packagist Downloads](https://img.shields.io/packagist/dt/xpaw/php-source-query-class.svg)](https://packagist.org/packages/xpaw/php-source-query-class)
-[![Packagist Version](https://img.shields.io/packagist/v/xpaw/php-source-query-class.svg)](https://packagist.org/packages/xpaw/php-source-query-class)
+* Refactored, split up to make the GoldSource / Source functionality extendable.
+  * Removed most of the tight coupling, extend rather than handling differences in-line.
+* Improved error handling.
+* Still roughly API compatible (functions have been renamed to lower camel case).
 
+# Original Readme
 This class was created to query game server which use the Source query protocol, this includes all source games, and all the games that implement Steamworks.
 
 The class also allows you to query servers using RCON although this only works for half-life 1 and source engine games.
@@ -35,7 +39,7 @@ AppID | Game | Query | RCON | Notes
 70000 | [Dino D-Day](http://store.steampowered.com/app/70000/) | :white_check_mark: | :white_check_mark: | 
 107410 | [Arma 3](http://store.steampowered.com/app/107410/) | :white_check_mark: | :x: | Add +1 to the server port
 115300 | [Call of Duty: Modern Warfare 3](http://store.steampowered.com/app/115300/) | :white_check_mark: | :white_check_mark: | 
-211820 | [Starbound](http://store.steampowered.com/app/211820/) | :white_check_mark: | :white_check_mark: | Call `SetUseOldGetChallengeMethod` method after connecting
+211820 | [Starbound](http://store.steampowered.com/app/211820/) | :white_check_mark: | :white_check_mark: | Call `setUseOldGetChallengeMethod` method after connecting
 244850 | [Space Engineers](http://store.steampowered.com/app/244850/) | :white_check_mark: | :x: | Add +1 to the server port
 251570 | [7 Days to Die](http://store.steampowered.com/app/251570) | :white_check_mark: | :x: |
 252490 | [Rust](http://store.steampowered.com/app/252490/) | :white_check_mark: | :x: |
@@ -52,40 +56,40 @@ Add your server to your favourites in Steam server browser, and if Steam can dis
 ## Functions
 <table>
 	<tr>
-		<td>Connect( $Ip, $Port, $Timeout, $Engine )</td>
+		<td>connect($host, $port, $timeout)</td>
 		<td>Opens connection to a server</td>
 	</tr>
 	<tr>
-		<td>Disconnect( )</td>
+		<td>disconnect()</td>
 		<td>Closes all open connections</td>
 	</tr>
 	<tr>
-		<td>Ping( )</td>
+		<td>ping()</td>
 		<td>Ping the server to see if it exists<br><b>Warning:</b> Source engine may not answer to this</td>
 	</tr>
 	<tr>
-		<td>GetInfo( )</td>
+		<td>getInfo()</td>
 		<td>Returns server info in an array</td>
 	</tr>
 	<tr>
-		<td>GetPlayers( )</td>
+		<td>getPlayers()</td>
 		<td>Returns players on the server in an array</td>
 	</tr>
 	<tr>
-		<td>GetRules( )</td>
+		<td>getRules()</td>
 		<td>Returns public rules <i>(cvars)</i> in an array</td>
 	</tr>
 	<tr>
-		<td>SetRconPassword( $Password )</td>
+		<td>setRconPassword($password)</td>
 		<td>Sets rcon password for later use with <i>Rcon()</i></td>
 	</tr>
 	<tr>
-		<td>Rcon( $Command )</td>
+		<td>rcon($command)</td>
 		<td>Execute rcon command on the server</td>
 	</tr>
 </table>
 
-Also refer to [examples folder](Examples/) to work things out.
+Also refer to [examples folder](Examples) to work things out.
 
 ## License
     PHP Source Query
