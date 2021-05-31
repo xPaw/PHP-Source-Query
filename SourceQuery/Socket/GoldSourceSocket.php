@@ -15,25 +15,14 @@ declare(strict_types=1);
 
 namespace xPaw\SourceQuery\Socket;
 
-use xPaw\SourceQuery\Buffer;
+use xPaw\SourceQuery\Socket\Traits\GoldSourcePacketDataTrait;
 
 final class GoldSourceSocket extends AbstractSocket
 {
+    use GoldSourcePacketDataTrait;
+
     public function getType(): int
     {
         return SocketType::GOLDSOURCE;
-    }
-
-    protected function readInternalPacketData(
-        Buffer $buffer,
-        int &$count,
-        int &$number,
-        bool &$isCompressed,
-        ?int &$checksum
-    ): void {
-        $packetCountAndNumber = $buffer->getByte();
-        $count = $packetCountAndNumber & 0xF;
-        $number = $packetCountAndNumber >> 4;
-        $isCompressed = false;
     }
 }

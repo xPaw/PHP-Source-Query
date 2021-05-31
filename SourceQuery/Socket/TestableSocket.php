@@ -17,9 +17,19 @@ namespace xPaw\SourceQuery\Socket;
 
 use xPaw\SourceQuery\Buffer;
 use xPaw\SourceQuery\Exception\InvalidPacketException;
+use xPaw\SourceQuery\Socket\Traits\GoldSourcePacketDataTrait;
+use xPaw\SourceQuery\Socket\Traits\SourcePacketDataTrait;
 
 final class TestableSocket extends AbstractSocket
 {
+    use GoldSourcePacketDataTrait {
+        GoldSourcePacketDataTrait::readInternalPacketData as readInternalPacketDataGoldSource;
+    }
+
+    use SourcePacketDataTrait {
+        SourcePacketDataTrait::readInternalPacketData as readInternalPacketDataSource;
+    }
+
     /**
      * @var string[]
      */
@@ -99,9 +109,6 @@ final class TestableSocket extends AbstractSocket
         return -2 === $buffer->getLong();
     }
 
-    /**
-     * @throws InvalidPacketException
-     */
     protected function readInternalPacketData(
         Buffer $buffer,
         int &$count,
@@ -130,46 +137,6 @@ final class TestableSocket extends AbstractSocket
                     $isCompressed,
                     $checksum
                 );
-        }
-    }
-
-    /**
-     * Same as GoldSourceSocket::readInternalPacketData.
-     */
-    private function readInternalPacketDataGoldSource(
-        Buffer $buffer,
-        int &$count,
-        int &$number,
-        bool &$isCompressed,
-        ?int &$checksum
-    ): void {
-        $packetCountAndNumber = $buffer->getByte();
-        $count = $packetCountAndNumber & 0xF;
-        $number = $packetCountAndNumber >> 4;
-        $isCompressed = false;
-    }
-
-    /**
-     * Same as SourceSocket::readInternalPacketData.
-     *
-     * @throws InvalidPacketException
-     */
-    private function readInternalPacketDataSource(
-        Buffer $buffer,
-        int &$count,
-        int &$number,
-        bool &$isCompressed,
-        ?int &$checksum
-    ): void {
-        $count = $buffer->getByte();
-        $number = $buffer->getByte() + 1;
-
-        if ($isCompressed) {
-            $buffer->getLong(); // Split size.
-
-            $checksum = $buffer->getUnsignedLong();
-        } else {
-            $buffer->getShort(); // Split size.
         }
     }
 }
