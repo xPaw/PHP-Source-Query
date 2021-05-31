@@ -6,7 +6,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use xPaw\SourceQuery\SourceQueryFactory;
 
-// For the sake of this example
+// For the sake of this example.
 header('Content-Type: text/plain');
 header('X-Content-Type-Options: nosniff');
 

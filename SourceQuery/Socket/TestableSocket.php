@@ -30,7 +30,7 @@ final class TestableSocket extends AbstractSocket
     /**
      * TestableSocket constructor.
      */
-    public function __construct(int $type)
+    public function __construct(int $type = SocketType::SOURCE)
     {
         $this->packetQueue = [];
         $this->type = $type;

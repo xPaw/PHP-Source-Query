@@ -17,7 +17,7 @@ $exception = null;
 
 try {
     $query->connect('localhost', 27015);
-    //$query->setUseOldGetChallengeMethod( true ); // Use this when players/rules retrieval fails on games like Starbound
+    //$query->setUseOldGetChallengeMethod(true); // Use this when players/rules retrieval fails on games like Starbound.
 
     $info = $query->getInfo();
     $players = $query->getPlayers();

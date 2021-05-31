@@ -17,12 +17,9 @@ namespace xPaw\SourceQuery\Rcon;
 
 use xPaw\SourceQuery\Exception\AuthenticationException;
 use xPaw\SourceQuery\Exception\InvalidPacketException;
-use xPaw\SourceQuery\Socket\SocketInterface;
 
 interface RconInterface
 {
-    public function __construct(SocketInterface $socket);
-
     /**
      * Open.
      */

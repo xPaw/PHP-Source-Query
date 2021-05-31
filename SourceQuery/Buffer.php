@@ -94,6 +94,22 @@ final class Buffer
     }
 
     /**
+     * Get byte (boolean) from buffer.
+     */
+    public function getBool(): bool
+    {
+        return 1 === $this->getByte();
+    }
+
+    /**
+     * Get byte (character) from buffer.
+     */
+    public function getChar(): string
+    {
+        return chr($this->getByte());
+    }
+
+    /**
      * Get short from buffer.
      *
      * @throws InvalidPacketException
