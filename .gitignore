@@ -2,3 +2,4 @@ vendor/
 composer.lock
 .php-cs-fixer.cache
 .idea/
+Tests/.phpunit.result.cache

@@ -12,6 +12,8 @@ jobs:
     - uses: actions/checkout@v1
     - name: Install dependencies
       run: composer install --no-interaction --no-progress
+    - name: Run cs-fixer
+      run: php${{ matrix.php }} vendor/bin/php-cs-fixer --config=.php-cspfixer.php
     - name: Run tests
       run: php${{ matrix.php }} vendor/bin/phpunit --configuration Tests/phpunit.xml --verbose --fail-on-warning
     - name: Run phpstan

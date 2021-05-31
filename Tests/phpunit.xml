@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit colors="true" verbose="true">
-	<testsuites>
-		<testsuite name="Tests">
-			<file>./Tests.php</file>
-		</testsuite>
-	</testsuites>
-	<filter>
-		<whitelist processUncoveredFilesFromWhitelist="true">
-			<directory suffix=".php">../SourceQuery</directory>
-		</whitelist>
-	</filter>
-	<logging>
-		<log type="coverage-clover" target="../build/logs/clover.xml"/>
-	</logging>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" colors="true" verbose="true" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd">
+  <coverage processUncoveredFiles="true">
+    <include>
+      <directory suffix=".php">../SourceQuery</directory>
+    </include>
+    <report>
+      <clover outputFile="../build/logs/clover.xml"/>
+    </report>
+  </coverage>
+  <testsuites>
+    <testsuite name="Tests">
+      <file>./Tests.php</file>
+    </testsuite>
+  </testsuites>
+  <logging/>
 </phpunit>
