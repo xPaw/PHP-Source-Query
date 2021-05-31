@@ -31,6 +31,8 @@ final class SourceRcon extends AbstractRcon
 
     /**
      * @var ?resource
+     *
+     * @psalm-var null|resource|closed-resource
      */
     private $rconSocket;
 
@@ -76,7 +78,7 @@ final class SourceRcon extends AbstractRcon
      */
     public function close(): void
     {
-        if ($this->rconSocket) {
+        if (is_resource($this->rconSocket)) {
             fclose($this->rconSocket);
 
             $this->rconSocket = null;
@@ -173,7 +175,7 @@ final class SourceRcon extends AbstractRcon
      */
     protected function read(): Buffer
     {
-        if (!$this->rconSocket) {
+        if (!is_resource($this->rconSocket)) {
             throw new InvalidPacketException('Rcon socket not open.');
         }
 
@@ -236,7 +238,7 @@ final class SourceRcon extends AbstractRcon
      */
     protected function write(?int $header, string $string = ''): bool
     {
-        if (!$this->rconSocket) {
+        if (!is_resource($this->rconSocket)) {
             throw new InvalidPacketException('Rcon socket not open.');
         }
 

@@ -15,17 +15,15 @@ declare(strict_types=1);
 
 namespace xPaw\SourceQuery\Socket;
 
-use SplQueue;
-use SplDoublyLinkedList;
 use xPaw\SourceQuery\Buffer;
 use xPaw\SourceQuery\Exception\InvalidPacketException;
 
 final class TestableSocket extends AbstractSocket
 {
     /**
-     * @var SplQueue<string>
+     * @var string[]
      */
-    private SplQueue $packetQueue;
+    private array $packetQueue;
 
     /**
      * @var int
@@ -39,8 +37,7 @@ final class TestableSocket extends AbstractSocket
      */
     public function __construct(int $type)
     {
-        $this->packetQueue = new SplQueue();
-        $this->packetQueue->setIteratorMode(SplDoublyLinkedList::IT_MODE_DELETE);
+        $this->packetQueue = [];
         $this->type = $type;
     }
 
@@ -57,7 +54,7 @@ final class TestableSocket extends AbstractSocket
      */
     public function queue(string $data): void
     {
-        $this->packetQueue->push($data);
+        $this->packetQueue[] = $data;
     }
 
     /**
@@ -89,7 +86,14 @@ final class TestableSocket extends AbstractSocket
     public function read(int $length = 1400): Buffer
     {
         $buffer = new Buffer();
-        $buffer->set($this->packetQueue->shift());
+
+        $packet = array_shift($this->packetQueue);
+
+        if (!$packet) {
+            throw new InvalidPacketException('Empty packet');
+        }
+
+        $buffer->set($packet);
 
         $this->readInternal($buffer, $length, [ $this, 'sherlock' ]);
 
@@ -117,11 +121,11 @@ final class TestableSocket extends AbstractSocket
      */
     public function sherlock(Buffer $buffer, int $length): bool
     {
-        if ($this->packetQueue->isEmpty()) {
+        if (count($this->packetQueue) === 0) {
             return false;
         }
 
-        $buffer->set($this->packetQueue->shift());
+        $buffer->set(array_shift($this->packetQueue));
 
         return $buffer->getLong() === -2;
     }

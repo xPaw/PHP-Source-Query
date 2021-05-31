@@ -33,7 +33,9 @@ abstract class AbstractSocket implements SocketInterface
     public int $port = 0;
 
     /**
-     * @var resource|null
+     * @var ?resource
+     *
+     * @psalm-var null|resource|closed-resource
      */
     public $socket;
 
@@ -73,7 +75,7 @@ abstract class AbstractSocket implements SocketInterface
      */
     public function getSocket()
     {
-        if (!$this->socket) {
+        if (!is_resource($this->socket)) {
             throw new InvalidArgumentException('Socket not open.');
         }
 
@@ -117,7 +119,7 @@ abstract class AbstractSocket implements SocketInterface
      */
     public function close(): void
     {
-        if ($this->socket) {
+        if (is_resource($this->socket)) {
             fclose($this->socket);
 
             $this->socket = null;
@@ -137,7 +139,7 @@ abstract class AbstractSocket implements SocketInterface
      */
     public function read(int $length = 1400): Buffer
     {
-        if (!$this->socket) {
+        if (!is_resource($this->socket)) {
             throw new InvalidPacketException('Socket not open.');
         }
 
@@ -165,7 +167,7 @@ abstract class AbstractSocket implements SocketInterface
      */
     public function write(int $header, string $string = ''): bool
     {
-        if (!$this->socket) {
+        if (!is_resource($this->socket)) {
             throw new InvalidPacketException('Socket not open.');
         }
 
@@ -185,7 +187,7 @@ abstract class AbstractSocket implements SocketInterface
      */
     public function sherlock(Buffer $buffer, int $length): bool
     {
-        if (!$this->socket) {
+        if (!is_resource($this->socket)) {
             throw new InvalidPacketException('Socket not open.');
         }
 
