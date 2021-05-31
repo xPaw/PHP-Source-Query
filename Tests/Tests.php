@@ -419,7 +419,7 @@ final class Tests extends TestCase
 
             $socket->queue($data);
         }
-        
+
         return $sourceQuery;
     }
 }

@@ -17,6 +17,7 @@ return (new PhpCsFixer\Config())
         'native_constant_invocation' => false,
         'native_function_invocation' => false,
         'php_unit_fqcn_annotation' => false,
+        'php_unit_test_case_static_method_calls' => false,
     ])
     ->setFinder(PhpCsFixer\Finder::create()
         ->exclude('vendor')
