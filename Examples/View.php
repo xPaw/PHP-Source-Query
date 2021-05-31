@@ -104,10 +104,8 @@ $timer = number_format(microtime(true) - $timer, 4, '.', '');
         echo '<pre>';
         print_r($infoValue);
         echo '</pre>';
-    } elseif (true === $infoValue) {
-        echo 'true';
-    } elseif (false === $infoValue) {
-        echo 'false';
+    } elseif (is_bool($infoValue)) {
+        echo $infoValue ? 'true' : 'false';
     } elseif (is_int($infoValue)) {
         echo $infoValue;
     } else {
@@ -128,7 +126,7 @@ $timer = number_format(microtime(true) - $timer, 4, '.', '');
 				<table class="table table-bordered table-striped">
 					<thead>
 						<tr>
-							<th>Player <span class="label label-info"><?php echo count($players); ?></span></th>
+							<th>Players <span class="label label-info"><?php echo count($players); ?></span></th>
 							<th class="frags-column">Frags</th>
 							<th class="frags-column">Time</th>
 						</tr>
