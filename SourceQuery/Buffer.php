@@ -113,7 +113,11 @@ final class Buffer
 
         $data = unpack('v', $this->get(2));
 
-        return (int)$data[ 1 ];
+        if (!$data) {
+            throw new InvalidPacketException('Empty data from packet.');
+        }
+
+        return (int) $data[1];
     }
 
     /**
@@ -129,7 +133,11 @@ final class Buffer
 
         $data = unpack('l', $this->get(4));
 
-        return (int)$data[ 1 ];
+        if (!$data) {
+            throw new InvalidPacketException('Empty data from packet.');
+        }
+
+        return (int) $data[1];
     }
 
     /**
@@ -145,7 +153,11 @@ final class Buffer
 
         $data = unpack('f', $this->get(4));
 
-        return (float)$data[ 1 ];
+        if (!$data) {
+            throw new InvalidPacketException('Empty data from packet.');
+        }
+
+        return (float) $data[1];
     }
 
     /**
@@ -161,7 +173,11 @@ final class Buffer
 
         $data = unpack('V', $this->get(4));
 
-        return (int)$data[ 1 ];
+        if (!$data) {
+            throw new InvalidPacketException('Empty data from packet.');
+        }
+
+        return (int) $data[1];
     }
 
     /**

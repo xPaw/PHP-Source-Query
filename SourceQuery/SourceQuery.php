@@ -128,22 +128,6 @@ final class SourceQuery
     }
 
     /**
-     * Forces GetChallenge to use old method for challenge retrieval because some games use outdated protocol (e.g Starbound)
-     *
-     * @param bool $value Set to true to force old method
-     *
-     * @return bool Previous value
-     */
-    public function SetUseOldGetChallengeMethod(bool $value): bool
-    {
-        $previous = $this->useOldGetChallengeMethod;
-
-        $this->useOldGetChallengeMethod = $value === true;
-
-        return $previous;
-    }
-
-    /**
      * Closes all open connections
      */
     public function disconnect(): void
@@ -158,6 +142,22 @@ final class SourceQuery
 
             $this->rcon = null;
         }
+    }
+
+    /**
+     * Forces GetChallenge to use old method for challenge retrieval because some games use outdated protocol (e.g Starbound)
+     *
+     * @param bool $value Set to true to force old method
+     *
+     * @return bool Previous value
+     */
+    public function SetUseOldGetChallengeMethod(bool $value): bool
+    {
+        $previous = $this->useOldGetChallengeMethod;
+
+        $this->useOldGetChallengeMethod = $value === true;
+
+        return $previous;
     }
 
     /**
@@ -279,7 +279,7 @@ final class SourceQuery
         $server[ 'Version' ] = $buffer->getString();
 
         // Extra Data Flags.
-        if (!$buffer->isEmpty()) {
+        if ($buffer->remaining() > 0) {
             $server[ 'ExtraDataFlags' ] = $Flags = $buffer->getByte();
 
             // S2A_EXTRA_DATA_HAS_GAME_PORT - Next 2 bytes include the game port.
@@ -422,52 +422,6 @@ final class SourceQuery
     }
 
     /**
-     * Get challenge (used for players/rules packets)
-     *
-     * @param int $header
-     * @param int $expectedResult
-     *
-     * @throws InvalidPacketException
-     */
-    private function getChallenge(int $header, int $expectedResult): void
-    {
-        if ($this->challenge) {
-            return;
-        }
-
-        if ($this->useOldGetChallengeMethod) {
-            $header = self::A2S_SERVERQUERY_GETCHALLENGE;
-        }
-
-        $this->socket->write($header, "\xFF\xFF\xFF\xFF");
-        $buffer = $this->socket->read();
-
-        $type = $buffer->getByte();
-
-        switch ($type) {
-            case self::S2C_CHALLENGE:
-            {
-                $this->challenge = $buffer->get(4);
-
-                return;
-            }
-            case $expectedResult:
-            {
-                // Goldsource (HLTV).
-                return;
-            }
-            case 0:
-            {
-                throw new InvalidPacketException('GetChallenge: Failed to get challenge.');
-            }
-            default:
-            {
-                throw new InvalidPacketException('GetChallenge: Packet header mismatch. (0x' . dechex($type) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH);
-            }
-        }
-    }
-
-    /**
      * Sets rcon password, for future use in Rcon()
      *
      * @param string $password Rcon Password
@@ -527,5 +481,51 @@ final class SourceQuery
         }
 
         return $this->rcon->command($command);
+    }
+
+    /**
+     * Get challenge (used for players/rules packets)
+     *
+     * @param int $header
+     * @param int $expectedResult
+     *
+     * @throws InvalidPacketException
+     */
+    private function getChallenge(int $header, int $expectedResult): void
+    {
+        if ($this->challenge) {
+            return;
+        }
+
+        if ($this->useOldGetChallengeMethod) {
+            $header = self::A2S_SERVERQUERY_GETCHALLENGE;
+        }
+
+        $this->socket->write($header, "\xFF\xFF\xFF\xFF");
+        $buffer = $this->socket->read();
+
+        $type = $buffer->getByte();
+
+        switch ($type) {
+            case self::S2C_CHALLENGE:
+            {
+                $this->challenge = $buffer->get(4);
+
+                return;
+            }
+            case $expectedResult:
+            {
+                // Goldsource (HLTV).
+                return;
+            }
+            case 0:
+            {
+                throw new InvalidPacketException('GetChallenge: Failed to get challenge.');
+            }
+            default:
+            {
+                throw new InvalidPacketException('GetChallenge: Packet header mismatch. (0x' . dechex($type) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH);
+            }
+        }
     }
 }

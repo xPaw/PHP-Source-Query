@@ -239,7 +239,7 @@ final class Tests extends TestCase
     {
         return
         [
-            [ "" ],
+            [ '' ],
             [ "\xff\xff\xff\xff" ], // No type.
             [ "\xff\xff\xff\xff\x49" ], // Correct type, but no data after.
             [ "\xff\xff\xff\xff\x6D" ], // Old info packet, but tests are done for source.
@@ -274,10 +274,22 @@ final class Tests extends TestCase
      */
     public function testGetRules(array $rawInput, array $expectedOutput): void
     {
-        $this->socket->queue(hex2bin("ffffffff4104fce20e")); // Challenge.
+        $data = hex2bin('ffffffff4104fce20e');
+
+        if (!$data) {
+            throw new InvalidPacketException('Bad packet data');
+        }
+
+        $this->socket->queue($data); // Challenge.
 
         foreach ($rawInput as $packet) {
-            $this->socket->queue(hex2bin($packet));
+            $data = hex2bin($packet);
+
+            if (!$data) {
+                throw new InvalidPacketException('Bad packet data');
+            }
+
+            $this->socket->queue($data);
         }
 
         $realOutput = $this->sourceQuery->getRules();
@@ -306,10 +318,22 @@ final class Tests extends TestCase
      */
     public function testGetPlayers(array $rawInput, array $expectedOutput): void
     {
-        $this->socket->queue(hex2bin("ffffffff4104fce20e")); // Challenge.
+        $data = hex2bin('ffffffff4104fce20e');
+
+        if (!$data) {
+            throw new InvalidPacketException('Bad packet data');
+        }
+
+        $this->socket->queue($data); // Challenge.
 
         foreach ($rawInput as $packet) {
-            $this->socket->queue(hex2bin($packet));
+            $data = hex2bin($packet);
+
+            if (!$data) {
+                throw new InvalidPacketException('Bad packet data');
+            }
+
+            $this->socket->queue($data);
         }
 
         $realOutput = $this->sourceQuery->getPlayers();
@@ -353,18 +377,36 @@ final class Tests extends TestCase
 
         $files = glob(__DIR__ . '/' . $path . '/*.raw', GLOB_ERR);
 
+        if (!$files) {
+            throw new RuntimeException('Could not load test data.');
+        }
+
         foreach ($files as $file) {
-            $content = $hexToBin
-                ? hex2bin(trim(file_get_contents($file)))
-                : file($file, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES);
+            if ($hexToBin) {
+                $content = file_get_contents($file);
+
+                if (!$content) {
+                    throw new RuntimeException('Could not load test data.');
+                }
+
+                $content = hex2bin(trim($content));
+            } else {
+                $content = file($file, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES);
+            }
+
+            $jsonContent = file_get_contents(
+                str_replace('.raw', '.json', $file)
+            );
+
+            if (!$jsonContent) {
+                throw new RuntimeException('Could not load test data.');
+            }
 
             $dataProvider[] =
                 [
                     $content,
                     json_decode(
-                        file_get_contents(
-                            str_replace('.raw', '.json', $file)
-                        ),
+                        $jsonContent,
                         true,
                         512,
                         JSON_THROW_ON_ERROR

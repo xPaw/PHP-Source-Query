@@ -173,8 +173,18 @@ final class SourceRcon extends AbstractRcon
      */
     protected function read(): Buffer
     {
+        if (!$this->rconSocket) {
+            throw new InvalidPacketException('Rcon socket not open.');
+        }
+
         $buffer = new Buffer();
-        $buffer->set(fread($this->rconSocket, 4));
+        $socketData = fread($this->rconSocket, 4);
+
+        if (!$socketData) {
+            throw new InvalidPacketException('Empty data from packet.');
+        }
+
+        $buffer->set($socketData);
 
         if ($buffer->remaining() < 4) {
             throw new InvalidPacketException('Rcon read: Failed to read any data from socket', InvalidPacketException::BUFFER_EMPTY);
@@ -182,7 +192,13 @@ final class SourceRcon extends AbstractRcon
 
         $packetSize = $buffer->getLong();
 
-        $buffer->set(fread($this->rconSocket, $packetSize));
+        $socketData = fread($this->rconSocket, $packetSize);
+
+        if (!$socketData) {
+            throw new InvalidPacketException('Empty data from packet.');
+        }
+
+        $buffer->set($socketData);
 
         $data = $buffer->get();
 
@@ -191,9 +207,13 @@ final class SourceRcon extends AbstractRcon
         while ($remaining > 0) {
             $data2 = fread($this->rconSocket, $remaining);
 
+            if (!$data2) {
+                throw new InvalidPacketException('Empty data from packet.');
+            }
+
             $packetSize = strlen($data2);
 
-            if ($packetSize === 0) {
+            if ($packetSize <= 0) {
                 throw new InvalidPacketException('Read ' . strlen($data) . ' bytes from socket, ' . $remaining . ' remaining', InvalidPacketException::BUFFER_EMPTY);
             }
 
@@ -211,9 +231,15 @@ final class SourceRcon extends AbstractRcon
      * @param string $string
      *
      * @return bool
+     *
+     * @throws InvalidPacketException
      */
     protected function write(?int $header, string $string = ''): bool
     {
+        if (!$this->rconSocket) {
+            throw new InvalidPacketException('Rcon socket not open.');
+        }
+
         // Pack the packet together.
         $command = pack('VV', ++$this->rconRequestId, $header) . $string . "\x00\x00";
 

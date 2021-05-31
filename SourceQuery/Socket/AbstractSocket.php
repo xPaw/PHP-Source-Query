@@ -137,6 +137,10 @@ abstract class AbstractSocket implements SocketInterface
      */
     public function read(int $length = 1400): Buffer
     {
+        if (!$this->socket) {
+            throw new InvalidPacketException('Socket not open.');
+        }
+
         $buffer = new Buffer();
         $data = fread($this->socket, $length);
 
@@ -156,9 +160,15 @@ abstract class AbstractSocket implements SocketInterface
      * @param string $string
      *
      * @return bool
+     *
+     * @throws InvalidPacketException
      */
     public function write(int $header, string $string = ''): bool
     {
+        if (!$this->socket) {
+            throw new InvalidPacketException('Socket not open.');
+        }
+
         $command = pack('ccccca*', 0xFF, 0xFF, 0xFF, 0xFF, $header, $string);
         $length  = strlen($command);
 
@@ -175,7 +185,15 @@ abstract class AbstractSocket implements SocketInterface
      */
     public function sherlock(Buffer $buffer, int $length): bool
     {
+        if (!$this->socket) {
+            throw new InvalidPacketException('Socket not open.');
+        }
+
         $data = fread($this->socket, $length);
+
+        if (!$data) {
+            throw new InvalidPacketException('Empty data from packet.');
+        }
 
         if (strlen($data) < 4) {
             return false;
