@@ -1,4 +1,6 @@
 # PHP Source Query
+[![CI](https://github.com/birkett/PHP-Source-Query/actions/workflows/ci.yml/badge.svg)](https://github.com/birkett/PHP-Source-Query/actions/workflows/ci.yml)
+
 A fork of [xPaw's PHP Source Query library.](https://github.com/xPaw/PHP-Source-Query)
 
 * Refactored, split up to make the GoldSource / Source functionality extendable.
