@@ -6,38 +6,30 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use xPaw\SourceQuery\SourceQuery;
 use xPaw\SourceQuery\Socket\SourceSocket;
-use xPaw\SourceQuery\Socket\SocketType;
 
-// Edit this ->
-define('SQ_SERVER_ADDR', 'localhost');
-define('SQ_SERVER_PORT', 27015);
-define('SQ_TIMEOUT', 3);
-define('SQ_ENGINE', SocketType::SOURCE);
-// Edit this <-
+$timer = microtime(true);
 
-$Timer = microtime(true);
+$query = new SourceQuery(new SourceSocket());
 
-$Query = new SourceQuery(new SourceSocket());
-
-$Info    = [];
-$Rules   = [];
-$Players = [];
-$Exception = null;
+$info = [];
+$rules = [];
+$players = [];
+$exception = null;
 
 try {
-    $Query->connect(SQ_SERVER_ADDR, SQ_SERVER_PORT, SQ_TIMEOUT, SQ_ENGINE);
+    $query->connect('localhost', 27015, 3);
     //$Query->SetUseOldGetChallengeMethod( true ); // Use this when players/rules retrieval fails on games like Starbound
 
-    $Info    = $Query->getInfo();
-    $Players = $Query->getPlayers();
-    $Rules   = $Query->getRules();
+    $info = $query->getInfo();
+    $players = $query->getPlayers();
+    $rules = $query->getRules();
 } catch (Exception $e) {
-    $Exception = $e;
+    $exception = $e;
 } finally {
-    $Query->disconnect();
+    $query->disconnect();
 }
 
-$Timer = number_format(microtime(true) - $Timer, 4, '.', '');
+$timer = number_format(microtime(true) - $timer, 4, '.', '');
 
 ?>
 <!DOCTYPE html>
@@ -47,7 +39,7 @@ $Timer = number_format(microtime(true) - $Timer, 4, '.', '');
 	<title>Source Query PHP Library</title>
 	
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-	<style type="text/css">
+	<style>
 		.table {
 			table-layout: fixed;
 			border-top-color: #428BCA;
@@ -89,9 +81,9 @@ $Timer = number_format(microtime(true) - $Timer, 4, '.', '');
 	</div>
 		
 	<div class="container">
-<?php if ($Exception !== null): ?>
+<?php if ($exception !== null): ?>
 		<div class="panel panel-error">
-			<pre class="panel-body"><?php echo htmlspecialchars($Exception->__toString()); ?></pre>
+			<pre class="panel-body"><?php echo htmlspecialchars($exception->__toString()); ?></pre>
 		</div>
 <?php endif; ?>
 		<div class="row">
@@ -100,27 +92,27 @@ $Timer = number_format(microtime(true) - $Timer, 4, '.', '');
 					<thead>
 						<tr>
 							<th class="info-column">Server Info</th>
-							<th><span class="label label-<?php echo $Timer > 1.0 ? 'danger' : 'success'; ?>"><?php echo $Timer; ?>s</span></th>
+							<th><span class="label label-<?php echo $timer > 1.0 ? 'danger' : 'success'; ?>"><?php echo $timer; ?>s</span></th>
 						</tr>
 					</thead>
 					<tbody>
-<?php if (!empty($Info)): ?>
-<?php foreach ($Info as $InfoKey => $InfoValue): ?>
+<?php if (!empty($info)): ?>
+<?php foreach ($info as $infoKey => $infoValue): ?>
 						<tr>
-							<td><?php echo htmlspecialchars($InfoKey); ?></td>
+							<td><?php echo htmlspecialchars($infoKey); ?></td>
 							<td><?php
-    if (is_array($InfoValue)) {
+    if (is_array($infoValue)) {
         echo "<pre>";
-        print_r($InfoValue);
+        print_r($infoValue);
         echo "</pre>";
-    } elseif ($InfoValue === true) {
+    } elseif ($infoValue === true) {
         echo 'true';
-    } elseif ($InfoValue === false) {
+    } elseif ($infoValue === false) {
         echo 'false';
-    } elseif (is_int($InfoValue)) {
-        echo $InfoValue;
+    } elseif (is_int($infoValue)) {
+        echo $infoValue;
     } else {
-        echo htmlspecialchars($InfoValue);
+        echo htmlspecialchars($infoValue);
     }
 ?></td>
 						</tr>
@@ -137,18 +129,18 @@ $Timer = number_format(microtime(true) - $Timer, 4, '.', '');
 				<table class="table table-bordered table-striped">
 					<thead>
 						<tr>
-							<th>Player <span class="label label-info"><?php echo count($Players); ?></span></th>
+							<th>Player <span class="label label-info"><?php echo count($players); ?></span></th>
 							<th class="frags-column">Frags</th>
 							<th class="frags-column">Time</th>
 						</tr>
 					</thead>
 					<tbody>
-<?php if (!empty($Players)): ?>
-<?php foreach ($Players as $Player): ?>
+<?php if (!empty($players)): ?>
+<?php foreach ($players as $player): ?>
 						<tr>
-							<td><?php echo htmlspecialchars($Player[ 'Name' ]); ?></td>
-							<td><?php echo $Player[ 'Frags' ]; ?></td>
-							<td><?php echo $Player[ 'TimeF' ]; ?></td>
+							<td><?php echo htmlspecialchars($player[ 'Name' ]); ?></td>
+							<td><?php echo $player[ 'Frags' ]; ?></td>
+							<td><?php echo $player[ 'TimeF' ]; ?></td>
 						</tr>
 <?php endforeach; ?>
 <?php else: ?>
@@ -165,15 +157,15 @@ $Timer = number_format(microtime(true) - $Timer, 4, '.', '');
 				<table class="table table-bordered table-striped">
 					<thead>
 						<tr>
-							<th colspan="2">Rules <span class="label label-info"><?php echo count($Rules); ?></span></th>
+							<th colspan="2">Rules <span class="label label-info"><?php echo count($rules); ?></span></th>
 						</tr>
 					</thead>
 					<tbody>
-<?php if (!empty($Rules)): ?>
-<?php foreach ($Rules as $Rule => $Value): ?>
+<?php if (!empty($rules)): ?>
+<?php foreach ($rules as $ruleKey => $ruleValue): ?>
 						<tr>
-							<td><?php echo htmlspecialchars($Rule); ?></td>
-							<td><?php echo htmlspecialchars($Value); ?></td>
+							<td><?php echo htmlspecialchars($ruleKey); ?></td>
+							<td><?php echo htmlspecialchars($ruleValue); ?></td>
 						</tr>
 <?php endforeach; ?>
 <?php else: ?>

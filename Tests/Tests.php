@@ -24,7 +24,6 @@ final class Tests extends TestCase
     private SourceQuery $sourceQuery;
 
     /**
-     * @throws SocketException
      * @throws InvalidArgumentException
      */
     public function setUp(): void
@@ -46,7 +45,6 @@ final class Tests extends TestCase
 
     /**
      * @throws InvalidArgumentException
-     * @throws SocketException
      */
     public function testInvalidTimeout(): void
     {
@@ -67,7 +65,6 @@ final class Tests extends TestCase
     }
 
     /**
-     * @throws InvalidPacketException
      * @throws SocketException
      */
     public function testNotConnectedPing(): void
@@ -166,26 +163,7 @@ final class Tests extends TestCase
      */
     public function infoProvider(): array
     {
-        $dataProvider = [];
-
-        $files = glob(__DIR__ . '/Info/*.raw', GLOB_ERR);
-
-        foreach ($files as $file) {
-            $dataProvider[] =
-            [
-                hex2bin(trim(file_get_contents($file))),
-                json_decode(
-                    file_get_contents(
-                        str_replace('.raw', '.json', $file)
-                    ),
-                    true,
-                    512,
-                    JSON_THROW_ON_ERROR
-                )
-            ];
-        }
-
-        return $dataProvider;
+        return $this->getData('Info', true);
     }
 
     /**
@@ -262,12 +240,12 @@ final class Tests extends TestCase
         return
         [
             [ "" ],
-            [ "\xff\xff\xff\xff" ], // No type
-            [ "\xff\xff\xff\xff\x49" ], // Correct type, but no data after
-            [ "\xff\xff\xff\xff\x6D" ], // Old info packet, but tests are done for source
-            [ "\xff\xff\xff\xff\x11" ], // Wrong type
-            [ "\x11\x11\x11\x11" ], // Wrong header
-            [ "\xff" ], // Should be 4 bytes, but it's 1
+            [ "\xff\xff\xff\xff" ], // No type.
+            [ "\xff\xff\xff\xff\x49" ], // Correct type, but no data after.
+            [ "\xff\xff\xff\xff\x6D" ], // Old info packet, but tests are done for source.
+            [ "\xff\xff\xff\xff\x11" ], // Wrong type.
+            [ "\x11\x11\x11\x11" ], // Wrong header.
+            [ "\xff" ], // Should be 4 bytes, but it's 1.
         ];
     }
 
@@ -296,7 +274,7 @@ final class Tests extends TestCase
      */
     public function testGetRules(array $rawInput, array $expectedOutput): void
     {
-        $this->socket->queue(hex2bin("ffffffff4104fce20e")); // Challenge
+        $this->socket->queue(hex2bin("ffffffff4104fce20e")); // Challenge.
 
         foreach ($rawInput as $packet) {
             $this->socket->queue(hex2bin($packet));
@@ -314,26 +292,7 @@ final class Tests extends TestCase
      */
     public function rulesProvider(): array
     {
-        $dataProvider = [];
-
-        $files = glob(__DIR__ . '/Rules/*.raw', GLOB_ERR);
-
-        foreach ($files as $file) {
-            $dataProvider[] =
-            [
-                file($file, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES),
-                json_decode(
-                    file_get_contents(
-                        str_replace('.raw', '.json', $file)
-                    ),
-                    true,
-                    512,
-                    JSON_THROW_ON_ERROR
-                )
-            ];
-        }
-
-        return $dataProvider;
+        return $this->getData('Rules');
     }
 
     /**
@@ -347,7 +306,7 @@ final class Tests extends TestCase
      */
     public function testGetPlayers(array $rawInput, array $expectedOutput): void
     {
-        $this->socket->queue(hex2bin("ffffffff4104fce20e")); // Challenge
+        $this->socket->queue(hex2bin("ffffffff4104fce20e")); // Challenge.
 
         foreach ($rawInput as $packet) {
             $this->socket->queue(hex2bin($packet));
@@ -365,30 +324,10 @@ final class Tests extends TestCase
      */
     public function playersProvider(): array
     {
-        $dataProvider = [];
-
-        $files = glob(__DIR__ . '/Players/*.raw', GLOB_ERR);
-
-        foreach ($files as $file) {
-            $dataProvider[] =
-            [
-                file($file, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES),
-                json_decode(
-                    file_get_contents(
-                        str_replace('.raw', '.json', $file)
-                    ),
-                    true,
-                    512,
-                    JSON_THROW_ON_ERROR
-                )
-            ];
-        }
-
-        return $dataProvider;
+        return $this->getData('Players');
     }
 
     /**
-     * @throws InvalidPacketException
      * @throws SocketException
      */
     public function testPing(): void
@@ -398,5 +337,41 @@ final class Tests extends TestCase
 
         $this->socket->queue("\xFF\xFF\xFF\xFF\xEE");
         self::assertFalse($this->sourceQuery->ping());
+    }
+
+    /**
+     * @param string $path
+     * @param bool $hexToBin
+     *
+     * @return array
+     *
+     * @throws JsonException
+     */
+    private function getData(string $path, bool $hexToBin = false): array
+    {
+        $dataProvider = [];
+
+        $files = glob(__DIR__ . '/' . $path . '/*.raw', GLOB_ERR);
+
+        foreach ($files as $file) {
+            $content = $hexToBin
+                ? hex2bin(trim(file_get_contents($file)))
+                : file($file, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES);
+
+            $dataProvider[] =
+                [
+                    $content,
+                    json_decode(
+                        file_get_contents(
+                            str_replace('.raw', '.json', $file)
+                        ),
+                        true,
+                        512,
+                        JSON_THROW_ON_ERROR
+                    )
+                ];
+        }
+
+        return $dataProvider;
     }
 }

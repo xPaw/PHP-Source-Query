@@ -26,16 +26,6 @@ use xPaw\SourceQuery\Rcon\SourceRcon;
 use xPaw\SourceQuery\Socket\SocketInterface;
 use xPaw\SourceQuery\Socket\SocketType;
 
-/**
- * Class SourceQuery
- *
- * @package xPaw\SourceQuery
- *
- * @uses AuthenticationException
- * @uses InvalidArgumentException
- * @uses InvalidPacketException
- * @uses SocketException
- */
 final class SourceQuery
 {
     /**
@@ -53,7 +43,7 @@ final class SourceQuery
     private const A2A_ACK       = 0x6A;
     private const S2C_CHALLENGE = 0x41;
     private const S2A_INFO_SRC  = 0x49;
-    private const S2A_INFO_OLD  = 0x6D; // Old GoldSource, HLTV uses it (actually called S2A_INFO_DETAILED)
+    private const S2A_INFO_OLD  = 0x6D; // Old GoldSource, HLTV uses it (actually called S2A_INFO_DETAILED).
     private const S2A_PLAYER    = 0x44;
     private const S2A_RULES     = 0x45;
     public const S2A_RCON      = 0x6C;
@@ -76,7 +66,7 @@ final class SourceQuery
      *
      * @var RconInterface|null
      */
-    private $rcon;
+    private ?RconInterface $rcon;
 
     /**
      * Points to socket class
@@ -104,6 +94,7 @@ final class SourceQuery
     public function __construct(SocketInterface $socket)
     {
         $this->socket = $socket;
+        $this->rcon = null;
     }
 
     /**
@@ -120,12 +111,10 @@ final class SourceQuery
      * @param string $address Server ip
      * @param int $port Server port
      * @param int $timeout Timeout period
-     * @param int $engine Engine the server runs on (goldsource, source)
      *
      * @throws InvalidArgumentException
-     * @throws SocketException
      */
-    public function connect(string $address, int $port, int $timeout = 3, int $engine = SocketType::SOURCE): void
+    public function connect(string $address, int $port, int $timeout = 3): void
     {
         $this->disconnect();
 
@@ -133,7 +122,7 @@ final class SourceQuery
             throw new InvalidArgumentException('Timeout must be a positive integer.', InvalidArgumentException::TIMEOUT_NOT_INTEGER);
         }
 
-        $this->socket->open($address, $port, $timeout, $engine);
+        $this->socket->open($address, $port, $timeout);
 
         $this->connected = true;
     }
@@ -175,7 +164,6 @@ final class SourceQuery
      * Sends ping packet to the server
      * NOTE: This may not work on some games (TF2 for example)
      *
-     * @throws InvalidPacketException
      * @throws SocketException
      *
      * @return bool True on success, false on failure
@@ -224,7 +212,7 @@ final class SourceQuery
             $type = $buffer->getByte();
         }
 
-        // Old GoldSource protocol, HLTV still uses it
+        // Old GoldSource protocol, HLTV still uses it.
         if ($type === self::S2A_INFO_OLD && $this->socket->getType() === SocketType::GOLDSOURCE) {
             /**
              * If we try to read data again, and we get the result with type S2A_INFO (0x49)
@@ -290,8 +278,8 @@ final class SourceQuery
 
         $server[ 'Version' ] = $buffer->getString();
 
-        // Extra Data Flags
-        if ($buffer->remaining() > 0) {
+        // Extra Data Flags.
+        if (!$buffer->isEmpty()) {
             $server[ 'ExtraDataFlags' ] = $Flags = $buffer->getByte();
 
             // S2A_EXTRA_DATA_HAS_GAME_PORT - Next 2 bytes include the game port.
@@ -299,12 +287,12 @@ final class SourceQuery
                 $server[ 'GamePort' ] = $buffer->getShort();
             }
 
-            // S2A_EXTRA_DATA_HAS_STEAMID - Next 8 bytes are the steamID
+            // S2A_EXTRA_DATA_HAS_STEAMID - Next 8 bytes are the steamID.
             // Want to play around with this?
             // You can use https://github.com/xPaw/SteamID.php
             if ($Flags & 0x10) {
                 $steamIdLower = $buffer->getUnsignedLong();
-                $steamIdInstance = $buffer->getUnsignedLong(); // This gets shifted by 32 bits, which should be steamid instance
+                $steamIdInstance = $buffer->getUnsignedLong(); // This gets shifted by 32 bits, which should be steamid instance.
 
                 if (PHP_INT_SIZE === 4) {
                     if (extension_loaded('gmp')) {
@@ -329,12 +317,12 @@ final class SourceQuery
                 $server[ 'SpecName' ] = $buffer->getString();
             }
 
-            // S2A_EXTRA_DATA_HAS_GAMETAG_DATA - Next bytes are the game tag string
+            // S2A_EXTRA_DATA_HAS_GAMETAG_DATA - Next bytes are the game tag string.
             if ($Flags & 0x20) {
                 $server[ 'GameTags' ] = $buffer->getString();
             }
 
-            // S2A_EXTRA_DATA_GAMEID - Next 8 bytes are the gameID of the server
+            // S2A_EXTRA_DATA_GAMEID - Next 8 bytes are the gameID of the server.
             if ($Flags & 0x01) {
                 $server[ 'GameID' ] = $buffer->getUnsignedLong() | ($buffer->getUnsignedLong() << 32);
             }
@@ -367,7 +355,7 @@ final class SourceQuery
         $this->getChallenge(self::A2S_PLAYER, self::S2A_PLAYER);
 
         $this->socket->write(self::A2S_PLAYER, $this->challenge);
-        $buffer = $this->socket->read(14000); // Moronic Arma 3 developers do not split their packets, so we have to read more data
+        $buffer = $this->socket->read(14000); // Moronic Arma 3 developers do not split their packets, so we have to read more data.
         // This violates the protocol spec, and they probably should fix it: https://developer.valvesoftware.com/wiki/Server_queries#Protocol
 
         $type = $buffer->getByte();
@@ -379,7 +367,7 @@ final class SourceQuery
         $players = [];
         $count = $buffer->getByte();
 
-        while ($count-- > 0 && $buffer->remaining() > 0) {
+        while ($count-- > 0 && !$buffer->isEmpty()) {
             $player = [];
             $player[ 'Id' ]    = $buffer->getByte(); // PlayerID, is it just always 0?
             $player[ 'Name' ]  = $buffer->getString();
@@ -421,7 +409,7 @@ final class SourceQuery
         $rules = [];
         $count = $buffer->getShort();
 
-        while ($count-- > 0 && $buffer->remaining() > 0) {
+        while ($count-- > 0 && !$buffer->isEmpty()) {
             $rule = $buffer->getString();
             $value = $buffer->getString();
 
@@ -440,7 +428,6 @@ final class SourceQuery
      * @param int $expectedResult
      *
      * @throws InvalidPacketException
-     * @throws SocketException
      */
     private function getChallenge(int $header, int $expectedResult): void
     {
@@ -466,8 +453,7 @@ final class SourceQuery
             }
             case $expectedResult:
             {
-                // Goldsource (HLTV)
-
+                // Goldsource (HLTV).
                 return;
             }
             case 0:
@@ -525,7 +511,7 @@ final class SourceQuery
      * @param string $command Command to execute
      *
      * @return string Answer from server in string
-     *@throws InvalidPacketException
+     * @throws InvalidPacketException
      * @throws SocketException
      *
      * @throws AuthenticationException

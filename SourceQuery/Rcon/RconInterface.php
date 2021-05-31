@@ -2,6 +2,17 @@
 
 declare(strict_types=1);
 
+/**
+ * @author Pavel Djundik
+ *
+ * @link https://xpaw.me
+ * @link https://github.com/xPaw/PHP-Source-Query
+ *
+ * @license GNU Lesser General Public License, version 2.1
+ *
+ * @internal
+ */
+
 namespace xPaw\SourceQuery\Rcon;
 
 use xPaw\SourceQuery\Exception\AuthenticationException;
@@ -16,14 +27,21 @@ interface RconInterface
     public function __construct(SocketInterface $socket);
 
     /**
+     * Open
+     */
+    public function open(): void;
+
+    /**
      * Close
      */
     public function close(): void;
 
     /**
-     * Open
+     * @param string $password
+     *
+     * @throws AuthenticationException
      */
-    public function open(): void;
+    public function authorize(string $password): void;
 
     /**
      * @param string $command
@@ -34,11 +52,4 @@ interface RconInterface
      * @throws InvalidPacketException
      */
     public function command(string $command): string;
-
-    /**
-     * @param string $password
-     *
-     * @throws AuthenticationException
-     */
-    public function authorize(string $password): void;
 }

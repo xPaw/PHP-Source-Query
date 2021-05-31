@@ -2,6 +2,17 @@
 
 declare(strict_types=1);
 
+/**
+ * @author Pavel Djundik
+ *
+ * @link https://xpaw.me
+ * @link https://github.com/xPaw/PHP-Source-Query
+ *
+ * @license GNU Lesser General Public License, version 2.1
+ *
+ * @internal
+ */
+
 namespace xPaw\SourceQuery\Socket;
 
 use SplQueue;
@@ -50,35 +61,22 @@ final class TestableSocket extends AbstractSocket
     }
 
     /**
-     * Close.
-     */
-    public function close(): void
-    {
-    }
-
-    /**
      * @param string $address
      * @param int $port
      * @param int $timeout
-     * @param int $engine
      */
-    public function open(string $address, int $port, int $timeout, int $engine): void
+    public function open(string $address, int $port, int $timeout): void
     {
         $this->timeout = $timeout;
-        $this->engine  = $engine;
         $this->port    = $port;
         $this->address = $address;
     }
 
     /**
-     * @param int $header
-     * @param string $string
-     *
-     * @return bool
+     * Close.
      */
-    public function write(int $header, string $string = ''): bool
+    public function close(): void
     {
-        return true;
     }
 
     /**
@@ -96,6 +94,17 @@ final class TestableSocket extends AbstractSocket
         $this->readInternal($buffer, $length, [ $this, 'sherlock' ]);
 
         return $buffer;
+    }
+
+    /**
+     * @param int $header
+     * @param string $string
+     *
+     * @return bool
+     */
+    public function write(int $header, string $string = ''): bool
+    {
+        return true;
     }
 
     /**
@@ -166,7 +175,7 @@ final class TestableSocket extends AbstractSocket
      * @param bool $isCompressed
      * @param int|null $checksum
      */
-    protected function readInternalPacketDataGoldSource(
+    private function readInternalPacketDataGoldSource(
         Buffer $buffer,
         int &$count,
         int &$number,
@@ -190,7 +199,7 @@ final class TestableSocket extends AbstractSocket
      *
      * @throws InvalidPacketException
      */
-    protected function readInternalPacketDataSource(
+    private function readInternalPacketDataSource(
         Buffer $buffer,
         int &$count,
         int &$number,
@@ -201,11 +210,11 @@ final class TestableSocket extends AbstractSocket
         $number = $buffer->getByte() + 1;
 
         if ($isCompressed) {
-            $buffer->getLong(); // Split size
+            $buffer->getLong(); // Split size.
 
             $checksum = $buffer->getUnsignedLong();
         } else {
-            $buffer->getShort(); // Split size
+            $buffer->getShort(); // Split size.
         }
     }
 }

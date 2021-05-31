@@ -19,5 +19,5 @@ use Exception;
 
 abstract class SourceQueryException extends Exception
 {
-    // Base exception class
+    // Base exception class.
 }

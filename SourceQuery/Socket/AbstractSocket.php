@@ -20,26 +20,8 @@ use xPaw\SourceQuery\Exception\InvalidArgumentException;
 use xPaw\SourceQuery\Exception\InvalidPacketException;
 use xPaw\SourceQuery\Exception\SocketException;
 
-/**
- * Base socket
- *
- * @package xPaw\SourceQuery
- *
- * @uses InvalidPacketException
- * @uses SocketException
- */
 abstract class AbstractSocket implements SocketInterface
 {
-    /**
-     * @var resource|null
-     */
-    public $socket;
-
-    /**
-     * @var int
-     */
-    public int $engine = SocketType::SOURCE;
-
     /**
      * @var string $address
      */
@@ -49,6 +31,11 @@ abstract class AbstractSocket implements SocketInterface
      * @var int $port
      */
     public int $port = 0;
+
+    /**
+     * @var resource|null
+     */
+    public $socket;
 
     /**
      * @var int $timeout
@@ -80,14 +67,6 @@ abstract class AbstractSocket implements SocketInterface
     }
 
     /**
-     * @return int
-     */
-    public function getTimeout(): int
-    {
-        return $this->timeout;
-    }
-
-    /**
      * @return resource
      *
      * @throws InvalidArgumentException
@@ -102,29 +81,23 @@ abstract class AbstractSocket implements SocketInterface
     }
 
     /**
-     * Close
+     * @return int
      */
-    public function close(): void
+    public function getTimeout(): int
     {
-        if ($this->socket) {
-            fclose($this->socket);
-
-            $this->socket = null;
-        }
+        return $this->timeout;
     }
 
     /**
      * @param string $address
      * @param int $port
      * @param int $timeout
-     * @param int $engine
      *
      * @throws SocketException
      */
-    public function open(string $address, int $port, int $timeout, int $engine): void
+    public function open(string $address, int $port, int $timeout): void
     {
         $this->timeout = $timeout;
-        $this->engine  = $engine;
         $this->port    = $port;
         $this->address = $address;
 
@@ -140,17 +113,15 @@ abstract class AbstractSocket implements SocketInterface
     }
 
     /**
-     * @param int $header
-     * @param string $string
-     *
-     * @return bool
+     * Close
      */
-    public function write(int $header, string $string = ''): bool
+    public function close(): void
     {
-        $command = pack('ccccca*', 0xFF, 0xFF, 0xFF, 0xFF, $header, $string);
-        $length  = strlen($command);
+        if ($this->socket) {
+            fclose($this->socket);
 
-        return $length === fwrite($this->socket, $command, $length);
+            $this->socket = null;
+        }
     }
 
     /**
@@ -178,6 +149,20 @@ abstract class AbstractSocket implements SocketInterface
         $this->readInternal($buffer, $length, [ $this, 'sherlock' ]);
 
         return $buffer;
+    }
+
+    /**
+     * @param int $header
+     * @param string $string
+     *
+     * @return bool
+     */
+    public function write(int $header, string $string = ''): bool
+    {
+        $command = pack('ccccca*', 0xFF, 0xFF, 0xFF, 0xFF, $header, $string);
+        $length  = strlen($command);
+
+        return $length === fwrite($this->socket, $command, $length);
     }
 
     /**
@@ -230,7 +215,7 @@ abstract class AbstractSocket implements SocketInterface
      */
     protected function readInternal(Buffer $buffer, int $length, callable $sherlockFunction): Buffer
     {
-        if ($buffer->remaining() === 0) {
+        if ($buffer->isEmpty()) {
             throw new InvalidPacketException('Failed to read any data from socket', InvalidPacketException::BUFFER_EMPTY);
         }
 

@@ -17,13 +17,6 @@ namespace xPaw\SourceQuery;
 
 use xPaw\SourceQuery\Exception\InvalidPacketException;
 
-/**
- * Class Buffer
- *
- * @package xPaw\SourceQuery
- *
- * @uses InvalidPacketException
- */
 final class Buffer
 {
     /**

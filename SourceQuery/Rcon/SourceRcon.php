@@ -22,15 +22,6 @@ use xPaw\SourceQuery\Exception\SocketException;
 use xPaw\SourceQuery\Socket\SocketInterface;
 use xPaw\SourceQuery\SourceQuery;
 
-/**
- * Class SourceRcon
- *
- * @package xPaw\SourceQuery
- *
- * @uses AuthenticationException
- * @uses InvalidPacketException
- * @uses SocketException
- */
 final class SourceRcon extends AbstractRcon
 {
     /**
@@ -57,20 +48,6 @@ final class SourceRcon extends AbstractRcon
     }
 
     /**
-     * Close
-     */
-    public function close(): void
-    {
-        if ($this->rconSocket) {
-            fclose($this->rconSocket);
-
-            $this->rconSocket = null;
-        }
-
-        $this->rconRequestId = 0;
-    }
-
-    /**
      * @throws SocketException
      */
     public function open(): void
@@ -91,6 +68,49 @@ final class SourceRcon extends AbstractRcon
             $this->rconSocket = $rconSocket;
             stream_set_timeout($this->rconSocket, $this->socket->getTimeout());
             stream_set_blocking($this->rconSocket, true);
+        }
+    }
+
+    /**
+     * Close
+     */
+    public function close(): void
+    {
+        if ($this->rconSocket) {
+            fclose($this->rconSocket);
+
+            $this->rconSocket = null;
+        }
+
+        $this->rconRequestId = 0;
+    }
+
+    /**
+     * @param string $password
+     *
+     * @throws AuthenticationException
+     * @throws InvalidPacketException
+     */
+    public function authorize(string $password): void
+    {
+        $this->write(SourceQuery::SERVERDATA_AUTH, $password);
+        $buffer = $this->read();
+
+        $requestId = $buffer->getLong();
+        $type = $buffer->getLong();
+
+        // If we receive SERVERDATA_RESPONSE_VALUE, then we need to read again.
+        // More info: https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Additional_Comments
+
+        if ($type === SourceQuery::SERVERDATA_RESPONSE_VALUE) {
+            $buffer = $this->read();
+
+            $requestId = $buffer->getLong();
+            $type = $buffer->getLong();
+        }
+
+        if ($requestId === -1 || $type !== SourceQuery::SERVERDATA_AUTH_RESPONSE) {
+            throw new AuthenticationException('RCON authorization failed.', AuthenticationException::BAD_PASSWORD);
         }
     }
 
@@ -119,7 +139,7 @@ final class SourceRcon extends AbstractRcon
 
         $data = $buffer->get();
 
-        // We do this stupid hack to handle split packets
+        // We do this stupid hack to handle split packets.
         // See https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Multiple-packet_Responses
         if (strlen($data) >= 4000) {
             $this->write(SourceQuery::SERVERDATA_REQUESTVALUE);
@@ -127,7 +147,7 @@ final class SourceRcon extends AbstractRcon
             do {
                 $buffer = $this->read();
 
-                $buffer->getLong(); // RequestID
+                $buffer->getLong(); // RequestID.
 
                 if ($buffer->getLong() !== SourceQuery::SERVERDATA_RESPONSE_VALUE) {
                     break;
@@ -144,53 +164,6 @@ final class SourceRcon extends AbstractRcon
         }
 
         return rtrim($data, "\0");
-    }
-
-    /**
-     * @param string $password
-     *
-     * @throws AuthenticationException
-     * @throws InvalidPacketException
-     */
-    public function authorize(string $password): void
-    {
-        $this->write(SourceQuery::SERVERDATA_AUTH, $password);
-        $buffer = $this->read();
-
-        $requestId = $buffer->getLong();
-        $type = $buffer->getLong();
-
-        // If we receive SERVERDATA_RESPONSE_VALUE, then we need to read again
-        // More info: https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Additional_Comments
-
-        if ($type === SourceQuery::SERVERDATA_RESPONSE_VALUE) {
-            $buffer = $this->read();
-
-            $requestId = $buffer->getLong();
-            $type = $buffer->getLong();
-        }
-
-        if ($requestId === -1 || $type !== SourceQuery::SERVERDATA_AUTH_RESPONSE) {
-            throw new AuthenticationException('RCON authorization failed.', AuthenticationException::BAD_PASSWORD);
-        }
-    }
-
-    /**
-     * @param int|null $header
-     * @param string $string
-     *
-     * @return bool
-     */
-    protected function write(?int $header, string $string = ''): bool
-    {
-        // Pack the packet together
-        $command = pack('VV', ++$this->rconRequestId, $header) . $string . "\x00\x00";
-
-        // Prepend packet length
-        $command = pack('V', strlen($command)) . $command;
-        $length  = strlen($command);
-
-        return $length === fwrite($this->rconSocket, $command, $length);
     }
 
     /**
@@ -231,5 +204,23 @@ final class SourceRcon extends AbstractRcon
         $buffer->set($data);
 
         return $buffer;
+    }
+
+    /**
+     * @param int|null $header
+     * @param string $string
+     *
+     * @return bool
+     */
+    protected function write(?int $header, string $string = ''): bool
+    {
+        // Pack the packet together.
+        $command = pack('VV', ++$this->rconRequestId, $header) . $string . "\x00\x00";
+
+        // Prepend packet length.
+        $command = pack('V', strlen($command)) . $command;
+        $length  = strlen($command);
+
+        return $length === fwrite($this->rconSocket, $command, $length);
     }
 }

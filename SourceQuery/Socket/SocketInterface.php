@@ -35,14 +35,14 @@ interface SocketInterface
     public function getPort(): int;
 
     /**
-     * @return int
-     */
-    public function getTimeout(): int;
-
-    /**
      * @return resource
      */
     public function getSocket();
+
+    /**
+     * @return int
+     */
+    public function getTimeout(): int;
 
     /**
      * Get the socket type (goldsrc/src).
@@ -50,17 +50,23 @@ interface SocketInterface
     public function getType(): int;
 
     /**
+     * @param string $address
+     * @param int $port
+     * @param int $timeout
+     */
+    public function open(string $address, int $port, int $timeout): void;
+
+    /**
      * Close
      */
     public function close(): void;
 
     /**
-     * @param string $address
-     * @param int $port
-     * @param int $timeout
-     * @param int $engine
+     * @param int $length
+     *
+     * @return Buffer
      */
-    public function open(string $address, int $port, int $timeout, int $engine): void;
+    public function read(int $length = 1400): Buffer;
 
     /**
      * @param int $header
@@ -69,11 +75,4 @@ interface SocketInterface
      * @return bool
      */
     public function write(int $header, string $string = ''): bool;
-
-    /**
-     * @param int $length
-     *
-     * @return Buffer
-     */
-    public function read(int $length = 1400): Buffer;
 }
