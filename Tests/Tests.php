@@ -13,7 +13,9 @@ use xPaw\SourceQuery\SourceQuery;
 
 /**
  * @internal
- * @coversNothing
+ * @covers \xPaw\SourceQuery\SourceQuery
+ *
+ * @psalm-suppress PropertyNotSetInConstructor
  */
 final class Tests extends TestCase
 {
