@@ -5,17 +5,19 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use xPaw\SourceQuery\SourceQuery;
+use xPaw\SourceQuery\Socket\SourceSocket;
+use xPaw\SourceQuery\Socket\SocketType;
 
 // Edit this ->
 define('SQ_SERVER_ADDR', 'localhost');
 define('SQ_SERVER_PORT', 27015);
 define('SQ_TIMEOUT', 3);
-define('SQ_ENGINE', SourceQuery::SOURCE);
+define('SQ_ENGINE', SocketType::SOURCE);
 // Edit this <-
 
 $Timer = microtime(true);
 
-$Query = new SourceQuery();
+$Query = new SourceQuery(new SourceSocket());
 
 $Info    = [];
 $Rules   = [];
@@ -23,16 +25,16 @@ $Players = [];
 $Exception = null;
 
 try {
-    $Query->Connect(SQ_SERVER_ADDR, SQ_SERVER_PORT, SQ_TIMEOUT, SQ_ENGINE);
+    $Query->connect(SQ_SERVER_ADDR, SQ_SERVER_PORT, SQ_TIMEOUT, SQ_ENGINE);
     //$Query->SetUseOldGetChallengeMethod( true ); // Use this when players/rules retrieval fails on games like Starbound
 
-    $Info    = $Query->GetInfo();
-    $Players = $Query->GetPlayers();
-    $Rules   = $Query->GetRules();
+    $Info    = $Query->getInfo();
+    $Players = $Query->getPlayers();
+    $Rules   = $Query->getRules();
 } catch (Exception $e) {
     $Exception = $e;
 } finally {
-    $Query->Disconnect();
+    $Query->disconnect();
 }
 
 $Timer = number_format(microtime(true) - $Timer, 4, '.', '');

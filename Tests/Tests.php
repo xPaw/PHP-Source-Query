@@ -3,118 +3,25 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
-use xPaw\SourceQuery\BaseSocket;
 use xPaw\SourceQuery\SourceQuery;
-use xPaw\SourceQuery\Buffer;
 use xPaw\SourceQuery\Exception\AuthenticationException;
 use xPaw\SourceQuery\Exception\InvalidArgumentException;
 use xPaw\SourceQuery\Exception\InvalidPacketException;
 use xPaw\SourceQuery\Exception\SocketException;
-
-final class TestableSocket extends BaseSocket
-{
-    /**
-     * @var SplQueue<string>
-     */
-    private SplQueue $PacketQueue;
-
-    /**
-     * TestableSocket constructor.
-     */
-    public function __construct()
-    {
-        $this->PacketQueue = new SplQueue();
-        $this->PacketQueue->setIteratorMode(SplDoublyLinkedList::IT_MODE_DELETE);
-    }
-
-    /**
-     * @param string $Data
-     */
-    public function Queue(string $Data): void
-    {
-        $this->PacketQueue->push($Data);
-    }
-
-    /**
-     * Close.
-     */
-    public function Close(): void
-    {
-    }
-
-    /**
-     * @param string $Address
-     * @param int $Port
-     * @param int $Timeout
-     * @param int $Engine
-     */
-    public function Open(string $Address, int $Port, int $Timeout, int $Engine): void
-    {
-        $this->Timeout = $Timeout;
-        $this->Engine  = $Engine;
-        $this->Port    = $Port;
-        $this->Address = $Address;
-    }
-
-    /**
-     * @param int $Header
-     * @param string $String
-     *
-     * @return bool
-     */
-    public function Write(int $Header, string $String = ''): bool
-    {
-        return true;
-    }
-
-    /**
-     * @param int $Length
-     *
-     * @return Buffer
-     *
-     * @throws InvalidPacketException
-     * @throws SocketException
-     */
-    public function Read(int $Length = 1400): Buffer
-    {
-        $Buffer = new Buffer();
-        $Buffer->Set($this->PacketQueue->shift());
-
-        $this->ReadInternal($Buffer, $Length, [ $this, 'Sherlock' ]);
-
-        return $Buffer;
-    }
-
-    /**
-     * @param Buffer $Buffer
-     *
-     * @return bool
-     *
-     * @throws InvalidPacketException
-     */
-    public function Sherlock(Buffer $Buffer): bool
-    {
-        if ($this->PacketQueue->isEmpty()) {
-            return false;
-        }
-
-        $Buffer->Set($this->PacketQueue->shift());
-
-        return $Buffer->GetLong() === -2;
-    }
-}
+use xPaw\SourceQuery\Socket\SocketType;
+use xPaw\SourceQuery\Socket\TestableSocket;
 
 final class Tests extends TestCase
 {
     /**
-     * @var TestableSocket $Socket
+     * @var TestableSocket
      */
-    private TestableSocket $Socket;
+    private TestableSocket $socket;
 
     /**
-     * @var SourceQuery $SourceQuery
+     * @var SourceQuery
      */
-    private SourceQuery $SourceQuery;
+    private SourceQuery $sourceQuery;
 
     /**
      * @throws SocketException
@@ -122,9 +29,9 @@ final class Tests extends TestCase
      */
     public function setUp(): void
     {
-        $this->Socket = new TestableSocket();
-        $this->SourceQuery = new SourceQuery($this->Socket);
-        $this->SourceQuery->Connect('', 2);
+        $this->socket = new TestableSocket(SocketType::SOURCE);
+        $this->sourceQuery = new SourceQuery($this->socket);
+        $this->sourceQuery->connect('', 2);
     }
 
     /**
@@ -132,9 +39,9 @@ final class Tests extends TestCase
      */
     public function tearDown(): void
     {
-        $this->SourceQuery->Disconnect();
+        $this->sourceQuery->disconnect();
 
-        unset($this->Socket, $this->SourceQuery);
+        unset($this->socket, $this->sourceQuery);
     }
 
     /**
@@ -144,8 +51,8 @@ final class Tests extends TestCase
     public function testInvalidTimeout(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $SourceQuery = new SourceQuery();
-        $SourceQuery->Connect('', 2, -1);
+        $SourceQuery = new SourceQuery($this->socket);
+        $SourceQuery->connect('', 2, -1);
     }
 
     /**
@@ -155,8 +62,8 @@ final class Tests extends TestCase
     public function testNotConnectedGetInfo(): void
     {
         $this->expectException(SocketException::class);
-        $this->SourceQuery->Disconnect();
-        $this->SourceQuery->GetInfo();
+        $this->sourceQuery->disconnect();
+        $this->sourceQuery->getInfo();
     }
 
     /**
@@ -166,8 +73,8 @@ final class Tests extends TestCase
     public function testNotConnectedPing(): void
     {
         $this->expectException(SocketException::class);
-        $this->SourceQuery->Disconnect();
-        $this->SourceQuery->Ping();
+        $this->sourceQuery->disconnect();
+        $this->sourceQuery->ping();
     }
 
     /**
@@ -177,8 +84,8 @@ final class Tests extends TestCase
     public function testNotConnectedGetPlayers(): void
     {
         $this->expectException(SocketException::class);
-        $this->SourceQuery->Disconnect();
-        $this->SourceQuery->GetPlayers();
+        $this->sourceQuery->disconnect();
+        $this->sourceQuery->getPlayers();
     }
 
     /**
@@ -188,8 +95,8 @@ final class Tests extends TestCase
     public function testNotConnectedGetRules(): void
     {
         $this->expectException(SocketException::class);
-        $this->SourceQuery->Disconnect();
-        $this->SourceQuery->GetRules();
+        $this->sourceQuery->disconnect();
+        $this->sourceQuery->getRules();
     }
 
     /**
@@ -200,8 +107,8 @@ final class Tests extends TestCase
     public function testNotConnectedSetRconPassword(): void
     {
         $this->expectException(SocketException::class);
-        $this->SourceQuery->Disconnect();
-        $this->SourceQuery->SetRconPassword('a');
+        $this->sourceQuery->disconnect();
+        $this->sourceQuery->setRconPassword('a');
     }
 
     /**
@@ -212,8 +119,8 @@ final class Tests extends TestCase
     public function testNotConnectedRcon(): void
     {
         $this->expectException(SocketException::class);
-        $this->SourceQuery->Disconnect();
-        $this->SourceQuery->Rcon('a');
+        $this->sourceQuery->disconnect();
+        $this->sourceQuery->rcon('a');
     }
 
     /**
@@ -224,29 +131,32 @@ final class Tests extends TestCase
     public function testRconWithoutPassword(): void
     {
         $this->expectException(SocketException::class);
-        $this->SourceQuery->Rcon('a');
+        $this->sourceQuery->rcon('a');
     }
 
     /**
-     * @param string $RawInput
-     * @param array $ExpectedOutput
+     * @param string $rawInput
+     * @param array $expectedOutput
      *
+     * @throws InvalidArgumentException
      * @throws InvalidPacketException
      * @throws SocketException
      *
-     * @dataProvider InfoProvider
+     * @dataProvider infoProvider
      */
-    public function testGetInfo(string $RawInput, array $ExpectedOutput): void
+    public function testGetInfo(string $rawInput, array $expectedOutput): void
     {
-        if (isset($ExpectedOutput[ 'IsMod' ])) {
-            $this->Socket->Engine = SourceQuery::GOLDSOURCE;
+        if (isset($expectedOutput[ 'IsMod' ])) {
+            $this->socket = new TestableSocket(SocketType::GOLDSOURCE);
+            $this->sourceQuery = new SourceQuery($this->socket);
+            $this->sourceQuery->connect('', 2);
         }
 
-        $this->Socket->Queue($RawInput);
+        $this->socket->queue($rawInput);
 
-        $RealOutput = $this->SourceQuery->GetInfo();
+        $realOutput = $this->sourceQuery->getInfo();
 
-        self::assertEquals($ExpectedOutput, $RealOutput);
+        self::assertEquals($expectedOutput, $realOutput);
     }
 
     /**
@@ -254,19 +164,19 @@ final class Tests extends TestCase
      *
      * @throws JsonException
      */
-    public function InfoProvider(): array
+    public function infoProvider(): array
     {
-        $DataProvider = [];
+        $dataProvider = [];
 
-        $Files = glob(__DIR__ . '/Info/*.raw', GLOB_ERR);
+        $files = glob(__DIR__ . '/Info/*.raw', GLOB_ERR);
 
-        foreach ($Files as $File) {
-            $DataProvider[] =
+        foreach ($files as $file) {
+            $dataProvider[] =
             [
-                hex2bin(trim(file_get_contents($File))),
+                hex2bin(trim(file_get_contents($file))),
                 json_decode(
                     file_get_contents(
-                        str_replace('.raw', '.json', $File)
+                        str_replace('.raw', '.json', $file)
                     ),
                     true,
                     512,
@@ -275,79 +185,79 @@ final class Tests extends TestCase
             ];
         }
 
-        return $DataProvider;
+        return $dataProvider;
     }
 
     /**
-     * @param string $Data
+     * @param string $data
      *
      * @throws InvalidPacketException
      * @throws SocketException
      *
-     * @dataProvider BadPacketProvider
+     * @dataProvider badPacketProvider
      */
-    public function testBadGetInfo(string $Data): void
+    public function testBadGetInfo(string $data): void
     {
         $this->expectException(InvalidPacketException::class);
-        $this->Socket->Queue($Data);
+        $this->socket->queue($data);
 
-        $this->SourceQuery->GetInfo();
+        $this->sourceQuery->getInfo();
     }
 
     /**
-     * @param string $Data
+     * @param string $data
      *
      * @throws InvalidPacketException
      * @throws SocketException
      *
-     * @dataProvider BadPacketProvider
+     * @dataProvider badPacketProvider
      */
-    public function testBadGetChallengeViaPlayers(string $Data): void
+    public function testBadGetChallengeViaPlayers(string $data): void
     {
         $this->expectException(InvalidPacketException::class);
-        $this->Socket->Queue($Data);
+        $this->socket->queue($data);
 
-        $this->SourceQuery->GetPlayers();
+        $this->sourceQuery->getPlayers();
     }
 
     /**
-     * @param string $Data
+     * @param string $data
      *
      * @throws InvalidPacketException
      * @throws SocketException
      *
-     * @dataProvider BadPacketProvider
+     * @dataProvider badPacketProvider
      */
-    public function testBadGetPlayersAfterCorrectChallenge(string $Data): void
+    public function testBadGetPlayersAfterCorrectChallenge(string $data): void
     {
         $this->expectException(InvalidPacketException::class);
-        $this->Socket->Queue("\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11");
-        $this->Socket->Queue($Data);
+        $this->socket->queue("\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11");
+        $this->socket->queue($data);
 
-        $this->SourceQuery->GetPlayers();
+        $this->sourceQuery->getPlayers();
     }
 
     /**
-     * @param string $Data
+     * @param string $data
      *
      * @throws InvalidPacketException
      * @throws SocketException
      *
-     * @dataProvider BadPacketProvider
+     * @dataProvider badPacketProvider
      */
-    public function testBadGetRulesAfterCorrectChallenge(string $Data): void
+    public function testBadGetRulesAfterCorrectChallenge(string $data): void
     {
         $this->expectException(InvalidPacketException::class);
-        $this->Socket->Queue("\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11");
-        $this->Socket->Queue($Data);
+        $this->socket->queue("\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11");
+        $this->socket->queue($data);
 
-        $this->SourceQuery->GetRules();
+        $this->sourceQuery->getRules();
     }
 
     /**
      * @return string[][]
      */
-    public function BadPacketProvider(): array
+    public function badPacketProvider(): array
     {
         return
         [
@@ -367,34 +277,34 @@ final class Tests extends TestCase
      */
     public function testGetChallengeTwice(): void
     {
-        $this->Socket->Queue("\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11");
-        $this->Socket->Queue("\xFF\xFF\xFF\xFF\x45\x01\x00ayy\x00lmao\x00");
-        self::assertEquals([ 'ayy' => 'lmao' ], $this->SourceQuery->GetRules());
+        $this->socket->queue("\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11");
+        $this->socket->queue("\xFF\xFF\xFF\xFF\x45\x01\x00ayy\x00lmao\x00");
+        self::assertEquals([ 'ayy' => 'lmao' ], $this->sourceQuery->getRules());
 
-        $this->Socket->Queue("\xFF\xFF\xFF\xFF\x45\x01\x00wow\x00much\x00");
-        self::assertEquals([ 'wow' => 'much' ], $this->SourceQuery->GetRules());
+        $this->socket->queue("\xFF\xFF\xFF\xFF\x45\x01\x00wow\x00much\x00");
+        self::assertEquals([ 'wow' => 'much' ], $this->sourceQuery->getRules());
     }
 
     /**
-     * @param array $RawInput
-     * @param array $ExpectedOutput
+     * @param string[] $rawInput
+     * @param array $expectedOutput
      *
      * @throws InvalidPacketException
      * @throws SocketException
      *
-     * @dataProvider RulesProvider
+     * @dataProvider rulesProvider
      */
-    public function testGetRules(array $RawInput, array $ExpectedOutput): void
+    public function testGetRules(array $rawInput, array $expectedOutput): void
     {
-        $this->Socket->Queue(hex2bin("ffffffff4104fce20e")); // Challenge
+        $this->socket->queue(hex2bin("ffffffff4104fce20e")); // Challenge
 
-        foreach ($RawInput as $Packet) {
-            $this->Socket->Queue(hex2bin($Packet));
+        foreach ($rawInput as $packet) {
+            $this->socket->queue(hex2bin($packet));
         }
 
-        $RealOutput = $this->SourceQuery->GetRules();
+        $realOutput = $this->sourceQuery->getRules();
 
-        self::assertEquals($ExpectedOutput, $RealOutput);
+        self::assertEquals($expectedOutput, $realOutput);
     }
 
     /**
@@ -402,19 +312,19 @@ final class Tests extends TestCase
      *
      * @throws JsonException
      */
-    public function RulesProvider(): array
+    public function rulesProvider(): array
     {
-        $DataProvider = [];
+        $dataProvider = [];
 
-        $Files = glob(__DIR__ . '/Rules/*.raw', GLOB_ERR);
+        $files = glob(__DIR__ . '/Rules/*.raw', GLOB_ERR);
 
-        foreach ($Files as $File) {
-            $DataProvider[] =
+        foreach ($files as $file) {
+            $dataProvider[] =
             [
-                file($File, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES),
+                file($file, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES),
                 json_decode(
                     file_get_contents(
-                        str_replace('.raw', '.json', $File)
+                        str_replace('.raw', '.json', $file)
                     ),
                     true,
                     512,
@@ -423,29 +333,29 @@ final class Tests extends TestCase
             ];
         }
 
-        return $DataProvider;
+        return $dataProvider;
     }
 
     /**
-     * @param string[] $RawInput
-     * @param array $ExpectedOutput
+     * @param string[] $rawInput
+     * @param array $expectedOutput
      *
      * @throws InvalidPacketException
      * @throws SocketException
      *
-     * @dataProvider PlayersProvider
+     * @dataProvider playersProvider
      */
-    public function testGetPlayers(array $RawInput, array $ExpectedOutput): void
+    public function testGetPlayers(array $rawInput, array $expectedOutput): void
     {
-        $this->Socket->Queue(hex2bin("ffffffff4104fce20e")); // Challenge
+        $this->socket->queue(hex2bin("ffffffff4104fce20e")); // Challenge
 
-        foreach ($RawInput as $Packet) {
-            $this->Socket->Queue(hex2bin($Packet));
+        foreach ($rawInput as $packet) {
+            $this->socket->queue(hex2bin($packet));
         }
 
-        $RealOutput = $this->SourceQuery->GetPlayers();
+        $realOutput = $this->sourceQuery->getPlayers();
 
-        self::assertEquals($ExpectedOutput, $RealOutput);
+        self::assertEquals($expectedOutput, $realOutput);
     }
 
     /**
@@ -453,19 +363,19 @@ final class Tests extends TestCase
      *
      * @throws JsonException
      */
-    public function PlayersProvider(): array
+    public function playersProvider(): array
     {
-        $DataProvider = [];
+        $dataProvider = [];
 
-        $Files = glob(__DIR__ . '/Players/*.raw', GLOB_ERR);
+        $files = glob(__DIR__ . '/Players/*.raw', GLOB_ERR);
 
-        foreach ($Files as $File) {
-            $DataProvider[] =
+        foreach ($files as $file) {
+            $dataProvider[] =
             [
-                file($File, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES),
+                file($file, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES),
                 json_decode(
                     file_get_contents(
-                        str_replace('.raw', '.json', $File)
+                        str_replace('.raw', '.json', $file)
                     ),
                     true,
                     512,
@@ -474,7 +384,7 @@ final class Tests extends TestCase
             ];
         }
 
-        return $DataProvider;
+        return $dataProvider;
     }
 
     /**
@@ -483,10 +393,10 @@ final class Tests extends TestCase
      */
     public function testPing(): void
     {
-        $this->Socket->Queue("\xFF\xFF\xFF\xFF\x6A\x00");
-        self::assertTrue($this->SourceQuery->Ping());
+        $this->socket->queue("\xFF\xFF\xFF\xFF\x6A\x00");
+        self::assertTrue($this->sourceQuery->ping());
 
-        $this->Socket->Queue("\xFF\xFF\xFF\xFF\xEE");
-        self::assertFalse($this->SourceQuery->Ping());
+        $this->socket->queue("\xFF\xFF\xFF\xFF\xEE");
+        self::assertFalse($this->sourceQuery->ping());
     }
 }

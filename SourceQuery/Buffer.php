@@ -29,28 +29,28 @@ final class Buffer
     /**
      * Buffer
      */
-    private string $Buffer = '';
+    private string $buffer = '';
 
     /**
      * Buffer length
      */
-    private int $Length = 0;
+    private int $length = 0;
 
     /**
      * Current position in buffer
      */
-    private int $Position = 0;
+    private int $position = 0;
 
     /**
      * Sets buffer
      *
-     * @param string $Buffer
+     * @param string $buffer
      */
-    public function Set(string $Buffer): void
+    public function set(string $buffer): void
     {
-        $this->Buffer   = $Buffer;
-        $this->Length   = strlen($Buffer);
-        $this->Position = 0;
+        $this->buffer = $buffer;
+        $this->length = strlen($buffer);
+        $this->position = 0;
     }
 
     /**
@@ -58,9 +58,9 @@ final class Buffer
      *
      * @return int Remaining bytes in buffer
      */
-    public function Remaining(): int
+    public function remaining(): int
     {
-        return $this->Length - $this->Position;
+        return $this->length - $this->position;
     }
 
     /**
@@ -68,43 +68,43 @@ final class Buffer
      */
     public function isEmpty(): bool
     {
-        return $this->Remaining() <= 0;
+        return $this->remaining() <= 0;
     }
 
     /**
      * Gets data from buffer
      *
-     * @param int $Length Bytes to read
+     * @param int $length Bytes to read
      *
      * @return string
      */
-    public function Get(int $Length = -1): string
+    public function get(int $length = -1): string
     {
-        if ($Length === 0) {
+        if ($length === 0) {
             return '';
         }
 
-        $Remaining = $this->Remaining();
+        $remaining = $this->remaining();
 
-        if ($Length === -1) {
-            $Length = $Remaining;
-        } elseif ($Length > $Remaining) {
+        if ($length === -1) {
+            $length = $remaining;
+        } elseif ($length > $remaining) {
             return '';
         }
 
-        $Data = substr($this->Buffer, $this->Position, $Length);
+        $data = substr($this->buffer, $this->position, $length);
 
-        $this->Position += $Length;
+        $this->position += $length;
 
-        return $Data;
+        return $data;
     }
 
     /**
      * Get byte from buffer
      */
-    public function GetByte(): int
+    public function getByte(): int
     {
-        return ord($this->Get(1));
+        return ord($this->get(1));
     }
 
     /**
@@ -112,15 +112,15 @@ final class Buffer
      *
      * @throws InvalidPacketException
      */
-    public function GetShort(): int
+    public function getShort(): int
     {
-        if ($this->Remaining() < 2) {
+        if ($this->remaining() < 2) {
             throw new InvalidPacketException('Not enough data to unpack a short.', InvalidPacketException::BUFFER_EMPTY);
         }
 
-        $Data = unpack('v', $this->Get(2));
+        $data = unpack('v', $this->get(2));
 
-        return (int)$Data[ 1 ];
+        return (int)$data[ 1 ];
     }
 
     /**
@@ -128,15 +128,15 @@ final class Buffer
      *
      * @throws InvalidPacketException
      */
-    public function GetLong(): int
+    public function getLong(): int
     {
-        if ($this->Remaining() < 4) {
+        if ($this->remaining() < 4) {
             throw new InvalidPacketException('Not enough data to unpack a long.', InvalidPacketException::BUFFER_EMPTY);
         }
 
-        $Data = unpack('l', $this->Get(4));
+        $data = unpack('l', $this->get(4));
 
-        return (int)$Data[ 1 ];
+        return (int)$data[ 1 ];
     }
 
     /**
@@ -144,15 +144,15 @@ final class Buffer
      *
      * @throws InvalidPacketException
      */
-    public function GetFloat(): float
+    public function getFloat(): float
     {
-        if ($this->Remaining() < 4) {
+        if ($this->remaining() < 4) {
             throw new InvalidPacketException('Not enough data to unpack a float.', InvalidPacketException::BUFFER_EMPTY);
         }
 
-        $Data = unpack('f', $this->Get(4));
+        $data = unpack('f', $this->get(4));
 
-        return (float)$Data[ 1 ];
+        return (float)$data[ 1 ];
     }
 
     /**
@@ -160,32 +160,32 @@ final class Buffer
      *
      * @throws InvalidPacketException
      */
-    public function GetUnsignedLong(): int
+    public function getUnsignedLong(): int
     {
-        if ($this->Remaining() < 4) {
+        if ($this->remaining() < 4) {
             throw new InvalidPacketException('Not enough data to unpack an usigned long.', InvalidPacketException::BUFFER_EMPTY);
         }
 
-        $Data = unpack('V', $this->Get(4));
+        $data = unpack('V', $this->get(4));
 
-        return (int)$Data[ 1 ];
+        return (int)$data[ 1 ];
     }
 
     /**
      * Read one string from buffer ending with null byte
      */
-    public function GetString(): string
+    public function getString(): string
     {
-        $ZeroBytePosition = strpos($this->Buffer, "\0", $this->Position);
+        $zeroBytePosition = strpos($this->buffer, "\0", $this->position);
 
-        if ($ZeroBytePosition === false) {
+        if ($zeroBytePosition === false) {
             return '';
         }
 
-        $String = $this->Get($ZeroBytePosition - $this->Position);
+        $string = $this->get($zeroBytePosition - $this->position);
 
-        $this->Position++;
+        $this->position++;
 
-        return $String;
+        return $string;
     }
 }
