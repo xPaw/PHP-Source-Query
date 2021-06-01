@@ -36,7 +36,7 @@ interface SocketInterface
     /**
      * Get the socket type (goldsrc/src).
      */
-    public function getType(): int;
+    public function getType(): string;
 
     public function open(string $address, int $port, int $timeout): void;
 

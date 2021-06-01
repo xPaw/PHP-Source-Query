@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace xPaw\SourceQuery\Socket;
 
 use xPaw\SourceQuery\Buffer;
+use xPaw\SourceQuery\EngineType;
 use xPaw\SourceQuery\Exception\InvalidPacketException;
 use xPaw\SourceQuery\Socket\Traits\GoldSourcePacketDataTrait;
 use xPaw\SourceQuery\Socket\Traits\SourcePacketDataTrait;
@@ -35,18 +36,18 @@ final class TestableSocket extends AbstractSocket
      */
     private array $packetQueue;
 
-    private int $type;
+    private string $type;
 
     /**
      * TestableSocket constructor.
      */
-    public function __construct(int $type = SocketType::SOURCE)
+    public function __construct(string $type = EngineType::SOURCE)
     {
         $this->packetQueue = [];
         $this->type = $type;
     }
 
-    public function getType(): int
+    public function getType(): string
     {
         return $this->type;
     }
@@ -117,7 +118,7 @@ final class TestableSocket extends AbstractSocket
         ?int &$checksum
     ): void {
         switch ($this->type) {
-            case SocketType::GOLDSOURCE:
+            case EngineType::GOLDSOURCE:
                 $this->readInternalPacketDataGoldSource(
                     $buffer,
                     $count,
@@ -128,7 +129,7 @@ final class TestableSocket extends AbstractSocket
 
                 break;
 
-            case SocketType::SOURCE:
+            case EngineType::SOURCE:
             default:
                 $this->readInternalPacketDataSource(
                     $buffer,

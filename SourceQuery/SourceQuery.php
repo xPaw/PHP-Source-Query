@@ -25,7 +25,6 @@ use xPaw\SourceQuery\QueryResponse\RulesQueryResponse;
 use xPaw\SourceQuery\QueryResponse\SourceInfoQueryResponse;
 use xPaw\SourceQuery\Rcon\RconInterface;
 use xPaw\SourceQuery\Socket\SocketInterface;
-use xPaw\SourceQuery\Socket\SocketType;
 
 final class SourceQuery
 {
@@ -201,7 +200,7 @@ final class SourceQuery
         }
 
         // Old GoldSource protocol, HLTV still uses it.
-        if (self::S2A_INFO_OLD === $type && SocketType::GOLDSOURCE === $this->socket->getType()) {
+        if (self::S2A_INFO_OLD === $type && EngineType::GOLDSOURCE === $this->socket->getType()) {
             return GoldSourceInfoQueryResponse::fromBuffer($buffer);
         }
 

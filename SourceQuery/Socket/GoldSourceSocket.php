@@ -15,14 +15,15 @@ declare(strict_types=1);
 
 namespace xPaw\SourceQuery\Socket;
 
+use xPaw\SourceQuery\EngineType;
 use xPaw\SourceQuery\Socket\Traits\GoldSourcePacketDataTrait;
 
 final class GoldSourceSocket extends AbstractSocket
 {
     use GoldSourcePacketDataTrait;
 
-    public function getType(): int
+    public function getType(): string
     {
-        return SocketType::GOLDSOURCE;
+        return EngineType::GOLDSOURCE;
     }
 }

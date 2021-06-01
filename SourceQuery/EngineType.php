@@ -13,10 +13,15 @@ declare(strict_types=1);
  * @internal
  */
 
-namespace xPaw\SourceQuery\Socket;
+namespace xPaw\SourceQuery;
 
-abstract class SocketType
+abstract class EngineType
 {
-    public const GOLDSOURCE = 0;
-    public const SOURCE = 1;
+    public const GOLDSOURCE = 'GoldSource';
+    public const SOURCE = 'Source';
+
+    public const ALL_ENGINES = [
+        self::GOLDSOURCE,
+        self::SOURCE,
+    ];
 }

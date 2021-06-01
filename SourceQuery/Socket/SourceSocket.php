@@ -15,14 +15,15 @@ declare(strict_types=1);
 
 namespace xPaw\SourceQuery\Socket;
 
+use xPaw\SourceQuery\EngineType;
 use xPaw\SourceQuery\Socket\Traits\SourcePacketDataTrait;
 
 final class SourceSocket extends AbstractSocket
 {
     use SourcePacketDataTrait;
 
-    public function getType(): int
+    public function getType(): string
     {
-        return SocketType::SOURCE;
+        return EngineType::SOURCE;
     }
 }

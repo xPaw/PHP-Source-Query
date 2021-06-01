@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
+use xPaw\SourceQuery\EngineType;
 use xPaw\SourceQuery\Exception\AuthenticationException;
 use xPaw\SourceQuery\Exception\InvalidArgumentException;
 use xPaw\SourceQuery\Exception\InvalidPacketException;
 use xPaw\SourceQuery\Exception\SocketException;
 use xPaw\SourceQuery\Rcon\TestableRcon;
-use xPaw\SourceQuery\Socket\SocketType;
 use xPaw\SourceQuery\Socket\TestableSocket;
 use xPaw\SourceQuery\SourceQuery;
 
@@ -140,8 +140,8 @@ final class Tests extends TestCase
     public function testGetInfo(string $rawInput, array $expectedOutput): void
     {
         $socketType = isset($expectedOutput['IsMod'])
-            ? SocketType::GOLDSOURCE
-            : SocketType::SOURCE;
+            ? EngineType::GOLDSOURCE
+            : EngineType::SOURCE;
 
         $socket = new TestableSocket($socketType);
         $sourceQuery = $this->create($socket);
