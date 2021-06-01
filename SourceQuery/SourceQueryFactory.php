@@ -11,7 +11,7 @@ use xPaw\SourceQuery\Socket\SourceSocket;
 
 final class SourceQueryFactory
 {
-    public static function createGoldSourceQuery(): SourceQuery
+    public static function createSourceQuery(): SourceQuery
     {
         $socket = new SourceSocket();
         $rcon = new SourceRcon($socket);
@@ -19,7 +19,7 @@ final class SourceQueryFactory
         return new SourceQuery($socket, $rcon);
     }
 
-    public static function createSourceQuery(): SourceQuery
+    public static function createGoldSourceQuery(): SourceQuery
     {
         $socket = new GoldSourceSocket();
         $rcon = new GoldSourceRcon($socket);
