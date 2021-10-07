@@ -37,7 +37,7 @@ AppID | Game | Query | RCON | Notes
 115300 | [Call of Duty: Modern Warfare 3](http://store.steampowered.com/app/115300/) | :white_check_mark: | :white_check_mark: | 
 211820 | [Starbound](http://store.steampowered.com/app/211820/) | :white_check_mark: | :white_check_mark: | Call `SetUseOldGetChallengeMethod` method after connecting
 244850 | [Space Engineers](http://store.steampowered.com/app/244850/) | :white_check_mark: | :x: | Add +1 to the server port
-244850 | [Unturned](https://store.steampowered.com/app/304930/) | :white_check_mark: | :x: | Add +1 to the server port
+304930 | [Unturned](https://store.steampowered.com/app/304930/) | :white_check_mark: | :x: | Add +1 to the server port
 251570 | [7 Days to Die](http://store.steampowered.com/app/251570) | :white_check_mark: | :x: |
 252490 | [Rust](http://store.steampowered.com/app/252490/) | :white_check_mark: | :x: |
 282440 | [Quake Live](http://store.steampowered.com/app/282440) | :white_check_mark: | :x: | Quake Live uses the ZMQ messaging queue protocol for rcon control.
