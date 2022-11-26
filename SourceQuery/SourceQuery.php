@@ -383,7 +383,7 @@
 			$this->GetChallenge( self::A2S_PLAYER, self::S2A_PLAYER );
 			
 			$this->Socket->Write( self::A2S_PLAYER, $this->Challenge );
-			$Buffer = $this->Socket->Read( 14000 ); // Moronic Arma 3 developers do not split their packets, so we have to read more data
+			$Buffer = $this->Socket->Read( 14000 ); // Arma 3 developers do not split their packets, so we have to read more data
 			// This violates the protocol spec, and they probably should fix it: https://developer.valvesoftware.com/wiki/Server_queries#Protocol
 			
 			$Type = $Buffer->GetByte( );
