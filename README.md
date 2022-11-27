@@ -35,6 +35,7 @@ AppID | Game | Query | RCON | Notes
 70000 | [Dino D-Day](http://store.steampowered.com/app/70000/) | :white_check_mark: | :white_check_mark: | 
 107410 | [Arma 3](http://store.steampowered.com/app/107410/) | :white_check_mark: | :x: | Add +1 to the server port
 115300 | [Call of Duty: Modern Warfare 3](http://store.steampowered.com/app/115300/) | :white_check_mark: | :white_check_mark: | 
+162107 | [DeadPoly](https://store.steampowered.com/app/1621070/) | :white_check_mark: | :x: |
 211820 | [Starbound](http://store.steampowered.com/app/211820/) | :white_check_mark: | :white_check_mark: | Call `SetUseOldGetChallengeMethod` method after connecting
 244850 | [Space Engineers](http://store.steampowered.com/app/244850/) | :white_check_mark: | :x: | Add +1 to the server port
 304930 | [Unturned](https://store.steampowered.com/app/304930/) | :white_check_mark: | :x: | Add +1 to the server port
