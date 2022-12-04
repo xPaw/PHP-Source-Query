@@ -10,14 +10,18 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php: ['7.4', '8.0']
+        php: ['7.4', '8.0', '8.1']
     steps:
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php }}
     - uses: actions/checkout@v3
     - name: Install dependencies
       run: composer install --no-interaction --no-progress
     - name: Run tests
-      run: php${{ matrix.php }} vendor/bin/phpunit --configuration Tests/phpunit.xml --verbose --fail-on-warning
+      run: php vendor/bin/phpunit --configuration Tests/phpunit.xml --verbose --fail-on-warning
     - name: Run phpstan
-      run: php${{ matrix.php }} vendor/bin/phpstan
+      run: php vendor/bin/phpstan
     - name: Run psalm
-      run: php${{ matrix.php }} vendor/bin/psalm
+      run: php vendor/bin/psalm
