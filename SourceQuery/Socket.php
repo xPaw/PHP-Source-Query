@@ -27,7 +27,7 @@
 	{
 		public function Close( ) : void
 		{
-			if( $this->Socket !== null )
+			if( is_resource($this->Socket) )
 			{
 				fclose( $this->Socket );
 				
