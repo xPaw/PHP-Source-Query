@@ -4,5 +4,5 @@ parameters:
 	level: 6
 	paths:
 		- .
-	excludes_analyse:
+	excludePaths:
 		- vendor

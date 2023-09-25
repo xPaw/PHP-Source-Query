@@ -11,7 +11,6 @@
 		
 		public function __construct( )
 		{
-			/** @var \SplQueue<string> */
 			$this->PacketQueue = new \SplQueue();
 			$this->PacketQueue->setIteratorMode( \SplDoublyLinkedList::IT_MODE_DELETE );
 			
@@ -157,7 +156,7 @@
 			$this->assertEquals( $ExpectedOutput, $RealOutput );
 		}
 		
-		public function InfoProvider() : array
+		public static function InfoProvider() : array
 		{
 			$DataProvider = [];
 			
@@ -221,7 +220,7 @@
 			$this->SourceQuery->GetRules();
 		}
 		
-		public function BadPacketProvider( ) : array
+		public static function BadPacketProvider( ) : array
 		{
 			return
 			[
@@ -263,7 +262,7 @@
 			$this->assertEquals( $ExpectedOutput, $RealOutput );
 		}
 		
-		public function RulesProvider() : array
+		public static function RulesProvider() : array
 		{
 			$DataProvider = [];
 			
@@ -299,7 +298,7 @@
 			$this->assertEquals( $ExpectedOutput, $RealOutput );
 		}
 		
-		public function PlayersProvider() : array
+		public static function PlayersProvider() : array
 		{
 			$DataProvider = [];
 			
