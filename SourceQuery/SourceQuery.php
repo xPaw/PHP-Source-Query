@@ -214,7 +214,7 @@
 			$Type = $Buffer->GetByte( );
 			$Server = [];
 			
-			if( $Type === self::S2C_CHALLENGE )
+			while( $Type === self::S2C_CHALLENGE )
 			{
 				$this->Challenge = $Buffer->Get( 4 );
 
