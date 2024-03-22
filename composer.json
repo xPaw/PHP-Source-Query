@@ -16,9 +16,21 @@
 		"ark",
 		"gmod"
 	],
+	"scripts":
+	{
+		"test":
+		[
+			"@phpunit",
+			"@phpstan",
+			"@psalm"
+		],
+		"phpunit": "phpunit --configuration Tests/phpunit.xml --fail-on-warning",
+		"phpstan": "phpstan",
+		"psalm": "psalm"
+	},
 	"require":
 	{
-		"php": ">=8.0"
+		"php": ">=8.1"
 	},
 	"require-dev":
 	{

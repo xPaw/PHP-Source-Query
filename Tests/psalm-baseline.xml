@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="5.23.1@8471a896ccea3526b26d082f4461eeea467f10a4">
+  <file src="SourceQuery/BaseSocket.php">
+    <MissingConstructor>
+      <code><![CDATA[$Address]]></code>
+      <code><![CDATA[$Engine]]></code>
+      <code><![CDATA[$Port]]></code>
+      <code><![CDATA[$Timeout]]></code>
+    </MissingConstructor>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[Buffer]]></code>
+      <code><![CDATA[bool]]></code>
+    </PossiblyUnusedReturnValue>
+    <UnusedVariable>
+      <code><![CDATA[$ReadMore]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="SourceQuery/GoldSourceRcon.php">
+    <PossiblyNullArgument>
+      <code><![CDATA[$this->Socket->Socket]]></code>
+    </PossiblyNullArgument>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$Header]]></code>
+      <code><![CDATA[$Length]]></code>
+    </PossiblyUnusedParam>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[bool]]></code>
+    </PossiblyUnusedReturnValue>
+    <UnusedVariable>
+      <code><![CDATA[$ReadMore]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="SourceQuery/Socket.php">
+    <InvalidPropertyAssignmentValue>
+      <code><![CDATA[$this->Socket]]></code>
+    </InvalidPropertyAssignmentValue>
+    <PossiblyNullArgument>
+      <code><![CDATA[$this->Socket]]></code>
+      <code><![CDATA[$this->Socket]]></code>
+      <code><![CDATA[$this->Socket]]></code>
+    </PossiblyNullArgument>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[bool]]></code>
+    </PossiblyUnusedReturnValue>
+  </file>
+  <file src="SourceQuery/SourceQuery.php">
+    <PossiblyUnusedMethod>
+      <code><![CDATA[SetUseOldGetChallengeMethod]]></code>
+    </PossiblyUnusedMethod>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[string]]></code>
+    </PossiblyUnusedReturnValue>
+    <UnusedVariable>
+      <code><![CDATA[$SteamID]]></code>
+    </UnusedVariable>
+  </file>
+  <file src="SourceQuery/SourceRcon.php">
+    <InvalidPropertyAssignmentValue>
+      <code><![CDATA[$this->RconSocket]]></code>
+    </InvalidPropertyAssignmentValue>
+    <PossiblyNullArgument>
+      <code><![CDATA[$this->RconSocket]]></code>
+      <code><![CDATA[$this->RconSocket]]></code>
+      <code><![CDATA[$this->RconSocket]]></code>
+      <code><![CDATA[$this->RconSocket]]></code>
+    </PossiblyNullArgument>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[bool]]></code>
+    </PossiblyUnusedReturnValue>
+  </file>
+  <file src="Tests/Tests.php">
+    <MixedPropertyTypeCoercion>
+      <code><![CDATA[new \SplQueue()]]></code>
+    </MixedPropertyTypeCoercion>
+    <PossiblyUnusedParam>
+      <code><![CDATA[$Length]]></code>
+    </PossiblyUnusedParam>
+    <PossiblyUnusedReturnValue>
+      <code><![CDATA[bool]]></code>
+    </PossiblyUnusedReturnValue>
+    <PropertyNotSetInConstructor>
+      <code><![CDATA[$Socket]]></code>
+      <code><![CDATA[$SourceQuery]]></code>
+      <code><![CDATA[TestableSocket]]></code>
+      <code><![CDATA[TestableSocket]]></code>
+      <code><![CDATA[TestableSocket]]></code>
+      <code><![CDATA[TestableSocket]]></code>
+    </PropertyNotSetInConstructor>
+    <UnusedClass>
+      <code><![CDATA[Tests]]></code>
+    </UnusedClass>
+  </file>
+</files>

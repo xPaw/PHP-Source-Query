@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php: ['8.0', '8.1', '8.2']
+        php: ['8.1', '8.2', '8.3']
     steps:
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -20,8 +20,8 @@ jobs:
     - name: Install dependencies
       run: composer install --no-interaction --no-progress
     - name: Run tests
-      run: php vendor/bin/phpunit --configuration Tests/phpunit.xml --fail-on-warning
+      run: composer run phpunit
     - name: Run phpstan
-      run: php vendor/bin/phpstan
+      run: composer run phpstan
     - name: Run psalm
-      run: php vendor/bin/psalm
+      run: composer run psalm
