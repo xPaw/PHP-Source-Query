@@ -46,6 +46,7 @@
 			
 			if( $ErrNo || $Socket === false )
 			{
+				$this->Socket = null;
 				throw new SocketException( 'Could not create socket: ' . $ErrStr, SocketException::COULD_NOT_CREATE_SOCKET );
 			}
 			
