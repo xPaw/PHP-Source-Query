@@ -429,7 +429,7 @@
 			$this->GetChallenge( self::A2S_RULES, self::S2A_RULES );
 			
 			$this->Socket->Write( self::A2S_RULES, $this->Challenge );
-			$Buffer = $this->Socket->Read( );
+			$Buffer = $this->Socket->Read( 14000 ); // fix Rust long desc 
 			
 			$Type = $Buffer->GetByte( );
 			
