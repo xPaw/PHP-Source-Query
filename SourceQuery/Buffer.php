@@ -18,10 +18,6 @@ use xPaw\SourceQuery\Exception\InvalidPacketException;
 
 /**
  * Class Buffer
- *
- * @package xPaw\SourceQuery
- *
- * @uses xPaw\SourceQuery\Exception\InvalidPacketException
  */
 class Buffer
 {

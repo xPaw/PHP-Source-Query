@@ -21,13 +21,6 @@ use xPaw\SourceQuery\Exception\SocketException;
 
 /**
  * Class SourceQuery
- *
- * @package xPaw\SourceQuery
- *
- * @uses xPaw\SourceQuery\Exception\AuthenticationException
- * @uses xPaw\SourceQuery\Exception\InvalidArgumentException
- * @uses xPaw\SourceQuery\Exception\InvalidPacketException
- * @uses xPaw\SourceQuery\Exception\SocketException
  */
 class SourceQuery
 {

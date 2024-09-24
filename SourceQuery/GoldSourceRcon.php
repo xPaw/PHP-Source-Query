@@ -20,11 +20,6 @@ use xPaw\SourceQuery\Exception\SocketException;
 
 /**
  * Class GoldSourceRcon
- *
- * @package xPaw\SourceQuery
- *
- * @uses xPaw\SourceQuery\Exception\AuthenticationException
- * @uses xPaw\SourceQuery\Exception\InvalidPacketException
  */
 class GoldSourceRcon
 {

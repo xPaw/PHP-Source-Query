@@ -19,11 +19,6 @@ use xPaw\SourceQuery\Exception\SocketException;
 
 /**
  * Class Socket
- *
- * @package xPaw\SourceQuery
- *
- * @uses xPaw\SourceQuery\Exception\InvalidPacketException
- * @uses xPaw\SourceQuery\Exception\SocketException
  */
 class Socket extends BaseSocket
 {

@@ -20,12 +20,6 @@ use xPaw\SourceQuery\Exception\SocketException;
 
 /**
  * Class SourceRcon
- *
- * @package xPaw\SourceQuery
- *
- * @uses xPaw\SourceQuery\Exception\AuthenticationException
- * @uses xPaw\SourceQuery\Exception\InvalidPacketException
- * @uses xPaw\SourceQuery\Exception\SocketException
  */
 class SourceRcon
 {
