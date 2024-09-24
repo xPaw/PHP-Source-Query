@@ -2,7 +2,7 @@ includes:
     - vendor/phpstan/phpstan-strict-rules/rules.neon
 parameters:
 	checkFunctionNameCase: true
-	level: 7
+	level: max
 	paths:
 		- .
 	excludePaths:

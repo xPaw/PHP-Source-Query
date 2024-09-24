@@ -16,6 +16,7 @@ declare(strict_types=1);
 	
 	use xPaw\SourceQuery\Exception\AuthenticationException;
 	use xPaw\SourceQuery\Exception\InvalidPacketException;
+	use xPaw\SourceQuery\Exception\SocketException;
 
 	/**
 	 * Class GoldSourceRcon
@@ -53,6 +54,11 @@ declare(strict_types=1);
 		
 		public function Write( int $Header, string $String = '' ) : bool
 		{
+			if( $this->Socket->Socket === null )
+			{
+				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
+			}
+
 			$Command = pack( 'cccca*', 0xFF, 0xFF, 0xFF, 0xFF, $String );
 			$Length  = strlen( $Command );
 			
@@ -60,11 +66,9 @@ declare(strict_types=1);
 		}
 		
 		/**
-		 * @param int $Length
 		 * @throws AuthenticationException
-		 * @return Buffer
 		 */
-		public function Read( int $Length = 1400 ) : Buffer
+		public function Read( ) : Buffer
 		{
 			// GoldSource RCON has same structure as Query
 			$Buffer = $this->Socket->Read( );

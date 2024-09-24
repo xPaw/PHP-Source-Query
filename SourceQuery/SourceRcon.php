@@ -74,6 +74,11 @@ declare(strict_types=1);
 		
 		public function Write( int $Header, string $String = '' ) : bool
 		{
+			if( $this->RconSocket === null )
+			{
+				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
+			}
+
 			// Pack the packet together
 			$Command = pack( 'VV', ++$this->RconRequestId, $Header ) . $String . "\x00\x00"; 
 			
@@ -86,6 +91,11 @@ declare(strict_types=1);
 		
 		public function Read( ) : Buffer
 		{
+			if( $this->RconSocket === null )
+			{
+				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
+			}
+
 			$Data = fread( $this->RconSocket, 4 );
 			$Buffer = new Buffer( );
 			$Buffer->Set( $Data === false ? '' : $Data );

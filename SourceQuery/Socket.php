@@ -58,6 +58,11 @@ declare(strict_types=1);
 		
 		public function Write( int $Header, string $String = '' ) : bool
 		{
+			if( $this->Socket === null )
+			{
+				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
+			}
+
 			$Command = pack( 'ccccca*', 0xFF, 0xFF, 0xFF, 0xFF, $Header, $String );
 			$Length  = strlen( $Command );
 			
@@ -75,6 +80,11 @@ declare(strict_types=1);
 		 */
 		public function Read( ) : Buffer
 		{
+			if( $this->Socket === null )
+			{
+				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
+			}
+
 			$Data = fread( $this->Socket, self::MaxPacketLength );
 			$Buffer = new Buffer( );
 			$Buffer->Set( $Data === false ? '' : $Data );
@@ -86,6 +96,11 @@ declare(strict_types=1);
 		
 		public function Sherlock( Buffer $Buffer ) : bool
 		{
+			if( $this->Socket === null )
+			{
+				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
+			}
+
 			$Data = fread( $this->Socket, self::MaxPacketLength );
 			
 			if( $Data === false || strlen( $Data ) < 4 )
