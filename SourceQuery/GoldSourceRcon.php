@@ -21,7 +21,7 @@ use xPaw\SourceQuery\Exception\SocketException;
 /**
  * Class GoldSourceRcon
  */
-class GoldSourceRcon
+class GoldSourceRcon extends BaseRcon
 {
 	/**
 	 * Points to socket class

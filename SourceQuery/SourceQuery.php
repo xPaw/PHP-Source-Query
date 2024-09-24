@@ -66,7 +66,7 @@ class SourceQuery
 	/**
 	 * Points to rcon class
 	 */
-	private SourceRcon|GoldSourceRcon|null $Rcon = null;
+	private ?BaseRcon $Rcon = null;
 
 	/**
 	 * Points to socket class
