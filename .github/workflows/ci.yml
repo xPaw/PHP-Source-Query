@@ -12,16 +12,20 @@ jobs:
       matrix:
         php: ['8.1', '8.2', '8.3']
     steps:
+
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php }}
-    - uses: actions/checkout@v4
+
+		- name: Checkout
+      uses: actions/checkout@v4
+
     - name: Install dependencies
       run: composer install --no-interaction --no-progress
+
     - name: Run tests
       run: composer run phpunit
+
     - name: Run phpstan
       run: composer run phpstan
-    - name: Run psalm
-      run: composer run psalm
