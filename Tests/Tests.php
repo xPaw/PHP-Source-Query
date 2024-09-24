@@ -1,5 +1,6 @@
 <?php
-	use PHPUnit\Framework\TestCase;
+declare(strict_types=1);
+
 	use xPaw\SourceQuery\BaseSocket;
 	use xPaw\SourceQuery\SourceQuery;
 	use xPaw\SourceQuery\Buffer;

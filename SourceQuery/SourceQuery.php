@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 	/**
 	 * This class provides the public interface to the PHP-Source-Query library.
 	 *
@@ -71,7 +73,7 @@
 		/**
 		 * Points to rcon class
 		 */
-		private SourceRcon|GoldSourceRcon|null $Rcon;
+		private SourceRcon|GoldSourceRcon|null $Rcon = null;
 		
 		/**
 		 * Points to socket class
@@ -154,7 +156,7 @@
 			
 			$this->Socket->Close( );
 			
-			if( $this->Rcon )
+			if( $this->Rcon !== null )
 			{
 				$this->Rcon->Close( );
 				
