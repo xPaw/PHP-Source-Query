@@ -153,7 +153,7 @@
 			
 			$RealOutput = $this->SourceQuery->GetInfo();
 			
-			$this->assertEquals( $ExpectedOutput, $RealOutput );
+			self::assertEquals( $ExpectedOutput, $RealOutput );
 		}
 		
 		public static function InfoProvider() : array
@@ -243,10 +243,10 @@
 		{
 			$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11" );
 			$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x45\x01\x00ayy\x00lmao\x00" );
-			$this->assertEquals( [ 'ayy' => 'lmao' ], $this->SourceQuery->GetRules() );
+			self::assertEquals( [ 'ayy' => 'lmao' ], $this->SourceQuery->GetRules() );
 			
 			$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x45\x01\x00wow\x00much\x00" );
-			$this->assertEquals( [ 'wow' => 'much' ], $this->SourceQuery->GetRules() );
+			self::assertEquals( [ 'wow' => 'much' ], $this->SourceQuery->GetRules() );
 		}
 		
 		/**
@@ -264,7 +264,7 @@
 			
 			$RealOutput = $this->SourceQuery->GetRules();
 			
-			$this->assertEquals( $ExpectedOutput, $RealOutput );
+			self::assertEquals( $ExpectedOutput, $RealOutput );
 		}
 		
 		public static function RulesProvider() : array
@@ -305,7 +305,7 @@
 			
 			$RealOutput = $this->SourceQuery->GetPlayers();
 			
-			$this->assertEquals( $ExpectedOutput, $RealOutput );
+			self::assertEquals( $ExpectedOutput, $RealOutput );
 		}
 		
 		public static function PlayersProvider() : array
@@ -334,9 +334,9 @@
 		public function testPing() : void
 		{
 			$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x6A\x00");
-			$this->assertTrue( $this->SourceQuery->Ping() );
+			self::assertTrue( $this->SourceQuery->Ping() );
 			
 			$this->Socket->Queue( "\xFF\xFF\xFF\xFF\xEE");
-			$this->assertFalse( $this->SourceQuery->Ping() );
+			self::assertFalse( $this->SourceQuery->Ping() );
 		}
 	}

@@ -33,7 +33,8 @@
 	"require-dev":
 	{
 		"phpunit/phpunit": "^10.3",
-		"phpstan/phpstan": "^1.10"
+		"phpstan/phpstan": "^1.10",
+		"phpstan/phpstan-strict-rules": "^1.6"
 	},
 	"autoload":
 	{

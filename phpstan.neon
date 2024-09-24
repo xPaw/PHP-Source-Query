@@ -1,3 +1,5 @@
+includes:
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
 parameters:
 	checkFunctionNameCase: true
 	level: 7
@@ -5,6 +7,9 @@ parameters:
 		- .
 	excludePaths:
 		- vendor
+	strictRules:
+		booleansInConditions: false
+		disallowedConstructs: false
 	ignoreErrors:
 		-
 			identifier: missingType.iterableValue
