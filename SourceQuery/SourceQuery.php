@@ -95,7 +95,7 @@
 		 */
 		private bool $UseOldGetChallengeMethod = false;
 		
-		public function __construct( BaseSocket $Socket = null )
+		public function __construct( ?BaseSocket $Socket = null )
 		{
 			$this->Socket = $Socket ?: new Socket( );
 		}
