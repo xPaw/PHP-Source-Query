@@ -41,9 +41,9 @@
 		abstract public function Close( ) : void;
 		abstract public function Open( string $Address, int $Port, int $Timeout, int $Engine ) : void;
 		abstract public function Write( int $Header, string $String = '' ) : bool;
-		abstract public function Read( int $Length = 1400 ) : Buffer;
+		abstract public function Read( ) : Buffer;
 		
-		protected function ReadInternal( Buffer $Buffer, int $Length, callable $SherlockFunction ) : Buffer
+		protected function ReadInternal( Buffer $Buffer, callable $SherlockFunction ) : Buffer
 		{
 			if( $Buffer->Remaining( ) === 0 )
 			{
@@ -106,7 +106,7 @@
 					
 					$ReadMore = $PacketCount > sizeof( $Packets );
 				}
-				while( $ReadMore && $SherlockFunction( $Buffer, $Length ) );
+				while( $ReadMore && $SherlockFunction( $Buffer ) );
 				
 				$Data = implode( $Packets );
 				

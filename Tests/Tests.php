@@ -39,17 +39,17 @@
 			return true;
 		}
 		
-		public function Read( int $Length = 1400 ) : Buffer
+		public function Read( ) : Buffer
 		{
 			$Buffer = new Buffer( );
 			$Buffer->Set( $this->PacketQueue->shift() );
 			
-			$this->ReadInternal( $Buffer, $Length, [ $this, 'Sherlock' ] );
+			$this->ReadInternal( $Buffer, [ $this, 'Sherlock' ] );
 			
 			return $Buffer;
 		}
 		
-		public function Sherlock( Buffer $Buffer, int $Length ) : bool
+		public function Sherlock( Buffer $Buffer ) : bool
 		{
 			if( $this->PacketQueue->isEmpty() )
 			{

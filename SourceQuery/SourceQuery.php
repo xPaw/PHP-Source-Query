@@ -383,8 +383,7 @@
 			$this->GetChallenge( self::A2S_PLAYER, self::S2A_PLAYER );
 			
 			$this->Socket->Write( self::A2S_PLAYER, $this->Challenge );
-			$Buffer = $this->Socket->Read( 14000 ); // Arma 3 developers do not split their packets, so we have to read more data
-			// This violates the protocol spec, and they probably should fix it: https://developer.valvesoftware.com/wiki/Server_queries#Protocol
+			$Buffer = $this->Socket->Read( );
 			
 			$Type = $Buffer->GetByte( );
 			
@@ -429,7 +428,7 @@
 			$this->GetChallenge( self::A2S_RULES, self::S2A_RULES );
 			
 			$this->Socket->Write( self::A2S_RULES, $this->Challenge );
-			$Buffer = $this->Socket->Read( 14000 ); // fix Rust long desc 
+			$Buffer = $this->Socket->Read( );
 			
 			$Type = $Buffer->GetByte( );
 			

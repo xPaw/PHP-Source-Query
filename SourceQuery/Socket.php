@@ -61,6 +61,8 @@
 			
 			return $Length === fwrite( $this->Socket, $Command, $Length );
 		}
+
+		private const MaxPacketLength = 1 << 16;
 		
 		/**
 		 * Reads from socket and returns Buffer.
@@ -69,19 +71,19 @@
 		 *
 		 * @return Buffer Buffer
 		 */
-		public function Read( int $Length = 1400 ) : Buffer
+		public function Read( ) : Buffer
 		{
 			$Buffer = new Buffer( );
-			$Buffer->Set( fread( $this->Socket, $Length ) );
+			$Buffer->Set( fread( $this->Socket, self::MaxPacketLength ) );
 			
-			$this->ReadInternal( $Buffer, $Length, [ $this, 'Sherlock' ] );
+			$this->ReadInternal( $Buffer, [ $this, 'Sherlock' ] );
 			
 			return $Buffer;
 		}
 		
-		public function Sherlock( Buffer $Buffer, int $Length ) : bool
+		public function Sherlock( Buffer $Buffer ) : bool
 		{
-			$Data = fread( $this->Socket, $Length );
+			$Data = fread( $this->Socket, self::MaxPacketLength );
 			
 			if( strlen( $Data ) < 4 )
 			{
