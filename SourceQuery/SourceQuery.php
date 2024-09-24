@@ -97,7 +97,7 @@ declare(strict_types=1);
 		
 		public function __construct( ?BaseSocket $Socket = null )
 		{
-			$this->Socket = $Socket ?: new Socket( );
+			$this->Socket = $Socket ?? new Socket( );
 		}
 		
 		public function __destruct( )
