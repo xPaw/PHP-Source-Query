@@ -12,7 +12,7 @@ The class also allows you to query servers using RCON although this only works f
 **:warning: Do not send me emails if this does not work for you, I will not help you.**
 
 ## Requirements
-* [Modern PHP version](https://php.net/supported-versions.php) (7.4 or newer)
+* [Modern PHP version](https://php.net/supported-versions.php)
 * 64-bit PHP or [gmp module](https://secure.php.net/manual/en/book.gmp.php)
 * Your server must allow UDP connections
 
