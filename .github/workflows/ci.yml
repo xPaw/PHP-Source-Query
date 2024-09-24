@@ -11,14 +11,14 @@ jobs:
     strategy:
       matrix:
         php: ['8.1', '8.2', '8.3']
-    steps:
 
+    steps:
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php }}
 
-		- name: Checkout
+    - name: Checkout
       uses: actions/checkout@v4
 
     - name: Install dependencies
