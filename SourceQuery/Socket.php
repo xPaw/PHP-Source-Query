@@ -108,6 +108,6 @@ declare(strict_types=1);
 
 			$Buffer->Set( $Data );
 
-			return $Buffer->GetLong( ) === -2;
+			return $Buffer->ReadInt32( ) === -2;
 		}
 	}

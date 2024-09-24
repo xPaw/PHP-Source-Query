@@ -59,7 +59,7 @@ declare(strict_types=1);
 
 			$Buffer->Set( $this->PacketQueue->shift() );
 
-			return $Buffer->GetLong( ) === -2;
+			return $Buffer->ReadInt32( ) === -2;
 		}
 	}
 

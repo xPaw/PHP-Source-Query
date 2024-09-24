@@ -183,7 +183,7 @@ declare(strict_types=1);
 			$this->Socket->Write( self::A2A_PING );
 			$Buffer = $this->Socket->Read( );
 
-			return $Buffer->GetByte( ) === self::A2A_ACK;
+			return $Buffer->ReadByte( ) === self::A2A_ACK;
 		}
 
 		/**
@@ -211,16 +211,16 @@ declare(strict_types=1);
 			}
 
 			$Buffer = $this->Socket->Read( );
-			$Type = $Buffer->GetByte( );
+			$Type = $Buffer->ReadByte( );
 			$Server = [];
 
 			if( $Type === self::S2C_CHALLENGE )
 			{
-				$this->Challenge = $Buffer->Get( 4 );
+				$this->Challenge = $Buffer->Read( 4 );
 
 				$this->Socket->Write( self::A2S_INFO, "Source Engine Query\0" . $this->Challenge );
 				$Buffer = $this->Socket->Read( );
-				$Type = $Buffer->GetByte( );
+				$Type = $Buffer->ReadByte( );
 			}
 
 			// Old GoldSource protocol, HLTV still uses it
@@ -232,34 +232,34 @@ declare(strict_types=1);
 				 * Because it sends answer for both protocols
 				 */
 
-				$Server[ 'Address' ]    = $Buffer->GetString( );
-				$Server[ 'HostName' ]   = $Buffer->GetString( );
-				$Server[ 'Map' ]        = $Buffer->GetString( );
-				$Server[ 'ModDir' ]     = $Buffer->GetString( );
-				$Server[ 'ModDesc' ]    = $Buffer->GetString( );
-				$Server[ 'Players' ]    = $Buffer->GetByte( );
-				$Server[ 'MaxPlayers' ] = $Buffer->GetByte( );
-				$Server[ 'Protocol' ]   = $Buffer->GetByte( );
-				$Server[ 'Dedicated' ]  = chr( $Buffer->GetByte( ) );
-				$Server[ 'Os' ]         = chr( $Buffer->GetByte( ) );
-				$Server[ 'Password' ]   = $Buffer->GetByte( ) === 1;
-				$Server[ 'IsMod' ]      = $Buffer->GetByte( ) === 1;
+				$Server[ 'Address' ]    = $Buffer->ReadNullTermString( );
+				$Server[ 'HostName' ]   = $Buffer->ReadNullTermString( );
+				$Server[ 'Map' ]        = $Buffer->ReadNullTermString( );
+				$Server[ 'ModDir' ]     = $Buffer->ReadNullTermString( );
+				$Server[ 'ModDesc' ]    = $Buffer->ReadNullTermString( );
+				$Server[ 'Players' ]    = $Buffer->ReadByte( );
+				$Server[ 'MaxPlayers' ] = $Buffer->ReadByte( );
+				$Server[ 'Protocol' ]   = $Buffer->ReadByte( );
+				$Server[ 'Dedicated' ]  = chr( $Buffer->ReadByte( ) );
+				$Server[ 'Os' ]         = chr( $Buffer->ReadByte( ) );
+				$Server[ 'Password' ]   = $Buffer->ReadByte( ) === 1;
+				$Server[ 'IsMod' ]      = $Buffer->ReadByte( ) === 1;
 
 				if( $Server[ 'IsMod' ] )
 				{
 					$Mod = [];
-					$Mod[ 'Url' ]        = $Buffer->GetString( );
-					$Mod[ 'Download' ]   = $Buffer->GetString( );
-					$Buffer->Get( 1 ); // NULL byte
-					$Mod[ 'Version' ]    = $Buffer->GetLong( );
-					$Mod[ 'Size' ]       = $Buffer->GetLong( );
-					$Mod[ 'ServerSide' ] = $Buffer->GetByte( ) === 1;
-					$Mod[ 'CustomDLL' ]  = $Buffer->GetByte( ) === 1;
+					$Mod[ 'Url' ]        = $Buffer->ReadNullTermString( );
+					$Mod[ 'Download' ]   = $Buffer->ReadNullTermString( );
+					$Buffer->Read( 1 ); // NULL byte
+					$Mod[ 'Version' ]    = $Buffer->ReadInt32( );
+					$Mod[ 'Size' ]       = $Buffer->ReadInt32( );
+					$Mod[ 'ServerSide' ] = $Buffer->ReadByte( ) === 1;
+					$Mod[ 'CustomDLL' ]  = $Buffer->ReadByte( ) === 1;
 					$Server[ 'Mod' ] = $Mod;
 				}
 
-				$Server[ 'Secure' ]   = $Buffer->GetByte( ) === 1;
-				$Server[ 'Bots' ]     = $Buffer->GetByte( );
+				$Server[ 'Secure' ]   = $Buffer->ReadByte( ) === 1;
+				$Server[ 'Bots' ]     = $Buffer->ReadByte( );
 
 				return $Server;
 			}
@@ -269,39 +269,39 @@ declare(strict_types=1);
 				throw new InvalidPacketException( 'GetInfo: Packet header mismatch. (0x' . dechex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 			}
 
-			$Server[ 'Protocol' ]   = $Buffer->GetByte( );
-			$Server[ 'HostName' ]   = $Buffer->GetString( );
-			$Server[ 'Map' ]        = $Buffer->GetString( );
-			$Server[ 'ModDir' ]     = $Buffer->GetString( );
-			$Server[ 'ModDesc' ]    = $Buffer->GetString( );
-			$Server[ 'AppID' ]      = $Buffer->GetShort( );
-			$Server[ 'Players' ]    = $Buffer->GetByte( );
-			$Server[ 'MaxPlayers' ] = $Buffer->GetByte( );
-			$Server[ 'Bots' ]       = $Buffer->GetByte( );
-			$Server[ 'Dedicated' ]  = chr( $Buffer->GetByte( ) );
-			$Server[ 'Os' ]         = chr( $Buffer->GetByte( ) );
-			$Server[ 'Password' ]   = $Buffer->GetByte( ) === 1;
-			$Server[ 'Secure' ]     = $Buffer->GetByte( ) === 1;
+			$Server[ 'Protocol' ]   = $Buffer->ReadByte( );
+			$Server[ 'HostName' ]   = $Buffer->ReadNullTermString( );
+			$Server[ 'Map' ]        = $Buffer->ReadNullTermString( );
+			$Server[ 'ModDir' ]     = $Buffer->ReadNullTermString( );
+			$Server[ 'ModDesc' ]    = $Buffer->ReadNullTermString( );
+			$Server[ 'AppID' ]      = $Buffer->ReadInt16( );
+			$Server[ 'Players' ]    = $Buffer->ReadByte( );
+			$Server[ 'MaxPlayers' ] = $Buffer->ReadByte( );
+			$Server[ 'Bots' ]       = $Buffer->ReadByte( );
+			$Server[ 'Dedicated' ]  = chr( $Buffer->ReadByte( ) );
+			$Server[ 'Os' ]         = chr( $Buffer->ReadByte( ) );
+			$Server[ 'Password' ]   = $Buffer->ReadByte( ) === 1;
+			$Server[ 'Secure' ]     = $Buffer->ReadByte( ) === 1;
 
 			// The Ship (they violate query protocol spec by modifying the response)
 			if( $Server[ 'AppID' ] === 2400 )
 			{
-				$Server[ 'GameMode' ]     = $Buffer->GetByte( );
-				$Server[ 'WitnessCount' ] = $Buffer->GetByte( );
-				$Server[ 'WitnessTime' ]  = $Buffer->GetByte( );
+				$Server[ 'GameMode' ]     = $Buffer->ReadByte( );
+				$Server[ 'WitnessCount' ] = $Buffer->ReadByte( );
+				$Server[ 'WitnessTime' ]  = $Buffer->ReadByte( );
 			}
 
-			$Server[ 'Version' ] = $Buffer->GetString( );
+			$Server[ 'Version' ] = $Buffer->ReadNullTermString( );
 
 			// Extra Data Flags
 			if( $Buffer->Remaining( ) > 0 )
 			{
-				$Server[ 'ExtraDataFlags' ] = $Flags = $Buffer->GetByte( );
+				$Server[ 'ExtraDataFlags' ] = $Flags = $Buffer->ReadByte( );
 
 				// S2A_EXTRA_DATA_HAS_GAME_PORT - Next 2 bytes include the game port.
 				if( $Flags & 0x80 )
 				{
-					$Server[ 'GamePort' ] = $Buffer->GetShort( );
+					$Server[ 'GamePort' ] = $Buffer->ReadInt16( );
 				}
 
 				// S2A_EXTRA_DATA_HAS_STEAMID - Next 8 bytes are the steamID
@@ -309,8 +309,8 @@ declare(strict_types=1);
 				// You can use https://github.com/xPaw/SteamID.php
 				if( $Flags & 0x10 )
 				{
-					$SteamIDLower    = $Buffer->GetUnsignedLong( );
-					$SteamIDInstance = $Buffer->GetUnsignedLong( ); // This gets shifted by 32 bits, which should be steamid instance
+					$SteamIDLower    = $Buffer->ReadUInt32( );
+					$SteamIDInstance = $Buffer->ReadUInt32( ); // This gets shifted by 32 bits, which should be steamid instance
 					$SteamID = 0;
 
 					if( PHP_INT_SIZE === 4 )
@@ -339,20 +339,20 @@ declare(strict_types=1);
 				// S2A_EXTRA_DATA_HAS_SPECTATOR_DATA - Next 2 bytes include the spectator port, then the spectator server name.
 				if( $Flags & 0x40 )
 				{
-					$Server[ 'SpecPort' ] = $Buffer->GetShort( );
-					$Server[ 'SpecName' ] = $Buffer->GetString( );
+					$Server[ 'SpecPort' ] = $Buffer->ReadInt16( );
+					$Server[ 'SpecName' ] = $Buffer->ReadNullTermString( );
 				}
 
 				// S2A_EXTRA_DATA_HAS_GAMETAG_DATA - Next bytes are the game tag string
 				if( $Flags & 0x20 )
 				{
-					$Server[ 'GameTags' ] = $Buffer->GetString( );
+					$Server[ 'GameTags' ] = $Buffer->ReadNullTermString( );
 				}
 
 				// S2A_EXTRA_DATA_GAMEID - Next 8 bytes are the gameID of the server
 				if( $Flags & 0x01 )
 				{
-					$Server[ 'GameID' ] = $Buffer->GetUnsignedLong( ) | ( $Buffer->GetUnsignedLong( ) << 32 );
+					$Server[ 'GameID' ] = $Buffer->ReadUInt32( ) | ( $Buffer->ReadUInt32( ) << 32 );
 				}
 
 				if( $Buffer->Remaining( ) > 0 )
@@ -385,7 +385,7 @@ declare(strict_types=1);
 			$this->Socket->Write( self::A2S_PLAYER, $this->Challenge );
 			$Buffer = $this->Socket->Read( );
 
-			$Type = $Buffer->GetByte( );
+			$Type = $Buffer->ReadByte( );
 
 			if( $Type !== self::S2A_PLAYER )
 			{
@@ -393,15 +393,15 @@ declare(strict_types=1);
 			}
 
 			$Players = [];
-			$Count   = $Buffer->GetByte( );
+			$Count   = $Buffer->ReadByte( );
 
 			while( $Count-- > 0 && $Buffer->Remaining( ) > 0 )
 			{
 				$Player = [];
-				$Player[ 'Id' ]    = $Buffer->GetByte( ); // PlayerID, is it just always 0?
-				$Player[ 'Name' ]  = $Buffer->GetString( );
-				$Player[ 'Frags' ] = $Buffer->GetLong( );
-				$Player[ 'Time' ]  = (int)$Buffer->GetFloat( );
+				$Player[ 'Id' ]    = $Buffer->ReadByte( ); // PlayerID, is it just always 0?
+				$Player[ 'Name' ]  = $Buffer->ReadNullTermString( );
+				$Player[ 'Frags' ] = $Buffer->ReadInt32( );
+				$Player[ 'Time' ]  = (int)$Buffer->ReadFloat32( );
 				$Player[ 'TimeF' ] = gmdate( ( $Player[ 'Time' ] > 3600 ? 'H:i:s' : 'i:s' ), $Player[ 'Time' ] );
 
 				$Players[ ] = $Player;
@@ -430,7 +430,7 @@ declare(strict_types=1);
 			$this->Socket->Write( self::A2S_RULES, $this->Challenge );
 			$Buffer = $this->Socket->Read( );
 
-			$Type = $Buffer->GetByte( );
+			$Type = $Buffer->ReadByte( );
 
 			if( $Type !== self::S2A_RULES )
 			{
@@ -438,12 +438,12 @@ declare(strict_types=1);
 			}
 
 			$Rules = [];
-			$Count = $Buffer->GetShort( );
+			$Count = $Buffer->ReadInt16( );
 
 			while( $Count-- > 0 && $Buffer->Remaining( ) > 0 )
 			{
-				$Rule  = $Buffer->GetString( );
-				$Value = $Buffer->GetString( );
+				$Rule  = $Buffer->ReadNullTermString( );
+				$Value = $Buffer->ReadNullTermString( );
 
 				if( !empty( $Rule ) )
 				{
@@ -474,13 +474,13 @@ declare(strict_types=1);
 			$this->Socket->Write( $Header, "\xFF\xFF\xFF\xFF" );
 			$Buffer = $this->Socket->Read( );
 
-			$Type = $Buffer->GetByte( );
+			$Type = $Buffer->ReadByte( );
 
 			switch( $Type )
 			{
 				case self::S2C_CHALLENGE:
 				{
-					$this->Challenge = $Buffer->Get( 4 );
+					$this->Challenge = $Buffer->Read( 4 );
 
 					return;
 				}

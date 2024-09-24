@@ -52,7 +52,7 @@ declare(strict_types=1);
 				throw new InvalidPacketException( 'Failed to read any data from socket', InvalidPacketException::BUFFER_EMPTY );
 			}
 
-			$Header = $Buffer->GetLong( );
+			$Header = $Buffer->ReadInt32( );
 
 			if( $Header === -1 ) // Single packet
 			{
@@ -67,13 +67,13 @@ declare(strict_types=1);
 
 				do
 				{
-					$RequestID = $Buffer->GetLong( );
+					$RequestID = $Buffer->ReadInt32( );
 
 					switch( $this->Engine )
 					{
 						case SourceQuery::GOLDSOURCE:
 						{
-							$PacketCountAndNumber = $Buffer->GetByte( );
+							$PacketCountAndNumber = $Buffer->ReadByte( );
 							$PacketCount          = $PacketCountAndNumber & 0xF;
 							$PacketNumber         = $PacketCountAndNumber >> 4;
 
@@ -82,18 +82,18 @@ declare(strict_types=1);
 						case SourceQuery::SOURCE:
 						{
 							$IsCompressed         = ( $RequestID & 0x80000000 ) !== 0;
-							$PacketCount          = $Buffer->GetByte( );
-							$PacketNumber         = $Buffer->GetByte( ) + 1;
+							$PacketCount          = $Buffer->ReadByte( );
+							$PacketNumber         = $Buffer->ReadByte( ) + 1;
 
 							if( $IsCompressed )
 							{
-								$Buffer->GetLong( ); // Split size
+								$Buffer->ReadInt32( ); // Split size
 
-								$PacketChecksum = $Buffer->GetUnsignedLong( );
+								$PacketChecksum = $Buffer->ReadUInt32( );
 							}
 							else
 							{
-								$Buffer->GetShort( ); // Split size
+								$Buffer->ReadInt16( ); // Split size
 							}
 
 							break;
@@ -104,7 +104,7 @@ declare(strict_types=1);
 						}
 					}
 
-					$Packets[ $PacketNumber ] = $Buffer->Get( );
+					$Packets[ $PacketNumber ] = $Buffer->Read( );
 
 					$ReadMore = $PacketCount > sizeof( $Packets );
 				}

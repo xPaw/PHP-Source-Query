@@ -83,12 +83,12 @@ declare(strict_types=1);
 
 				if( $ReadMore )
 				{
-					if( $Buffer->GetByte( ) !== SourceQuery::S2A_RCON )
+					if( $Buffer->ReadByte( ) !== SourceQuery::S2A_RCON )
 					{
 						throw new InvalidPacketException( 'Invalid rcon response.', InvalidPacketException::PACKET_HEADER_MISMATCH );
 					}
 
-					$Packet = $Buffer->Get( );
+					$Packet = $Buffer->Read( );
 					$StringBuffer .= $Packet;
 					//$StringBuffer .= SubStr( $Packet, 0, -2 );
 
@@ -129,7 +129,7 @@ declare(strict_types=1);
 			$this->Write( 0, 'rcon ' . $this->RconChallenge . ' "' . $this->RconPassword . '" ' . $Command . "\0" );
 			$Buffer = $this->Read( );
 
-			return $Buffer->Get( );
+			return $Buffer->Read( );
 		}
 
 		public function Authorize( string $Password ) : void
@@ -139,11 +139,11 @@ declare(strict_types=1);
 			$this->Write( 0, 'challenge rcon' );
 			$Buffer = $this->Socket->Read( );
 
-			if( $Buffer->Get( 14 ) !== 'challenge rcon' )
+			if( $Buffer->Read( 14 ) !== 'challenge rcon' )
 			{
 				throw new AuthenticationException( 'Failed to get RCON challenge.', AuthenticationException::BAD_PASSWORD );
 			}
 
-			$this->RconChallenge = trim( $Buffer->Get( ) );
+			$this->RconChallenge = trim( $Buffer->Read( ) );
 		}
 	}

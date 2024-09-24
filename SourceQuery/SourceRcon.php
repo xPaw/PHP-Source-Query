@@ -105,7 +105,7 @@ declare(strict_types=1);
 				throw new InvalidPacketException( 'Rcon read: Failed to read any data from socket', InvalidPacketException::BUFFER_EMPTY );
 			}
 
-			$PacketSize = $Buffer->GetLong( );
+			$PacketSize = $Buffer->ReadInt32( );
 
 			if( $PacketSize <= 0 )
 			{
@@ -115,7 +115,7 @@ declare(strict_types=1);
 			$Data = fread( $this->RconSocket, $PacketSize );
 			$Buffer->Set( $Data === false ? '' : $Data );
 
-			$Data = $Buffer->Get( );
+			$Data = $Buffer->Read( );
 
 			$Remaining = $PacketSize - strlen( $Data );
 
@@ -142,9 +142,9 @@ declare(strict_types=1);
 			$this->Write( SourceQuery::SERVERDATA_EXECCOMMAND, $Command );
 			$Buffer = $this->Read( );
 
-			$Buffer->GetLong( ); // RequestID
+			$Buffer->ReadInt32( ); // RequestID
 
-			$Type = $Buffer->GetLong( );
+			$Type = $Buffer->ReadInt32( );
 
 			if( $Type === SourceQuery::SERVERDATA_AUTH_RESPONSE )
 			{
@@ -155,7 +155,7 @@ declare(strict_types=1);
 				throw new InvalidPacketException( 'Invalid rcon response.', InvalidPacketException::PACKET_HEADER_MISMATCH );
 			}
 
-			$Data = $Buffer->Get( );
+			$Data = $Buffer->Read( );
 
 			// We do this stupid hack to handle split packets
 			// See https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Multiple-packet_Responses
@@ -167,14 +167,14 @@ declare(strict_types=1);
 				{
 					$Buffer = $this->Read( );
 
-					$Buffer->GetLong( ); // RequestID
+					$Buffer->ReadInt32( ); // RequestID
 
-					if( $Buffer->GetLong( ) !== SourceQuery::SERVERDATA_RESPONSE_VALUE )
+					if( $Buffer->ReadInt32( ) !== SourceQuery::SERVERDATA_RESPONSE_VALUE )
 					{
 						break;
 					}
 
-					$Data2 = $Buffer->Get( );
+					$Data2 = $Buffer->Read( );
 
 					if( $Data2 === "\x00\x01\x00\x00\x00\x00" )
 					{
@@ -194,8 +194,8 @@ declare(strict_types=1);
 			$this->Write( SourceQuery::SERVERDATA_AUTH, $Password );
 			$Buffer = $this->Read( );
 
-			$RequestID = $Buffer->GetLong( );
-			$Type      = $Buffer->GetLong( );
+			$RequestID = $Buffer->ReadInt32( );
+			$Type      = $Buffer->ReadInt32( );
 
 			// If we receive SERVERDATA_RESPONSE_VALUE, then we need to read again
 			// More info: https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Additional_Comments
@@ -204,8 +204,8 @@ declare(strict_types=1);
 			{
 				$Buffer = $this->Read( );
 
-				$RequestID = $Buffer->GetLong( );
-				$Type      = $Buffer->GetLong( );
+				$RequestID = $Buffer->ReadInt32( );
+				$Type      = $Buffer->ReadInt32( );
 			}
 
 			if( $RequestID === -1 || $Type !== SourceQuery::SERVERDATA_AUTH_RESPONSE )

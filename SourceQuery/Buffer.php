@@ -61,11 +61,11 @@ declare(strict_types=1);
 		}
 
 		/**
-		 * Gets data from buffer
+		 * Reads the specified number of bytes.
 		 *
 		 * @param int $Length Bytes to read
 		 */
-		public function Get( int $Length = -1 ) : string
+		public function Read( int $Length = -1 ) : string
 		{
 			if( $Length === 0 )
 			{
@@ -91,97 +91,97 @@ declare(strict_types=1);
 		}
 
 		/**
-		 * Get byte from buffer
+		 * Reads the next byte.
 		 */
-		public function GetByte( ) : int
+		public function ReadByte( ) : int
 		{
-			return ord( $this->Get( 1 ) );
+			return ord( $this->Read( 1 ) );
 		}
 
 		/**
-		 * Get short from buffer
+		 * Reads a 2-byte signed integer.
 		 */
-		public function GetShort( ) : int
+		public function ReadInt16( ) : int
 		{
 			if( $this->Remaining( ) < 2 )
 			{
-				throw new InvalidPacketException( 'Not enough data to unpack a short.', InvalidPacketException::BUFFER_EMPTY );
+				throw new InvalidPacketException( 'Not enough data to unpack.', InvalidPacketException::BUFFER_EMPTY );
 			}
 
-			$Data = unpack( 'v', $this->Get( 2 ) );
+			$Data = unpack( 'v', $this->Read( 2 ) );
 
 			if( $Data === false )
 			{
-				throw new InvalidPacketException( 'Failed to unpack a short.', InvalidPacketException::UNPACK_FAILED );
+				throw new InvalidPacketException( 'Failed to unpack.', InvalidPacketException::UNPACK_FAILED );
 			}
 
 			return (int)$Data[ 1 ];
 		}
 
 		/**
-		 * Get long from buffer
+		 * Reads a 4-byte signed integer.
 		 */
-		public function GetLong( ) : int
+		public function ReadInt32( ) : int
 		{
 			if( $this->Remaining( ) < 4 )
 			{
-				throw new InvalidPacketException( 'Not enough data to unpack a long.', InvalidPacketException::BUFFER_EMPTY );
+				throw new InvalidPacketException( 'Not enough data to unpack.', InvalidPacketException::BUFFER_EMPTY );
 			}
 
-			$Data = unpack( 'l', $this->Get( 4 ) );
+			$Data = unpack( 'l', $this->Read( 4 ) );
 
 			if( $Data === false )
 			{
-				throw new InvalidPacketException( 'Failed to unpack a long.', InvalidPacketException::UNPACK_FAILED );
+				throw new InvalidPacketException( 'Failed to unpack.', InvalidPacketException::UNPACK_FAILED );
 			}
 
 			return (int)$Data[ 1 ];
 		}
 
 		/**
-		 * Get float from buffer
+		 * Reads a 4-byte floating point value.
 		 */
-		public function GetFloat( ) : float
+		public function ReadFloat32( ) : float
 		{
 			if( $this->Remaining( ) < 4 )
 			{
-				throw new InvalidPacketException( 'Not enough data to unpack a float.', InvalidPacketException::BUFFER_EMPTY );
+				throw new InvalidPacketException( 'Not enough data to unpack.', InvalidPacketException::BUFFER_EMPTY );
 			}
 
-			$Data = unpack( 'f', $this->Get( 4 ) );
+			$Data = unpack( 'f', $this->Read( 4 ) );
 
 			if( $Data === false )
 			{
-				throw new InvalidPacketException( 'Failed to unpack a float.', InvalidPacketException::UNPACK_FAILED );
+				throw new InvalidPacketException( 'Failed to unpack.', InvalidPacketException::UNPACK_FAILED );
 			}
 
 			return (float)$Data[ 1 ];
 		}
 
 		/**
-		 * Get unsigned long from buffer
+		 * Reads a 4-byte unsigned integer.
 		 */
-		public function GetUnsignedLong( ) : int
+		public function ReadUInt32( ) : int
 		{
 			if( $this->Remaining( ) < 4 )
 			{
-				throw new InvalidPacketException( 'Not enough data to unpack an usigned long.', InvalidPacketException::BUFFER_EMPTY );
+				throw new InvalidPacketException( 'Not enough data to unpack.', InvalidPacketException::BUFFER_EMPTY );
 			}
 
-			$Data = unpack( 'V', $this->Get( 4 ) );
+			$Data = unpack( 'V', $this->Read( 4 ) );
 
 			if( $Data === false )
 			{
-				throw new InvalidPacketException( 'Failed to unpack a ulong.', InvalidPacketException::UNPACK_FAILED );
+				throw new InvalidPacketException( 'Failed to unpack.', InvalidPacketException::UNPACK_FAILED );
 			}
 
 			return (int)$Data[ 1 ];
 		}
 
 		/**
-		 * Read one string from buffer ending with null byte
+		 * Read a null-terminated string.
 		 */
-		public function GetString( ) : string
+		public function ReadNullTermString( ) : string
 		{
 			$ZeroBytePosition = strpos( $this->Buffer, "\0", $this->Position );
 
@@ -190,7 +190,7 @@ declare(strict_types=1);
 				return '';
 			}
 
-			$String = $this->Get( $ZeroBytePosition - $this->Position );
+			$String = $this->Read( $ZeroBytePosition - $this->Position );
 
 			$this->Position++;
 
