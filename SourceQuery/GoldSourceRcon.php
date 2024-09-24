@@ -27,10 +27,8 @@
 	{
 		/**
 		 * Points to socket class
-		 * 
-		 * @var BaseSocket
 		 */
-		private $Socket;
+		private BaseSocket $Socket;
 		
 		private string $RconPassword = '';
 		private string $RconChallenge = '';

@@ -70,10 +70,8 @@
 		
 		/**
 		 * Points to rcon class
-		 * 
-		 * @var SourceRcon|GoldSourceRcon|null
 		 */
-		private $Rcon;
+		private SourceRcon|GoldSourceRcon|null $Rcon;
 		
 		/**
 		 * Points to socket class
