@@ -75,8 +75,6 @@ declare(strict_types=1);
 		 * Reads from socket and returns Buffer.
 		 *
 		 * @throws InvalidPacketException
-		 *
-		 * @return Buffer Buffer
 		 */
 		public function Read( ) : Buffer
 		{

@@ -135,7 +135,7 @@ declare(strict_types=1);
 		 *
 		 * @param bool $Value Set to true to force old method
 		 *
-		 * @returns bool Previous value
+		 * @return bool Previous value
 		 */
 		public function SetUseOldGetChallengeMethod( bool $Value ) : bool
 		{
