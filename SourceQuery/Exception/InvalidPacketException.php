@@ -18,4 +18,5 @@
 		const BUFFER_EMPTY = 2;
 		const BUFFER_NOT_EMPTY = 3;
 		const CHECKSUM_MISMATCH = 4;
+		const UNPACK_FAILED = 5;
 	}

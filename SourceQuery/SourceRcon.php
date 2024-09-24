@@ -84,8 +84,9 @@
 		
 		public function Read( ) : Buffer
 		{
+			$Data = fread( $this->RconSocket, 4 );
 			$Buffer = new Buffer( );
-			$Buffer->Set( fread( $this->RconSocket, 4 ) );
+			$Buffer->Set( $Data === false ? '' : $Data );
 			
 			if( $Buffer->Remaining( ) < 4 )
 			{
@@ -94,7 +95,13 @@
 			
 			$PacketSize = $Buffer->GetLong( );
 			
-			$Buffer->Set( fread( $this->RconSocket, $PacketSize ) );
+			if( $PacketSize <= 0 )
+			{
+				throw new InvalidPacketException( 'Rcon read: Packet size was empty', InvalidPacketException::BUFFER_EMPTY );
+			}
+
+			$Data = fread( $this->RconSocket, $PacketSize );
+			$Buffer->Set( $Data === false ? '' : $Data );
 			
 			$Data = $Buffer->Get( );
 			
@@ -104,15 +111,13 @@
 			{
 				$Data2 = fread( $this->RconSocket, $Remaining );
 				
-				$PacketSize = strlen( $Data2 );
-				
-				if( $PacketSize === 0 )
+				if( $Data2 === false || strlen( $Data2 ) === 0 )
 				{
 					throw new InvalidPacketException( 'Read ' . strlen( $Data ) . ' bytes from socket, ' . $Remaining . ' remaining', InvalidPacketException::BUFFER_EMPTY );
 				}
 				
 				$Data .= $Data2;
-				$Remaining -= $PacketSize;
+				$Remaining -= strlen( $Data2 );
 			}
 			
 			$Buffer->Set( $Data );

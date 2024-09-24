@@ -73,8 +73,9 @@
 		 */
 		public function Read( ) : Buffer
 		{
+			$Data = fread( $this->Socket, self::MaxPacketLength );
 			$Buffer = new Buffer( );
-			$Buffer->Set( fread( $this->Socket, self::MaxPacketLength ) );
+			$Buffer->Set( $Data === false ? '' : $Data );
 			
 			$this->ReadInternal( $Buffer, [ $this, 'Sherlock' ] );
 			
@@ -85,7 +86,7 @@
 		{
 			$Data = fread( $this->Socket, self::MaxPacketLength );
 			
-			if( strlen( $Data ) < 4 )
+			if( $Data === false || strlen( $Data ) < 4 )
 			{
 				return false;
 			}

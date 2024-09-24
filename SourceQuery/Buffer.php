@@ -108,6 +108,11 @@
 			
 			$Data = unpack( 'v', $this->Get( 2 ) );
 			
+			if( $Data === false )
+			{
+				throw new InvalidPacketException( 'Failed to unpack a short.', InvalidPacketException::UNPACK_FAILED );
+			}
+
 			return (int)$Data[ 1 ];
 		}
 		
@@ -122,7 +127,12 @@
 			}
 			
 			$Data = unpack( 'l', $this->Get( 4 ) );
-			
+
+			if( $Data === false )
+			{
+				throw new InvalidPacketException( 'Failed to unpack a long.', InvalidPacketException::UNPACK_FAILED );
+			}
+
 			return (int)$Data[ 1 ];
 		}
 		
@@ -138,6 +148,11 @@
 			
 			$Data = unpack( 'f', $this->Get( 4 ) );
 			
+			if( $Data === false )
+			{
+				throw new InvalidPacketException( 'Failed to unpack a float.', InvalidPacketException::UNPACK_FAILED );
+			}
+
 			return (float)$Data[ 1 ];
 		}
 		
@@ -153,6 +168,11 @@
 			
 			$Data = unpack( 'V', $this->Get( 4 ) );
 			
+			if( $Data === false )
+			{
+				throw new InvalidPacketException( 'Failed to unpack a ulong.', InvalidPacketException::UNPACK_FAILED );
+			}
+
 			return (int)$Data[ 1 ];
 		}
 		

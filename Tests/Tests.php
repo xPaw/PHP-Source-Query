@@ -162,12 +162,17 @@
 			
 			$Files = glob( __DIR__ . '/Info/*.raw', GLOB_ERR );
 			
+			if( $Files === false )
+			{
+				throw new Exception();
+			}
+
 			foreach( $Files as $File )
 			{
 				$DataProvider[] =
 				[
-					hex2bin( trim( file_get_contents( $File ) ) ),
-					json_decode( file_get_contents( str_replace( '.raw', '.json', $File ) ), true )
+					hex2bin( trim( (string)file_get_contents( $File ) ) ),
+					json_decode( (string)file_get_contents( str_replace( '.raw', '.json', $File ) ), true )
 				];
 			}
 			
@@ -250,11 +255,11 @@
 		 */
 		public function testGetRules( array $RawInput, array $ExpectedOutput ) : void
 		{
-			$this->Socket->Queue( hex2bin( "ffffffff4104fce20e" ) ); // Challenge
+			$this->Socket->Queue( (string)hex2bin( "ffffffff4104fce20e" ) ); // Challenge
 			
 			foreach( $RawInput as $Packet )
 			{
-				$this->Socket->Queue( hex2bin( $Packet ) );
+				$this->Socket->Queue( (string)hex2bin( $Packet ) );
 			}
 			
 			$RealOutput = $this->SourceQuery->GetRules();
@@ -268,12 +273,17 @@
 			
 			$Files = glob( __DIR__ . '/Rules/*.raw', GLOB_ERR );
 			
+			if( $Files === false )
+			{
+				throw new Exception();
+			}
+
 			foreach( $Files as $File )
 			{
 				$DataProvider[] =
 				[
 					file( $File, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES ),
-					json_decode( file_get_contents( str_replace( '.raw', '.json', $File ) ), true )
+					json_decode( (string)file_get_contents( str_replace( '.raw', '.json', $File ) ), true )
 				];
 			}
 			
@@ -286,11 +296,11 @@
 		 */
 		public function testGetPlayers( array $RawInput, array $ExpectedOutput ) : void
 		{
-			$this->Socket->Queue( hex2bin( "ffffffff4104fce20e" ) ); // Challenge
+			$this->Socket->Queue( (string)hex2bin( "ffffffff4104fce20e" ) ); // Challenge
 			
 			foreach( $RawInput as $Packet )
 			{
-				$this->Socket->Queue( hex2bin( $Packet ) );
+				$this->Socket->Queue( (string)hex2bin( $Packet ) );
 			}
 			
 			$RealOutput = $this->SourceQuery->GetPlayers();
@@ -304,12 +314,17 @@
 			
 			$Files = glob( __DIR__ . '/Players/*.raw', GLOB_ERR );
 			
+			if( $Files === false )
+			{
+				throw new Exception();
+			}
+
 			foreach( $Files as $File )
 			{
 				$DataProvider[] =
 				[
 					file( $File, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES ),
-					json_decode( file_get_contents( str_replace( '.raw', '.json', $File ) ), true )
+					json_decode( (string)file_get_contents( str_replace( '.raw', '.json', $File ) ), true )
 				];
 			}
 			

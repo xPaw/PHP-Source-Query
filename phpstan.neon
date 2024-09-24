@@ -1,6 +1,6 @@
 parameters:
 	checkFunctionNameCase: true
-	level: 6
+	level: 7
 	paths:
 		- .
 	excludePaths:
