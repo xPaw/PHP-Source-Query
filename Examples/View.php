@@ -4,28 +4,28 @@
 	require __DIR__ . '/../vendor/autoload.php';
 
 	use xPaw\SourceQuery\SourceQuery;
-	
+
 	// Edit this ->
 	define( 'SQ_SERVER_ADDR', 'localhost' );
 	define( 'SQ_SERVER_PORT', 27015 );
 	define( 'SQ_TIMEOUT',     3 );
 	define( 'SQ_ENGINE',      SourceQuery::SOURCE );
 	// Edit this <-
-	
+
 	$Timer = microtime( true );
-	
+
 	$Query = new SourceQuery( );
-	
+
 	$Info    = [];
 	$Rules   = [];
 	$Players = [];
 	$Exception = null;
-	
+
 	try
 	{
 		$Query->Connect( SQ_SERVER_ADDR, SQ_SERVER_PORT, SQ_TIMEOUT, SQ_ENGINE );
 		//$Query->SetUseOldGetChallengeMethod( true ); // Use this when players/rules retrieval fails on games like Starbound
-		
+
 		$Info    = $Query->GetInfo( );
 		$Players = $Query->GetPlayers( );
 		$Rules   = $Query->GetRules( );
@@ -38,7 +38,7 @@
 	{
 		$Query->Disconnect( );
 	}
-	
+
 	$Timer = number_format( microtime( true ) - $Timer, 4, '.', '' );
 ?>
 <!DOCTYPE html>
@@ -46,28 +46,28 @@
 <head>
 	<meta charset="utf-8">
 	<title>Source Query PHP Library</title>
-	
+
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
 	<style type="text/css">
 		.table {
 			table-layout: fixed;
 			border-top-color: #428BCA;
 		}
-		
+
 		.table td {
 			overflow-x: auto;
 		}
-		
+
 		.table thead th {
 			background-color: #428BCA;
 			border-color: #428BCA !important;
 			color: #FFF;
 		}
-		
+
 		.info-column {
 			width: 120px;
 		}
-		
+
 		.frags-column {
 			width: 80px;
 		}
@@ -78,9 +78,9 @@
 	<div class="jumbotron">
 		<div class="container">
 			<h1>Source Query PHP Library</h1>
-			
+
 			<p class="lead">This library was created to query game server which use the Source (Steamworks) query protocol.</p>
-			
+
 			<p>
 				<a class="btn btn-large btn-primary" href="https://xpaw.me">Made by xPaw</a>
 				<a class="btn btn-large btn-primary" href="https://github.com/xPaw/PHP-Source-Query">View on GitHub</a>
@@ -88,7 +88,7 @@
 			</p>
 		</div>
 	</div>
-		
+
 	<div class="container">
 <?php if( $Exception !== null ): ?>
 		<div class="panel panel-error">

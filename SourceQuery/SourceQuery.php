@@ -36,7 +36,7 @@ declare(strict_types=1);
 		 */
 		const GOLDSOURCE = 0;
 		const SOURCE     = 1;
-		
+
 		/**
 		 * Packets sent
 		 */
@@ -45,7 +45,7 @@ declare(strict_types=1);
 		const A2S_PLAYER    = 0x55;
 		const A2S_RULES     = 0x56;
 		const A2S_SERVERQUERY_GETCHALLENGE = 0x57;
-		
+
 		/**
 		 * Packets received
 		 */
@@ -56,55 +56,55 @@ declare(strict_types=1);
 		const S2A_PLAYER    = 0x44;
 		const S2A_RULES     = 0x45;
 		const S2A_RCON      = 0x6C;
-		
+
 		/**
 		 * Source rcon sent
 		 */
 		const SERVERDATA_REQUESTVALUE   = 0;
 		const SERVERDATA_EXECCOMMAND    = 2;
 		const SERVERDATA_AUTH           = 3;
-		
+
 		/**
 		 * Source rcon received
 		 */
 		const SERVERDATA_RESPONSE_VALUE = 0;
 		const SERVERDATA_AUTH_RESPONSE  = 2;
-		
+
 		/**
 		 * Points to rcon class
 		 */
 		private SourceRcon|GoldSourceRcon|null $Rcon = null;
-		
+
 		/**
 		 * Points to socket class
 		 */
 		private BaseSocket $Socket;
-		
+
 		/**
 		 * True if connection is open, false if not
 		 */
 		private bool $Connected = false;
-		
+
 		/**
 		 * Contains challenge
 		 */
 		private string $Challenge = '';
-		
+
 		/**
 		 * Use old method for getting challenge number
 		 */
 		private bool $UseOldGetChallengeMethod = false;
-		
+
 		public function __construct( ?BaseSocket $Socket = null )
 		{
 			$this->Socket = $Socket ?? new Socket( );
 		}
-		
+
 		public function __destruct( )
 		{
 			$this->Disconnect( );
 		}
-		
+
 		/**
 		 * Opens connection to server
 		 *
@@ -119,17 +119,17 @@ declare(strict_types=1);
 		public function Connect( string $Address, int $Port, int $Timeout = 3, int $Engine = self::SOURCE ) : void
 		{
 			$this->Disconnect( );
-			
+
 			if( $Timeout < 0 )
 			{
 				throw new InvalidArgumentException( 'Timeout must be a positive integer.', InvalidArgumentException::TIMEOUT_NOT_INTEGER );
 			}
-			
+
 			$this->Socket->Open( $Address, $Port, $Timeout, $Engine );
-			
+
 			$this->Connected = true;
 		}
-		
+
 		/**
 		 * Forces GetChallenge to use old method for challenge retrieval because some games use outdated protocol (e.g Starbound)
 		 *
@@ -140,12 +140,12 @@ declare(strict_types=1);
 		public function SetUseOldGetChallengeMethod( bool $Value ) : bool
 		{
 			$Previous = $this->UseOldGetChallengeMethod;
-			
+
 			$this->UseOldGetChallengeMethod = $Value === true;
-			
+
 			return $Previous;
 		}
-		
+
 		/**
 		 * Closes all open connections
 		 */
@@ -153,17 +153,17 @@ declare(strict_types=1);
 		{
 			$this->Connected = false;
 			$this->Challenge = '';
-			
+
 			$this->Socket->Close( );
-			
+
 			if( $this->Rcon !== null )
 			{
 				$this->Rcon->Close( );
-				
+
 				$this->Rcon = null;
 			}
 		}
-		
+
 		/**
 		 * Sends ping packet to the server
 		 * NOTE: This may not work on some games (TF2 for example)
@@ -179,13 +179,13 @@ declare(strict_types=1);
 			{
 				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
 			}
-			
+
 			$this->Socket->Write( self::A2A_PING );
 			$Buffer = $this->Socket->Read( );
-			
+
 			return $Buffer->GetByte( ) === self::A2A_ACK;
 		}
-		
+
 		/**
 		 * Get server information
 		 *
@@ -200,7 +200,7 @@ declare(strict_types=1);
 			{
 				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
 			}
-			
+
 			if( $this->Challenge )
 			{
 				$this->Socket->Write( self::A2S_INFO, "Source Engine Query\0" . $this->Challenge );
@@ -213,7 +213,7 @@ declare(strict_types=1);
 			$Buffer = $this->Socket->Read( );
 			$Type = $Buffer->GetByte( );
 			$Server = [];
-			
+
 			if( $Type === self::S2C_CHALLENGE )
 			{
 				$this->Challenge = $Buffer->Get( 4 );
@@ -231,7 +231,7 @@ declare(strict_types=1);
 				 * That means this server is running dproto,
 				 * Because it sends answer for both protocols
 				 */
-				
+
 				$Server[ 'Address' ]    = $Buffer->GetString( );
 				$Server[ 'HostName' ]   = $Buffer->GetString( );
 				$Server[ 'Map' ]        = $Buffer->GetString( );
@@ -244,7 +244,7 @@ declare(strict_types=1);
 				$Server[ 'Os' ]         = chr( $Buffer->GetByte( ) );
 				$Server[ 'Password' ]   = $Buffer->GetByte( ) === 1;
 				$Server[ 'IsMod' ]      = $Buffer->GetByte( ) === 1;
-				
+
 				if( $Server[ 'IsMod' ] )
 				{
 					$Mod = [];
@@ -257,18 +257,18 @@ declare(strict_types=1);
 					$Mod[ 'CustomDLL' ]  = $Buffer->GetByte( ) === 1;
 					$Server[ 'Mod' ] = $Mod;
 				}
-				
+
 				$Server[ 'Secure' ]   = $Buffer->GetByte( ) === 1;
 				$Server[ 'Bots' ]     = $Buffer->GetByte( );
-				
+
 				return $Server;
 			}
-			
+
 			if( $Type !== self::S2A_INFO_SRC )
 			{
 				throw new InvalidPacketException( 'GetInfo: Packet header mismatch. (0x' . dechex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 			}
-			
+
 			$Server[ 'Protocol' ]   = $Buffer->GetByte( );
 			$Server[ 'HostName' ]   = $Buffer->GetString( );
 			$Server[ 'Map' ]        = $Buffer->GetString( );
@@ -282,7 +282,7 @@ declare(strict_types=1);
 			$Server[ 'Os' ]         = chr( $Buffer->GetByte( ) );
 			$Server[ 'Password' ]   = $Buffer->GetByte( ) === 1;
 			$Server[ 'Secure' ]     = $Buffer->GetByte( ) === 1;
-			
+
 			// The Ship (they violate query protocol spec by modifying the response)
 			if( $Server[ 'AppID' ] === 2400 )
 			{
@@ -290,20 +290,20 @@ declare(strict_types=1);
 				$Server[ 'WitnessCount' ] = $Buffer->GetByte( );
 				$Server[ 'WitnessTime' ]  = $Buffer->GetByte( );
 			}
-			
+
 			$Server[ 'Version' ] = $Buffer->GetString( );
-			
+
 			// Extra Data Flags
 			if( $Buffer->Remaining( ) > 0 )
 			{
 				$Server[ 'ExtraDataFlags' ] = $Flags = $Buffer->GetByte( );
-				
+
 				// S2A_EXTRA_DATA_HAS_GAME_PORT - Next 2 bytes include the game port.
 				if( $Flags & 0x80 )
 				{
 					$Server[ 'GamePort' ] = $Buffer->GetShort( );
 				}
-				
+
 				// S2A_EXTRA_DATA_HAS_STEAMID - Next 8 bytes are the steamID
 				// Want to play around with this?
 				// You can use https://github.com/xPaw/SteamID.php
@@ -312,7 +312,7 @@ declare(strict_types=1);
 					$SteamIDLower    = $Buffer->GetUnsignedLong( );
 					$SteamIDInstance = $Buffer->GetUnsignedLong( ); // This gets shifted by 32 bits, which should be steamid instance
 					$SteamID = 0;
-					
+
 					if( PHP_INT_SIZE === 4 )
 					{
 						if( extension_loaded( 'gmp' ) )
@@ -330,47 +330,47 @@ declare(strict_types=1);
 					{
 						$SteamID = $SteamIDLower | ( $SteamIDInstance << 32 );
 					}
-					
+
 					$Server[ 'SteamID' ] = $SteamID;
-					
+
 					unset( $SteamIDLower, $SteamIDInstance, $SteamID );
 				}
-				
+
 				// S2A_EXTRA_DATA_HAS_SPECTATOR_DATA - Next 2 bytes include the spectator port, then the spectator server name.
 				if( $Flags & 0x40 )
 				{
 					$Server[ 'SpecPort' ] = $Buffer->GetShort( );
 					$Server[ 'SpecName' ] = $Buffer->GetString( );
 				}
-				
+
 				// S2A_EXTRA_DATA_HAS_GAMETAG_DATA - Next bytes are the game tag string
 				if( $Flags & 0x20 )
 				{
 					$Server[ 'GameTags' ] = $Buffer->GetString( );
 				}
-				
+
 				// S2A_EXTRA_DATA_GAMEID - Next 8 bytes are the gameID of the server
 				if( $Flags & 0x01 )
 				{
-					$Server[ 'GameID' ] = $Buffer->GetUnsignedLong( ) | ( $Buffer->GetUnsignedLong( ) << 32 ); 
+					$Server[ 'GameID' ] = $Buffer->GetUnsignedLong( ) | ( $Buffer->GetUnsignedLong( ) << 32 );
 				}
-				
+
 				if( $Buffer->Remaining( ) > 0 )
 				{
 					throw new InvalidPacketException( 'GetInfo: unread data? ' . $Buffer->Remaining( ) . ' bytes remaining in the buffer. Please report it to the library developer.',
 						InvalidPacketException::BUFFER_NOT_EMPTY );
 				}
 			}
-			
+
 			return $Server;
 		}
-		
+
 		/**
 		 * Get players on the server
 		 *
 		 * @throws InvalidPacketException
 		 * @throws SocketException
-		 * 
+		 *
 		 * @return array Returns an array with players on success
 		 */
 		public function GetPlayers( ) : array
@@ -379,22 +379,22 @@ declare(strict_types=1);
 			{
 				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
 			}
-			
+
 			$this->GetChallenge( self::A2S_PLAYER, self::S2A_PLAYER );
-			
+
 			$this->Socket->Write( self::A2S_PLAYER, $this->Challenge );
 			$Buffer = $this->Socket->Read( );
-			
+
 			$Type = $Buffer->GetByte( );
-			
+
 			if( $Type !== self::S2A_PLAYER )
 			{
 				throw new InvalidPacketException( 'GetPlayers: Packet header mismatch. (0x' . dechex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 			}
-			
+
 			$Players = [];
 			$Count   = $Buffer->GetByte( );
-			
+
 			while( $Count-- > 0 && $Buffer->Remaining( ) > 0 )
 			{
 				$Player = [];
@@ -403,13 +403,13 @@ declare(strict_types=1);
 				$Player[ 'Frags' ] = $Buffer->GetLong( );
 				$Player[ 'Time' ]  = (int)$Buffer->GetFloat( );
 				$Player[ 'TimeF' ] = gmdate( ( $Player[ 'Time' ] > 3600 ? 'H:i:s' : 'i:s' ), $Player[ 'Time' ] );
-				
+
 				$Players[ ] = $Player;
 			}
-			
+
 			return $Players;
 		}
-		
+
 		/**
 		 * Get rules (cvars) from the server
 		 *
@@ -424,36 +424,36 @@ declare(strict_types=1);
 			{
 				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
 			}
-			
+
 			$this->GetChallenge( self::A2S_RULES, self::S2A_RULES );
-			
+
 			$this->Socket->Write( self::A2S_RULES, $this->Challenge );
 			$Buffer = $this->Socket->Read( );
-			
+
 			$Type = $Buffer->GetByte( );
-			
+
 			if( $Type !== self::S2A_RULES )
 			{
 				throw new InvalidPacketException( 'GetRules: Packet header mismatch. (0x' . dechex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 			}
-			
+
 			$Rules = [];
 			$Count = $Buffer->GetShort( );
-			
+
 			while( $Count-- > 0 && $Buffer->Remaining( ) > 0 )
 			{
 				$Rule  = $Buffer->GetString( );
 				$Value = $Buffer->GetString( );
-				
+
 				if( !empty( $Rule ) )
 				{
 					$Rules[ $Rule ] = $Value;
 				}
 			}
-			
+
 			return $Rules;
 		}
-		
+
 		/**
 		 * Get challenge (used for players/rules packets)
 		 *
@@ -465,29 +465,29 @@ declare(strict_types=1);
 			{
 				return;
 			}
-			
+
 			if( $this->UseOldGetChallengeMethod )
 			{
 				$Header = self::A2S_SERVERQUERY_GETCHALLENGE;
 			}
-			
+
 			$this->Socket->Write( $Header, "\xFF\xFF\xFF\xFF" );
 			$Buffer = $this->Socket->Read( );
-			
+
 			$Type = $Buffer->GetByte( );
-			
+
 			switch( $Type )
 			{
 				case self::S2C_CHALLENGE:
 				{
 					$this->Challenge = $Buffer->Get( 4 );
-					
+
 					return;
 				}
 				case $ExpectedResult:
 				{
 					// Goldsource (HLTV)
-					
+
 					return;
 				}
 				case 0:
@@ -500,7 +500,7 @@ declare(strict_types=1);
 				}
 			}
 		}
-		
+
 		/**
 		 * Sets rcon password, for future use in Rcon()
 		 *
@@ -516,19 +516,19 @@ declare(strict_types=1);
 			{
 				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
 			}
-			
+
 			switch( $this->Socket->Engine )
 			{
 				case SourceQuery::GOLDSOURCE:
 				{
 					$this->Rcon = new GoldSourceRcon( $this->Socket );
-					
+
 					break;
 				}
 				case SourceQuery::SOURCE:
 				{
 					$this->Rcon = new SourceRcon( $this->Socket );
-					
+
 					break;
 				}
 				default:
@@ -536,11 +536,11 @@ declare(strict_types=1);
 					throw new SocketException( 'Unknown engine.', SocketException::INVALID_ENGINE );
 				}
 			}
-			
+
 			$this->Rcon->Open( );
 			$this->Rcon->Authorize( $Password );
 		}
-		
+
 		/**
 		 * Sends a command to the server for execution.
 		 *
@@ -558,12 +558,12 @@ declare(strict_types=1);
 			{
 				throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
 			}
-			
+
 			if( $this->Rcon === null )
 			{
 				throw new SocketException( 'You must set a RCON password before trying to execute a RCON command.', SocketException::NOT_CONNECTED );
 			}
-			
+
 			return $this->Rcon->Command( $Command );
 		}
 	}
