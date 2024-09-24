@@ -1,5 +1,4 @@
 parameters:
-	checkMissingIterableValueType: false
 	checkFunctionNameCase: true
 	level: 6
 	paths:
@@ -7,6 +6,9 @@ parameters:
 	excludePaths:
 		- vendor
 	ignoreErrors:
+		-
+			identifier: missingType.iterableValue
+
 		-
 			message: "#^Comparison operation \"\\>\" between int\\<1, max\\> and 0 is always true\\.$#"
 			count: 1

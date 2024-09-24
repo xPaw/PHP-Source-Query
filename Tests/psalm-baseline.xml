@@ -72,9 +72,6 @@
     <MixedPropertyTypeCoercion>
       <code><![CDATA[new \SplQueue()]]></code>
     </MixedPropertyTypeCoercion>
-    <PossiblyUnusedParam>
-      <code><![CDATA[$Length]]></code>
-    </PossiblyUnusedParam>
     <PossiblyUnusedReturnValue>
       <code><![CDATA[bool]]></code>
     </PossiblyUnusedReturnValue>
