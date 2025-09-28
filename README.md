@@ -92,7 +92,7 @@ Also refer to [examples folder](Examples/) to work things out.
 
 ## License
     PHP Source Query
-    Copyright (C) 2012-2015 Pavel Djundik
+    Copyright (C) 2012-2025 Pavel Djundik
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
