@@ -185,7 +185,42 @@ class SourceQuery
 	 * @throws InvalidPacketException
 	 * @throws SocketException
 	 *
-	 * @return array Returns an array with information on success
+	 * @return array{
+	 *     Protocol: int,
+	 *     HostName: string,
+	 *     Map: string,
+	 *     ModDir: string,
+	 *     ModDesc: string,
+	 *     AppID?: int,
+	 *     Players: int,
+	 *     MaxPlayers: int,
+	 *     Bots: int,
+	 *     Dedicated: string,
+	 *     Os: string,
+	 *     Password: bool,
+	 *     Secure: bool,
+	 *     Version?: string,
+	 *     ExtraDataFlags?: int,
+	 *     GamePort?: int,
+	 *     SteamID?: string|int,
+	 *     SpecPort?: int,
+	 *     SpecName?: string,
+	 *     GameTags?: string,
+	 *     GameID?: int,
+	 *     Address?: string,
+	 *     IsMod?: bool,
+	 *     Mod?: array{
+	 *         Url: string,
+	 *         Download: string,
+	 *         Version: int,
+	 *         Size: int,
+	 *         ServerSide: bool,
+	 *         CustomDLL: bool
+	 *     },
+	 *     GameMode?: int,
+	 *     WitnessCount?: int,
+	 *     WitnessTime?: int
+	 * } Returns an array with server information on success
 	 */
 	public function GetInfo( ) : array
 	{
@@ -364,7 +399,7 @@ class SourceQuery
 	 * @throws InvalidPacketException
 	 * @throws SocketException
 	 *
-	 * @return array Returns an array with players on success
+	 * @return array<int, array{Id: int, Name: string, Frags: int, Time: int, TimeF: string}> Returns an array with players on success
 	 */
 	public function GetPlayers( ) : array
 	{
@@ -409,7 +444,7 @@ class SourceQuery
 	 * @throws InvalidPacketException
 	 * @throws SocketException
 	 *
-	 * @return array Returns an array with rules on success
+	 * @return array<string, string> Returns an array with rules on success
 	 */
 	public function GetRules( ) : array
 	{
@@ -438,7 +473,7 @@ class SourceQuery
 			$Rule  = $Buffer->ReadNullTermString( );
 			$Value = $Buffer->ReadNullTermString( );
 
-			if( !empty( $Rule ) )
+			if( strlen( $Rule ) > 0 )
 			{
 				$Rules[ $Rule ] = $Value;
 			}
