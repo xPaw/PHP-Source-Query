@@ -63,6 +63,8 @@ abstract class BaseSocket
 			do
 			{
 				$RequestID = $Buffer->ReadInt32( );
+				$PacketCount = 0;
+				$PacketNumber = 0;
 
 				switch( $this->Engine )
 				{

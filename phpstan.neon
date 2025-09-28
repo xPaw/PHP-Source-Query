@@ -7,12 +7,14 @@ parameters:
 		- .
 	excludePaths:
 		- vendor
+		- Examples/View.php
 	strictRules:
 		booleansInConditions: false
-		disallowedConstructs: false
 	ignoreErrors:
-		-
-			identifier: missingType.iterableValue
+		- identifier: missingType.iterableValue
+		- identifier: empty.notAllowed
+		- identifier: cast.int
+		- identifier: cast.double
 
 		-
 			message: "#^Comparison operation \"\\>\" between int\\<1, max\\> and 0 is always true\\.$#"

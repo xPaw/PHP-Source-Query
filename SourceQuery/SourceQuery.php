@@ -530,6 +530,11 @@ class SourceQuery
 			}
 		}
 
+		if( $this->Rcon === null ) // This should not happen, but makes phpstan happy.
+		{
+			throw new SocketException( 'Something went wrong.', SocketException::INVALID_ENGINE );
+		}
+
 		$this->Rcon->Open( );
 		$this->Rcon->Authorize( $Password );
 	}
