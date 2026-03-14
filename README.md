@@ -45,6 +45,7 @@ AppID | Game | Query | RCON | Notes
 346110 | [ARK: Survival Evolved](http://store.steampowered.com/app/346110/) | :white_check_mark: | :white_check_mark: | 
 ~ | [Minecraft](http://www.minecraft.net/) | :x: | :white_check_mark: | 
 108600 | [Project: Zomboid](https://store.steampowered.com/app/108600/) | :white_check_mark: | :white_check_mark: 
+1874880 | [Arma Reforger](https://store.steampowered.com/app/1874880/) | :white_check_mark: | :white_check_mark: 
 
 Open a pull request if you know another game which supports Source Query and/or RCON protocols.
 
