@@ -429,7 +429,22 @@ class SourceQuery
 			$Player[ 'Id' ]    = $Buffer->ReadByte( ); // PlayerID, is it just always 0?
 			$Player[ 'Name' ]  = $Buffer->ReadNullTermString( );
 			$Player[ 'Frags' ] = $Buffer->ReadInt32( );
-			$Player[ 'Time' ]  = (int)$Buffer->ReadFloat32( );
+
+			// Some servers return a bugged or intentionally huge float way above the php min/max int value
+			// Causes a php warning since php 8.5 in addition to the cast overflow to PHP_INT_MIN
+			// Versions below 8.5 would also return the overflow, but no error
+			$time = $Buffer->ReadFloat32( );
+
+			if ($time > PHP_INT_MAX) {
+				$Player[ 'Time' ] = PHP_INT_MAX;
+			}
+			elseif ($time < PHP_INT_MIN) {
+				$Player[ 'Time' ] = PHP_INT_MIN;
+			}
+			else {
+				$Player[ 'Time' ] = (int)$time;
+			}
+
 			$Player[ 'TimeF' ] = gmdate( ( $Player[ 'Time' ] > 3600 ? 'H:i:s' : 'i:s' ), $Player[ 'Time' ] );
 
 			$Players[ ] = $Player;
