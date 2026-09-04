@@ -90,6 +90,8 @@ class Buffer
 
 	/**
 	 * Reads the next byte.
+	 *
+	 * @return int<0, 255> the ASCII value as an integer.
 	 */
 	public function ReadByte( ) : int
 	{
