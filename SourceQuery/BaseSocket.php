@@ -107,6 +107,9 @@ abstract class BaseSocket
 			}
 			while( $ReadMore && $SherlockFunction( $Buffer ) );
 
+			// UDP Packets can arrive in wrong order
+			ksort($Packets, SORT_NUMERIC);
+
 			$Data = implode( $Packets );
 
 			// TODO: Test this
