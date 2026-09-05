@@ -101,13 +101,14 @@ class SupportTest extends \PHPUnit\Framework\TestCase
 
 		self::assertSame( 'hostname: Scripted', $Query->Rcon( 'status' ) );
 
-		$Requests = $this->RconServer->WaitForRequests( 2 );
+		$Requests = $this->RconServer->WaitForRequests( 3 );
 
-		self::assertCount( 2, $Requests );
+		self::assertCount( 3, $Requests );
 		self::assertSame( SourceQuery::SERVERDATA_AUTH, $Requests[ 0 ][ 'type' ] );
 		self::assertSame( 'testpassword', $Requests[ 0 ][ 'body' ] );
 		self::assertSame( SourceQuery::SERVERDATA_EXECCOMMAND, $Requests[ 1 ][ 'type' ] );
 		self::assertSame( 'status', $Requests[ 1 ][ 'body' ] );
+		self::assertSame( SourceQuery::SERVERDATA_REQUESTVALUE, $Requests[ 2 ][ 'type' ] ); // Answered by the fallback
 
 		$Query->Disconnect( );
 	}

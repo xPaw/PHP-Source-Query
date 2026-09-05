@@ -148,53 +148,56 @@ class SourceRcon extends BaseRcon
 	public function Command( string $Command ) : string
 	{
 		$this->Write( SourceQuery::SERVERDATA_EXECCOMMAND, $Command );
-		$Buffer = $this->Read( );
 
-		$Buffer->ReadInt32( ); // RequestID
-
-		$Type = $Buffer->ReadInt32( );
-
-		if( $Type === SourceQuery::SERVERDATA_AUTH_RESPONSE )
-		{
-			throw new AuthenticationException( 'Bad rcon_password.', AuthenticationException::BAD_PASSWORD );
-		}
-		else if( $Type !== SourceQuery::SERVERDATA_RESPONSE_VALUE )
-		{
-			throw new InvalidPacketException( 'Invalid rcon response.', InvalidPacketException::PACKET_HEADER_MISMATCH );
-		}
-
-		$Data = $Buffer->Read( );
-
-		// We do this stupid hack to handle split packets
+		// A response can span several packets and nothing marks the last one.
+		// The server answers requests in order, so an empty SERVERDATA_REQUESTVALUE sent right after the command
+		// is answered only once the whole response is out, and its request id tells us where the response ends.
 		// See https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Multiple-packet_Responses
-		if( strlen( $Data ) >= 4000 )
+		$this->Write( SourceQuery::SERVERDATA_REQUESTVALUE );
+
+		$SentinelID = $this->RconRequestId;
+		$Data = '';
+
+		do
 		{
-			$this->Write( SourceQuery::SERVERDATA_REQUESTVALUE );
+			$Buffer = $this->Read( );
 
-			do
+			$RequestID = $Buffer->ReadInt32( );
+			$Type      = $Buffer->ReadInt32( );
+
+			if( $Type === SourceQuery::SERVERDATA_AUTH_RESPONSE )
 			{
-				$Buffer = $this->Read( );
-
-				$Buffer->ReadInt32( ); // RequestID
-
-				if( $Buffer->ReadInt32( ) !== SourceQuery::SERVERDATA_RESPONSE_VALUE )
-				{
-					break;
-				}
-
-				$Data2 = $Buffer->Read( );
-
-				if( $Data2 === "\x00\x01\x00\x00\x00\x00" )
-				{
-					break;
-				}
-
-				$Data .= $Data2;
+				throw new AuthenticationException( 'Bad rcon_password.', AuthenticationException::BAD_PASSWORD );
 			}
-			while( true );
-		}
+			else if( $Type !== SourceQuery::SERVERDATA_RESPONSE_VALUE )
+			{
+				throw new InvalidPacketException( 'Invalid rcon response.', InvalidPacketException::PACKET_HEADER_MISMATCH );
+			}
 
-		return rtrim( $Data, "\0" );
+			$Packet = $Buffer->Read( );
+
+			// Every packet ends with the string terminator and an empty second string
+			if( str_ends_with( $Packet, "\x00\x00" ) )
+			{
+				$Packet = substr( $Packet, 0, -2 );
+			}
+
+			if( $RequestID === $SentinelID )
+			{
+				// The Source engine first flushes an empty packet for the sentinel, its real reply follows
+				if( $Packet === '' )
+				{
+					continue;
+				}
+
+				break;
+			}
+
+			$Data .= $Packet;
+		}
+		while( true );
+
+		return $Data;
 	}
 
 	public function Authorize( string $Password ) : void

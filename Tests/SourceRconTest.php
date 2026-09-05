@@ -96,6 +96,12 @@ class SourceRconTest extends \PHPUnit\Framework\TestCase
 	 */
 	private function ConnectAndAuthorize( array $Script, ?array $Fallback = null, int $Timeout = 2, ?array $ByType = null ) : SourceQuery
 	{
+		// Every command is followed by a SERVERDATA_REQUESTVALUE probe, answer it like the engine unless the test says otherwise
+		if( $ByType === null && $Fallback === null )
+		{
+			$ByType = self::RequestValueByType( );
+		}
+
 		$this->RconServer = new FakeRconServer( );
 
 		$Port = $this->RconServer->Start( $Script, $Fallback, null, 20.0, $ByType );
@@ -122,13 +128,15 @@ class SourceRconTest extends \PHPUnit\Framework\TestCase
 
 		self::assertSame( "hostname: Test Server\nplayers : 4 (32 max)", $Query->Rcon( 'status' ) );
 
-		$Requests = $this->RconServer?->WaitForRequests( 2 ) ?? [];
+		$Requests = $this->RconServer?->WaitForRequests( 3 ) ?? [];
 
-		self::assertCount( 2, $Requests );
+		self::assertCount( 3, $Requests );
 		self::assertSame( SourceQuery::SERVERDATA_AUTH, $Requests[ 0 ][ 'type' ] );
 		self::assertSame( 'testpassword', $Requests[ 0 ][ 'body' ] );
 		self::assertSame( SourceQuery::SERVERDATA_EXECCOMMAND, $Requests[ 1 ][ 'type' ] );
 		self::assertSame( 'status', $Requests[ 1 ][ 'body' ] );
+		self::assertSame( SourceQuery::SERVERDATA_REQUESTVALUE, $Requests[ 2 ][ 'type' ] );
+		self::assertSame( '', $Requests[ 2 ][ 'body' ] );
 	}
 
 	/** Baseline: an AUTH_RESPONSE carrying request id -1 means a bad password. */
@@ -230,7 +238,6 @@ class SourceRconTest extends \PHPUnit\Framework\TestCase
 	 * "first body >= 4000 bytes" heuristic then leaves follow-up packets in the
 	 * stream, where they come back as the answer to the next command.
 	 */
-	#[\PHPUnit\Framework\Attributes\Group('known-bug')]
 	public function testMultiPacketResponseBelowHeuristicIsFullyDrained( ) : void
 	{
 		$ChunkOne = self::Filler( 'A', 3000 );
@@ -262,7 +269,6 @@ class SourceRconTest extends \PHPUnit\Framework\TestCase
 	 * Each chunk's two trailing NUL framing bytes must be stripped rather than end
 	 * up in the middle of the returned string.
 	 */
-	#[\PHPUnit\Framework\Attributes\Group('known-bug')]
 	public function testMultiPacketResponseDoesNotEmbedNullBytes( ) : void
 	{
 		$ChunkOne = self::Filler( 'C', 4100 );
@@ -294,7 +300,6 @@ class SourceRconTest extends \PHPUnit\Framework\TestCase
 	 * 0" and never sends the terminator packet the Source engine does, so a
 	 * response of 4000 bytes or more must still come back without stalling.
 	 */
-	#[\PHPUnit\Framework\Attributes\Group('known-bug')]
 	public function testLargeMinecraftResponseIsReturnedWithoutStalling( ) : void
 	{
 		$Body = self::Filler( 'M', 4090 );

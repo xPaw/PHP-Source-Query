@@ -279,9 +279,8 @@ class SourceRconEdgeTest extends \PHPUnit\Framework\TestCase
 	//
 
 	/**
-	 * A body of 4000 bytes or more may be the first of several packets, so an empty
-	 * SERVERDATA_REQUESTVALUE is sent and everything up to the server's terminator
-	 * packet belongs to the same command.
+	 * An empty SERVERDATA_REQUESTVALUE follows every command; everything up to the
+	 * server's reply to it belongs to the command.
 	 */
 	public function testMultiPacketResponseEndsAtTheTerminatorPacket( ) : void
 	{
@@ -309,19 +308,14 @@ class SourceRconEdgeTest extends \PHPUnit\Framework\TestCase
 		self::assertSame( '', $Requests[ 2 ][ 'body' ] );
 	}
 
-	/**
-	 * The drain stops at the first packet that is not a RESPONSE_VALUE and returns
-	 * the output collected so far.
-	 */
-	public function testMultiPacketDrainStopsOnAnUnexpectedType( ) : void
+	/** An AUTH_RESPONSE in the middle of a response means the server no longer trusts us. */
+	public function testAuthResponseDuringMultiPacketResponse( ) : void
 	{
-		$ChunkOne = str_repeat( 'A', 4050 );
-
 		$Query = $this->ConnectAndAuthorize(
 		[
 			self::AuthOkStep( ),
 			[
-				[ 'type' => SourceQuery::SERVERDATA_RESPONSE_VALUE, 'id' => 'same', 'body' => $ChunkOne ],
+				[ 'type' => SourceQuery::SERVERDATA_RESPONSE_VALUE, 'id' => 'same', 'body' => str_repeat( 'A', 4050 ) ],
 			],
 		], null, 2,
 		[
@@ -331,7 +325,9 @@ class SourceRconEdgeTest extends \PHPUnit\Framework\TestCase
 			],
 		] );
 
-		self::assertSame( $ChunkOne, $Query->Rcon( 'cvarlist' ) );
+		$this->expectException( AuthenticationException::class );
+
+		$Query->Rcon( 'cvarlist' );
 	}
 
 	//
@@ -410,6 +406,12 @@ class SourceRconEdgeTest extends \PHPUnit\Framework\TestCase
 	 */
 	private function ConnectAndAuthorize( array $Script, ?array $Fallback = null, int $Timeout = 2, ?array $ByType = null ) : SourceQuery
 	{
+		// Every command is followed by a SERVERDATA_REQUESTVALUE probe, answer it like the engine unless the test says otherwise
+		if( $ByType === null && $Fallback === null )
+		{
+			$ByType = self::RequestValueByType( );
+		}
+
 		$this->RconServer = new FakeRconServer( );
 
 		$Port = $this->RconServer->Start( $Script, $Fallback, null, 15.0, $ByType );
