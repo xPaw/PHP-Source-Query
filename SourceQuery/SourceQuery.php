@@ -242,6 +242,8 @@ class SourceQuery
 		$Type = $Buffer->ReadByte( );
 		$Server = [];
 
+		$this->ThrowIfBanned( $Type, $Buffer );
+
 		if( $Type === self::S2C_CHALLENGE )
 		{
 			$this->Challenge = $Buffer->Read( 4 );
@@ -249,6 +251,8 @@ class SourceQuery
 			$this->Socket->Write( self::A2S_INFO, "Source Engine Query\0" . $this->Challenge );
 			$Buffer = $this->Socket->Read( );
 			$Type = $Buffer->ReadByte( );
+
+			$this->ThrowIfBanned( $Type, $Buffer );
 		}
 
 		// Old GoldSource protocol, HLTV still uses it
@@ -509,6 +513,8 @@ class SourceQuery
 
 		$Type = $Buffer->ReadByte( );
 
+		$this->ThrowIfBanned( $Type, $Buffer );
+
 		if( $Type === self::S2C_CHALLENGE )
 		{
 			$this->Challenge = $Buffer->Read( 4 );
@@ -517,6 +523,8 @@ class SourceQuery
 			$Buffer = $this->Socket->Read( );
 
 			$Type = $Buffer->ReadByte( );
+
+			$this->ThrowIfBanned( $Type, $Buffer );
 		}
 
 		if( $Type !== $ExpectedResult )
@@ -525,6 +533,19 @@ class SourceQuery
 		}
 
 		return $Buffer;
+	}
+
+	/**
+	 * A banned address gets a printed message (A2A_PRINT) instead of an answer to any query
+	 *
+	 * @throws AuthenticationException
+	 */
+	private function ThrowIfBanned( int $Type, Buffer $Buffer ) : void
+	{
+		if( $Type === self::S2A_RCON )
+		{
+			throw new AuthenticationException( trim( $Buffer->Read( ) ), AuthenticationException::BANNED );
+		}
 	}
 
 	/**
@@ -548,6 +569,8 @@ class SourceQuery
 		$Buffer = $this->Socket->Read( );
 
 		$Type = $Buffer->ReadByte( );
+
+		$this->ThrowIfBanned( $Type, $Buffer );
 
 		switch( $Type )
 		{

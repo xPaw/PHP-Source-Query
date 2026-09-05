@@ -109,7 +109,6 @@ class GoldSourceProtocolTest extends \PHPUnit\Framework\TestCase
 	 * A banned address gets an A2A_PRINT reply saying so instead of data, for
 	 * every query it sends. That is not a malformed packet.
 	 */
-	#[Group( 'known-bug' )]
 	public function testBanReplyToInfoIsReportedAsBanned( ) : void
 	{
 		$this->Socket->Engine = SourceQuery::GOLDSOURCE;
@@ -121,7 +120,6 @@ class GoldSourceProtocolTest extends \PHPUnit\Framework\TestCase
 		$this->SourceQuery->GetInfo( );
 	}
 
-	#[Group( 'known-bug' )]
 	public function testBanReplyToPlayersIsReportedAsBanned( ) : void
 	{
 		$this->Socket->Engine = SourceQuery::GOLDSOURCE;
