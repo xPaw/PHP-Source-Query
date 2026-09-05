@@ -100,11 +100,12 @@ class GoldSourceRcon extends BaseRcon
 
 		$Trimmed = trim( $StringBuffer );
 
-		if( $Trimmed === 'Bad rcon_password.' )
+		// The engine appends the reason on a second line, e.g. "Bad rcon_password.\nBad challenge."
+		if( str_starts_with( $Trimmed, 'Bad rcon_password.' ) )
 		{
 			throw new AuthenticationException( $Trimmed, AuthenticationException::BAD_PASSWORD );
 		}
-		else if( $Trimmed === 'You have been banned from this server.' )
+		else if( str_starts_with( $Trimmed, 'You have been banned from this server.' ) )
 		{
 			throw new AuthenticationException( $Trimmed, AuthenticationException::BANNED );
 		}

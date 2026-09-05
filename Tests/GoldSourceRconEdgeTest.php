@@ -219,7 +219,6 @@ class GoldSourceRconEdgeTest extends \PHPUnit\Framework\TestCase
 	 * and puts the reason on the next line. All of them are authentication
 	 * failures, not command output.
 	 */
-	#[Group( 'known-bug' )]
 	#[DataProvider( 'RejectionProvider' )]
 	public function testEveryBadPasswordRejectionIsAnAuthenticationFailure( string $Reply ) : void
 	{
