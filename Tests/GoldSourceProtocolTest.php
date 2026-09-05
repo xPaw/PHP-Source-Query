@@ -41,7 +41,6 @@ class GoldSourceProtocolTest extends \PHPUnit\Framework\TestCase
 	 * mod was built against, not a single filler byte. A server that fills it in
 	 * shifts every field after it.
 	 */
-	#[Group( 'known-bug' )]
 	public function testModBlockHlVersionIsANullTerminatedString( ) : void
 	{
 		$this->Socket->Engine = SourceQuery::GOLDSOURCE;

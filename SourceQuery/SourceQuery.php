@@ -282,7 +282,7 @@ class SourceQuery
 				$Mod = [];
 				$Mod[ 'Url' ]        = $Buffer->ReadNullTermString( );
 				$Mod[ 'Download' ]   = $Buffer->ReadNullTermString( );
-				$Buffer->Read( 1 ); // NULL byte
+				$Buffer->ReadNullTermString( ); // Engine version the mod was built against, most servers send an empty string
 				$Mod[ 'Version' ]    = $Buffer->ReadInt32( );
 				$Mod[ 'Size' ]       = $Buffer->ReadInt32( );
 				$Mod[ 'ServerSide' ] = $Buffer->ReadByte( ) === 1;
