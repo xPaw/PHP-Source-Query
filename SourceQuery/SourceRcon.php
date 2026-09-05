@@ -28,6 +28,8 @@ class SourceRcon extends BaseRcon
 	 */
 	private BaseSocket $Socket;
 
+	private const MaxPacketSize = 1 << 20;
+
 	/** @var ?resource */
 	private $RconSocket;
 	private int $RconRequestId = 0;
@@ -104,6 +106,12 @@ class SourceRcon extends BaseRcon
 		if( $PacketSize <= 0 )
 		{
 			throw new InvalidPacketException( 'Rcon read: Packet size was empty', InvalidPacketException::BUFFER_EMPTY );
+		}
+
+		// Source engine packets never exceed a few kilobytes, other implementations stay well under this
+		if( $PacketSize > self::MaxPacketSize )
+		{
+			throw new InvalidPacketException( 'Rcon read: Packet size ' . $PacketSize . ' is too large', InvalidPacketException::PACKET_HEADER_MISMATCH );
 		}
 
 		$Data = fread( $this->RconSocket, $PacketSize );

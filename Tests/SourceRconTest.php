@@ -194,7 +194,6 @@ class SourceRconTest extends \PHPUnit\Framework\TestCase
 	 * Real engine packets never exceed ~4106 bytes, so an announced size has to be
 	 * bounded before it is allocated and waited for.
 	 */
-	#[\PHPUnit\Framework\Attributes\Group('known-bug')]
 	public function testAbsurdPacketSizeIsRejectedWithoutWaiting( ) : void
 	{
 		// 32 MiB announced, 3 bytes of body actually delivered, connection kept open.
