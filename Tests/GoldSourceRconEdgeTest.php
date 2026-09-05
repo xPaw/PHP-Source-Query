@@ -217,7 +217,8 @@ class GoldSourceRconEdgeTest extends \PHPUnit\Framework\TestCase
 	/**
 	 * The engine prefixes several distinct rejections with 'Bad rcon_password.'
 	 * and puts the reason on the next line. All of them are authentication
-	 * failures, not command output.
+	 * failures, not command output. 'Bad challenge.' is handled by fetching a new
+	 * challenge, see below.
 	 */
 	#[DataProvider( 'RejectionProvider' )]
 	public function testEveryBadPasswordRejectionIsAnAuthenticationFailure( string $Reply ) : void
@@ -245,7 +246,6 @@ class GoldSourceRconEdgeTest extends \PHPUnit\Framework\TestCase
 	{
 		return
 		[
-			'bad challenge'   => [ "Bad rcon_password.\nBad challenge.\n" ],
 			'no password set' => [ "Bad rcon_password.\nNo password set for this server.\n" ],
 			'no privilege'    => [ "Bad rcon_password.\nNo privilege.\n" ],
 		];
@@ -256,7 +256,6 @@ class GoldSourceRconEdgeTest extends \PHPUnit\Framework\TestCase
 	 * 'Bad challenge.' is the normal way a long lived connection is told to fetch
 	 * a new one. The command must be retried once with the fresh challenge.
 	 */
-	#[Group( 'known-bug' )]
 	public function testStaleChallengeIsRenewedAndTheCommandRetried( ) : void
 	{
 		$Rcon = $this->Authorize( );

@@ -124,6 +124,26 @@ class GoldSourceRcon extends BaseRcon
 			throw new AuthenticationException( 'Tried to execute a RCON command before successful authorization.', AuthenticationException::BAD_PASSWORD );
 		}
 
+		try
+		{
+			return $this->Execute( $Command );
+		}
+		catch( AuthenticationException $Exception )
+		{
+			// The server forgot our challenge (restart, eviction), get a new one and try once more
+			if( !str_contains( $Exception->getMessage( ), 'Bad challenge.' ) )
+			{
+				throw $Exception;
+			}
+
+			$this->Authorize( $this->RconPassword );
+
+			return $this->Execute( $Command );
+		}
+	}
+
+	private function Execute( string $Command ) : string
+	{
 		$this->Write( 0, 'rcon ' . $this->RconChallenge . ' "' . $this->RconPassword . '" ' . $Command . "\0" );
 		$Buffer = $this->Read( );
 
