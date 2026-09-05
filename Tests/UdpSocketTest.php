@@ -65,7 +65,6 @@ class UdpSocketTest extends \PHPUnit\Framework\TestCase
 	 * When the read times out mid reassembly the fragments that did arrive must not
 	 * be imploded and returned as if the response were whole.
 	 */
-	#[Group('known-bug')]
 	public function testIncompleteSplitReplyThrowsInsteadOfReturningTruncatedRules( ) : void
 	{
 		$this->StartQuery( );

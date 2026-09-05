@@ -21,4 +21,5 @@ class InvalidPacketException extends SourceQueryException
 	const BUFFER_NOT_EMPTY = 3;
 	const CHECKSUM_MISMATCH = 4;
 	const UNPACK_FAILED = 5;
+	const INVALID_SPLIT_PACKET = 6;
 }

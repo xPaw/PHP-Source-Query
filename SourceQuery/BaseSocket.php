@@ -107,6 +107,11 @@ abstract class BaseSocket
 			}
 			while( $ReadMore && $SherlockFunction( $Buffer ) );
 
+			if( sizeof( $Packets ) !== $PacketCount )
+			{
+				throw new InvalidPacketException( 'Received ' . sizeof( $Packets ) . ' of ' . $PacketCount . ' split packets.', InvalidPacketException::INVALID_SPLIT_PACKET );
+			}
+
 			// UDP Packets can arrive in wrong order
 			ksort($Packets, SORT_NUMERIC);
 

@@ -112,7 +112,6 @@ class SplitPacketTest extends \PHPUnit\Framework\TestCase
 	 * A missing final fragment must throw instead of returning a truncated result
 	 * built from the fragments that did arrive.
 	 */
-	#[Group( 'known-bug' )]
 	public function testMissingLastFragmentMustThrow( ) : void
 	{
 		$Rules     = self::Rules( 12 );
@@ -139,7 +138,6 @@ class SplitPacketTest extends \PHPUnit\Framework\TestCase
 	 * A missing middle fragment corrupts rather than truncates: the surviving
 	 * fragments are concatenated across the gap and keys/values shift.
 	 */
-	#[Group( 'known-bug' )]
 	public function testMissingMiddleFragmentMustThrow( ) : void
 	{
 		$Rules     = self::Rules( 12 );
@@ -166,7 +164,6 @@ class SplitPacketTest extends \PHPUnit\Framework\TestCase
 	 * A stray single-packet datagram in the middle of a split reply must make
 	 * reassembly fail loudly rather than be swallowed.
 	 */
-	#[Group( 'known-bug' )]
 	public function testStraySinglePacketDuringReassemblyMustThrow( ) : void
 	{
 		$Rules     = self::Rules( 12 );
