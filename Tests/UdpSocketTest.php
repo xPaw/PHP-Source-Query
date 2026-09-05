@@ -171,7 +171,6 @@ class UdpSocketTest extends \PHPUnit\Framework\TestCase
 	 * Connect( ) promises a positive integer timeout, so 0 must be rejected;
 	 * stream_set_timeout( $Socket, 0 ) breaks every later read.
 	 */
-	#[Group('known-bug')]
 	public function testConnectRejectsZeroTimeout( ) : void
 	{
 		$this->Server = new FakeUdpServer( );

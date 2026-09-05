@@ -113,7 +113,7 @@ class SourceQuery
 	{
 		$this->Disconnect( );
 
-		if( $Timeout < 0 )
+		if( $Timeout <= 0 )
 		{
 			throw new InvalidArgumentException( 'Timeout must be a positive integer.', InvalidArgumentException::TIMEOUT_NOT_INTEGER );
 		}
