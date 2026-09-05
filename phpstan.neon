@@ -10,8 +10,6 @@ parameters:
 	strictRules:
 		booleansInConditions: false
 	ignoreErrors:
-		- identifier: missingType.iterableValue
-		  path: Tests/Tests.php
 		- identifier: cast.int
 		  path: SourceQuery/Buffer.php
 		- identifier: cast.double

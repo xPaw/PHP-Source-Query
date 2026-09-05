@@ -2,67 +2,8 @@
 declare(strict_types=1);
 
 	use PHPUnit\Framework\Attributes\DataProvider;
-	use xPaw\SourceQuery\BaseSocket;
 	use xPaw\SourceQuery\SourceQuery;
-	use xPaw\SourceQuery\Buffer;
-
-	class TestableSocket extends BaseSocket
-	{
-		/** @var \SplQueue<string> */
-		private \SplQueue $PacketQueue;
-
-		public function __construct( )
-		{
-			$this->PacketQueue = new \SplQueue();
-			$this->PacketQueue->setIteratorMode( \SplDoublyLinkedList::IT_MODE_DELETE );
-
-		}
-
-		public function Queue( string $Data ) : void
-		{
-			$this->PacketQueue->push( $Data );
-		}
-
-		public function Close( ) : void
-		{
-			//
-		}
-
-		public function Open( string $Address, int $Port, int $Timeout, int $Engine ) : void
-		{
-			$this->Timeout = $Timeout;
-			$this->Engine  = $Engine;
-			$this->Port    = $Port;
-			$this->Address = $Address;
-		}
-
-		public function Write( int $Header, string $String = '' ) : bool
-		{
-			return true;
-		}
-
-		public function Read( ) : Buffer
-		{
-			$Buffer = new Buffer( );
-			$Buffer->Set( $this->PacketQueue->shift() );
-
-			$this->ReadInternal( $Buffer, [ $this, 'Sherlock' ] );
-
-			return $Buffer;
-		}
-
-		public function Sherlock( Buffer $Buffer ) : bool
-		{
-			if( $this->PacketQueue->isEmpty() )
-			{
-				return false;
-			}
-
-			$Buffer->Set( $this->PacketQueue->shift() );
-
-			return $Buffer->ReadInt32( ) === -2;
-		}
-	}
+	use xPaw\SourceQuery\Tests\Support\TestableSocket;
 
 	class Tests extends \PHPUnit\Framework\TestCase
 	{
@@ -138,6 +79,7 @@ declare(strict_types=1);
 			$this->SourceQuery->Rcon('a');
 		}
 
+		/** @param array<mixed> $ExpectedOutput */
 		#[DataProvider( 'InfoProvider' )]
 		public function testGetInfo( string $RawInput, array $ExpectedOutput ) : void
 		{
@@ -153,24 +95,21 @@ declare(strict_types=1);
 			self::assertEquals( $ExpectedOutput, $RealOutput );
 		}
 
+		/** @return array<int, array{string, array<mixed>}> */
 		public static function InfoProvider() : array
 		{
 			$DataProvider = [];
 
-			$Files = glob( __DIR__ . '/Info/*.raw', GLOB_ERR );
-
-			if( $Files === false )
+			foreach( self::Fixtures( 'Info' ) as $File )
 			{
-				throw new Exception();
-			}
+				$Raw = hex2bin( trim( self::Contents( $File ) ) );
 
-			foreach( $Files as $File )
-			{
-				$DataProvider[] =
-				[
-					hex2bin( trim( (string)file_get_contents( $File ) ) ),
-					json_decode( (string)file_get_contents( str_replace( '.raw', '.json', $File ) ), true )
-				];
+				if( $Raw === false )
+				{
+					throw new Exception( 'Invalid hex in ' . $File );
+				}
+
+				$DataProvider[] = [ $Raw, self::ExpectedFor( $File ) ];
 			}
 
 			return $DataProvider;
@@ -214,6 +153,7 @@ declare(strict_types=1);
 			$this->SourceQuery->GetRules();
 		}
 
+		/** @return array<int, array{string}> */
 		public static function BadPacketProvider( ) : array
 		{
 			return
@@ -238,7 +178,10 @@ declare(strict_types=1);
 			self::assertEquals( [ 'wow' => 'much' ], $this->SourceQuery->GetRules() );
 		}
 
-		/** @param array<string> $RawInput */
+		/**
+		 * @param array<string> $RawInput
+		 * @param array<mixed> $ExpectedOutput
+		 */
 		#[DataProvider( 'RulesProvider' )]
 		public function testGetRules( array $RawInput, array $ExpectedOutput ) : void
 		{
@@ -254,30 +197,16 @@ declare(strict_types=1);
 			self::assertEquals( $ExpectedOutput, $RealOutput );
 		}
 
+		/** @return array<int, array{array<string>, array<mixed>}> */
 		public static function RulesProvider() : array
 		{
-			$DataProvider = [];
-
-			$Files = glob( __DIR__ . '/Rules/*.raw', GLOB_ERR );
-
-			if( $Files === false )
-			{
-				throw new Exception();
-			}
-
-			foreach( $Files as $File )
-			{
-				$DataProvider[] =
-				[
-					file( $File, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES ),
-					json_decode( (string)file_get_contents( str_replace( '.raw', '.json', $File ) ), true )
-				];
-			}
-
-			return $DataProvider;
+			return self::PacketListProvider( 'Rules' );
 		}
 
-		/** @param array<string> $RawInput */
+		/**
+		 * @param array<string> $RawInput
+		 * @param array<mixed> $ExpectedOutput
+		 */
 		#[DataProvider( 'PlayersProvider' )]
 		public function testGetPlayers( array $RawInput, array $ExpectedOutput ) : void
 		{
@@ -293,27 +222,82 @@ declare(strict_types=1);
 			self::assertEquals( $ExpectedOutput, $RealOutput );
 		}
 
+		/** @return array<int, array{array<string>, array<mixed>}> */
 		public static function PlayersProvider() : array
+		{
+			return self::PacketListProvider( 'Players' );
+		}
+
+		/**
+		 * Every fixture in the directory as hex encoded packets plus the result
+		 * they must decode to.
+		 *
+		 * @return array<int, array{array<string>, array<mixed>}>
+		 */
+		private static function PacketListProvider( string $Directory ) : array
 		{
 			$DataProvider = [];
 
-			$Files = glob( __DIR__ . '/Players/*.raw', GLOB_ERR );
-
-			if( $Files === false )
+			foreach( self::Fixtures( $Directory ) as $File )
 			{
-				throw new Exception();
-			}
+				$Packets = file( $File, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES );
 
-			foreach( $Files as $File )
-			{
-				$DataProvider[] =
-				[
-					file( $File, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES ),
-					json_decode( (string)file_get_contents( str_replace( '.raw', '.json', $File ) ), true )
-				];
+				if( $Packets === false )
+				{
+					throw new Exception( 'Could not read ' . $File );
+				}
+
+				$DataProvider[] = [ $Packets, self::ExpectedFor( $File ) ];
 			}
 
 			return $DataProvider;
+		}
+
+		/**
+		 * The .raw fixtures of one directory.
+		 *
+		 * @return array<int, string>
+		 */
+		private static function Fixtures( string $Directory ) : array
+		{
+			$Files = glob( __DIR__ . '/' . $Directory . '/*.raw', GLOB_ERR );
+
+			if( $Files === false )
+			{
+				throw new Exception( 'Could not list the ' . $Directory . ' fixtures.' );
+			}
+
+			return $Files;
+		}
+
+		/**
+		 * The .json result that belongs to a .raw fixture.
+		 *
+		 * @return array<mixed>
+		 */
+		private static function ExpectedFor( string $File ) : array
+		{
+			$Json    = str_replace( '.raw', '.json', $File );
+			$Decoded = json_decode( self::Contents( $Json ), true );
+
+			if( !is_array( $Decoded ) )
+			{
+				throw new Exception( 'Could not decode ' . $Json );
+			}
+
+			return $Decoded;
+		}
+
+		private static function Contents( string $File ) : string
+		{
+			$Contents = file_get_contents( $File );
+
+			if( $Contents === false )
+			{
+				throw new Exception( 'Could not read ' . $File );
+			}
+
+			return $Contents;
 		}
 
 		public function testPing() : void

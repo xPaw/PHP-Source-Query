@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" colors="true" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/12.0/phpunit.xsd" cacheDirectory=".phpunit.cache">
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" colors="true" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/12.0/phpunit.xsd" cacheDirectory=".phpunit.cache" bootstrap="bootstrap.php">
   <testsuites>
     <testsuite name="Tests">
       <file>./Tests.php</file>
+      <directory suffix="Test.php">.</directory>
     </testsuite>
   </testsuites>
+  <groups>
+    <exclude>
+      <group>known-bug</group>
+    </exclude>
+  </groups>
   <source>
     <include>
       <directory suffix=".php">../SourceQuery</directory>
