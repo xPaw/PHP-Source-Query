@@ -59,12 +59,22 @@ abstract class BaseSocket
 			$IsCompressed = false;
 			$ReadMore     = false;
 			$PacketChecksum = null;
+			$ExpectedRequestID = null;
 
 			do
 			{
 				$RequestID = $Buffer->ReadInt32( );
 				$PacketCount = 0;
 				$PacketNumber = 0;
+
+				if( $ExpectedRequestID === null )
+				{
+					$ExpectedRequestID = $RequestID;
+				}
+				else if( $RequestID !== $ExpectedRequestID )
+				{
+					throw new InvalidPacketException( 'Split packet request id mismatch.', InvalidPacketException::INVALID_SPLIT_PACKET );
+				}
 
 				switch( $this->Engine )
 				{

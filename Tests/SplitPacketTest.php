@@ -192,7 +192,6 @@ class SplitPacketTest extends \PHPUnit\Framework\TestCase
 	 * The request id identifies the response a fragment belongs to, so fragments
 	 * of two different responses must not be reassembled into one.
 	 */
-	#[Group( 'known-bug' )]
 	public function testMismatchedRequestIdMustThrow( ) : void
 	{
 		$Rules  = self::Rules( 8 );
