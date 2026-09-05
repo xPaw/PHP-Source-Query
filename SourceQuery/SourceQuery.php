@@ -435,13 +435,20 @@ class SourceQuery
 			// Versions below 8.5 would also return the overflow, but no error
 			$time = $Buffer->ReadFloat32( );
 
-			if ($time > PHP_INT_MAX) {
+			if( is_nan( $time ) )
+			{
+				$Player[ 'Time' ] = 0;
+			}
+			else if( $time >= PHP_INT_MAX ) // PHP_INT_MAX becomes 2^63 as a float, which is itself out of range
+			{
 				$Player[ 'Time' ] = PHP_INT_MAX;
 			}
-			elseif ($time < PHP_INT_MIN) {
+			else if( $time <= PHP_INT_MIN )
+			{
 				$Player[ 'Time' ] = PHP_INT_MIN;
 			}
-			else {
+			else
+			{
 				$Player[ 'Time' ] = (int)$time;
 			}
 

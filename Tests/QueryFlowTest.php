@@ -187,7 +187,6 @@ class QueryFlowTest extends \PHPUnit\Framework\TestCase
 	// The float to int conversion of a player's time must cope with NaN and the
 	// exact 2^63 boundary without emitting a PHP warning.
 
-	#[Group( 'known-bug' )]
 	public function testNanPlayerTimeIsZeroAndDoesNotWarn( ) : void
 	{
 		$this->Socket->Queue( self::ChallengeReply( self::CHALLENGE_A ) );
@@ -208,7 +207,6 @@ class QueryFlowTest extends \PHPUnit\Framework\TestCase
 		self::assertSame( [], $this->CapturedWarnings, 'A NaN player time must not emit a PHP warning.' );
 	}
 
-	#[Group( 'known-bug' )]
 	public function testPlayerTimeOfExactlyTwoToThe63IsClamped( ) : void
 	{
 		$this->Socket->Queue( self::ChallengeReply( self::CHALLENGE_A ) );
