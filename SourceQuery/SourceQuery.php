@@ -452,7 +452,15 @@ class SourceQuery
 				$Player[ 'Time' ] = (int)$time;
 			}
 
-			$Player[ 'TimeF' ] = gmdate( ( $Player[ 'Time' ] > 3600 ? 'H:i:s' : 'i:s' ), $Player[ 'Time' ] );
+			$Seconds = max( 0, $Player[ 'Time' ] );
+			$Hours   = intdiv( $Seconds, 3600 );
+
+			$Player[ 'TimeF' ] = sprintf( '%02d:%02d', intdiv( $Seconds % 3600, 60 ), $Seconds % 60 );
+
+			if( $Hours > 0 )
+			{
+				$Player[ 'TimeF' ] = sprintf( '%02d:', $Hours ) . $Player[ 'TimeF' ];
+			}
 
 			$Players[ ] = $Player;
 		}

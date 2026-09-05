@@ -230,13 +230,11 @@ class QueryFlowTest extends \PHPUnit\Framework\TestCase
 	// TimeF must show the hour at exactly 3600 seconds and keep counting past 24
 	// hours instead of wrapping.
 
-	#[Group( 'known-bug' )]
 	public function testTimeFAtExactlyOneHour( ) : void
 	{
 		self::assertSame( [ '01:00:00' ], self::TimeFFor( 3600.0 ) );
 	}
 
-	#[Group( 'known-bug' )]
 	public function testTimeFDoesNotWrapAtTwentyFourHours( ) : void
 	{
 		self::assertSame( [ '25:00:00' ], self::TimeFFor( 90000.0 ) );

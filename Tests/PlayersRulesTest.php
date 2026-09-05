@@ -101,7 +101,7 @@ class PlayersRulesTest extends \PHPUnit\Framework\TestCase
 		$Players = $this->Players( chr( 1 ) . self::PlayerRecord( 0, 'Negative', 0, -1.0 ) );
 
 		self::assertSame( -1, $Players[ 0 ][ 'Time' ] );
-		self::assertSame( '59:59', $Players[ 0 ][ 'TimeF' ] );
+		self::assertSame( '00:00', $Players[ 0 ][ 'TimeF' ] );
 	}
 
 	/**
@@ -113,7 +113,7 @@ class PlayersRulesTest extends \PHPUnit\Framework\TestCase
 		$Players = $this->Players( chr( 1 ) . self::PlayerRecord( 0, 'Huge', 0, 1.0e30 ) );
 
 		self::assertSame( PHP_INT_MAX, $Players[ 0 ][ 'Time' ] );
-		self::assertSame( gmdate( 'H:i:s', PHP_INT_MAX ), $Players[ 0 ][ 'TimeF' ] );
+		self::assertSame( '2562047788015215:30:07', $Players[ 0 ][ 'TimeF' ] );
 	}
 
 	public function testTimeBelowTheIntegerRangeIsClampedToTheMinimum( ) : void
@@ -121,7 +121,7 @@ class PlayersRulesTest extends \PHPUnit\Framework\TestCase
 		$Players = $this->Players( chr( 1 ) . self::PlayerRecord( 0, 'Huge Negative', 0, -1.0e30 ) );
 
 		self::assertSame( PHP_INT_MIN, $Players[ 0 ][ 'Time' ] );
-		self::assertSame( gmdate( 'i:s', PHP_INT_MIN ), $Players[ 0 ][ 'TimeF' ] );
+		self::assertSame( '00:00', $Players[ 0 ][ 'TimeF' ] );
 	}
 
 	/** Names are raw bytes, so multi byte text has to survive untouched. */
