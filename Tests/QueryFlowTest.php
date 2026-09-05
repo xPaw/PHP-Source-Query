@@ -42,7 +42,6 @@ class QueryFlowTest extends \PHPUnit\Framework\TestCase
 	// A server may forget a challenge (restart, expiry) and answer with a fresh
 	// S2C_CHALLENGE instead of the data, which has to be re-negotiated.
 
-	#[Group( 'known-bug' )]
 	public function testGetPlayersRenegotiatesRejectedChallenge( ) : void
 	{
 		$this->Socket->Queue( self::ChallengeReply( self::CHALLENGE_A ) );
@@ -70,7 +69,6 @@ class QueryFlowTest extends \PHPUnit\Framework\TestCase
 		self::assertTrue( $this->Socket->IsQueueEmpty( ) );
 	}
 
-	#[Group( 'known-bug' )]
 	public function testGetRulesRenegotiatesRejectedChallenge( ) : void
 	{
 		$this->Socket->Queue( self::ChallengeReply( self::CHALLENGE_A ) );

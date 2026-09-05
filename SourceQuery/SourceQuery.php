@@ -410,15 +410,7 @@ class SourceQuery
 
 		$this->GetChallenge( self::A2S_PLAYER, self::S2A_PLAYER );
 
-		$this->Socket->Write( self::A2S_PLAYER, $this->Challenge );
-		$Buffer = $this->Socket->Read( );
-
-		$Type = $Buffer->ReadByte( );
-
-		if( $Type !== self::S2A_PLAYER )
-		{
-			throw new InvalidPacketException( 'GetPlayers: Packet header mismatch. (0x' . dechex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
-		}
+		$Buffer = $this->Request( 'GetPlayers', self::A2S_PLAYER, self::S2A_PLAYER );
 
 		$Players = [];
 		$Count   = $Buffer->ReadByte( );
@@ -485,15 +477,7 @@ class SourceQuery
 
 		$this->GetChallenge( self::A2S_RULES, self::S2A_RULES );
 
-		$this->Socket->Write( self::A2S_RULES, $this->Challenge );
-		$Buffer = $this->Socket->Read( );
-
-		$Type = $Buffer->ReadByte( );
-
-		if( $Type !== self::S2A_RULES )
-		{
-			throw new InvalidPacketException( 'GetRules: Packet header mismatch. (0x' . dechex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
-		}
+		$Buffer = $this->Request( 'GetRules', self::A2S_RULES, self::S2A_RULES );
 
 		$Rules = [];
 		$Count = $Buffer->ReadInt16( );
@@ -510,6 +494,37 @@ class SourceQuery
 		}
 
 		return $Rules;
+	}
+
+	/**
+	 * Sends a request with the current challenge and reads its reply.
+	 * Servers rotate challenges, when ours is rejected the request is repeated once with the new one.
+	 *
+	 * @throws InvalidPacketException
+	 */
+	private function Request( string $Method, int $Header, int $ExpectedResult ) : Buffer
+	{
+		$this->Socket->Write( $Header, $this->Challenge );
+		$Buffer = $this->Socket->Read( );
+
+		$Type = $Buffer->ReadByte( );
+
+		if( $Type === self::S2C_CHALLENGE )
+		{
+			$this->Challenge = $Buffer->Read( 4 );
+
+			$this->Socket->Write( $Header, $this->Challenge );
+			$Buffer = $this->Socket->Read( );
+
+			$Type = $Buffer->ReadByte( );
+		}
+
+		if( $Type !== $ExpectedResult )
+		{
+			throw new InvalidPacketException( $Method . ': Packet header mismatch. (0x' . dechex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
+		}
+
+		return $Buffer;
 	}
 
 	/**
