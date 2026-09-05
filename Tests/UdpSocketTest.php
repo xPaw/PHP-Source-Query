@@ -32,7 +32,6 @@ class UdpSocketTest extends \PHPUnit\Framework\TestCase
 	 * MaxPacketLength promises 65536, so a datagram larger than PHP's 8192 byte
 	 * stream chunk size must still be delivered in full.
 	 */
-	#[Group('known-bug')]
 	public function testSingleDatagramLargerThan8192BytesIsRead( ) : void
 	{
 		$this->StartQuery( );

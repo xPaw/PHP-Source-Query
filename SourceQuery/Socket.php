@@ -49,6 +49,9 @@ class Socket extends BaseSocket
 		$this->Socket = $Socket;
 		stream_set_timeout( $this->Socket, $Timeout );
 		stream_set_blocking( $this->Socket, true );
+
+		// PHP reads in chunks of 8192 bytes by default, a larger datagram would be truncated or dropped
+		stream_set_chunk_size( $this->Socket, self::MaxPacketLength );
 	}
 
 	public function Write( int $Header, string $String = '' ) : bool
