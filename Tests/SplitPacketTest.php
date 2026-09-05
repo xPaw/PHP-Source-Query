@@ -263,7 +263,6 @@ class SplitPacketTest extends \PHPUnit\Framework\TestCase
 	 * just the request id, total and number in front of their share of the bzip2
 	 * stream. Reading the 8 byte trailer on every fragment corrupts the stream.
 	 */
-	#[Group( 'known-bug' )]
 	public function testCompressedMultiFragmentIsDecoded( ) : void
 	{
 		$Rules     = self::Rules( 8 );

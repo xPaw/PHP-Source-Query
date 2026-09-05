@@ -94,9 +94,13 @@ abstract class BaseSocket
 
 						if( $IsCompressed )
 						{
-							$Buffer->ReadInt32( ); // Split size
+							// Only the first packet carries the decompressed size and checksum
+							if( $PacketNumber === 1 )
+							{
+								$Buffer->ReadInt32( ); // Decompressed size
 
-							$PacketChecksum = $Buffer->ReadUInt32( );
+								$PacketChecksum = $Buffer->ReadUInt32( );
+							}
 						}
 						else
 						{
