@@ -134,7 +134,6 @@ class GoldSourceRconTest extends \PHPUnit\Framework\TestCase
 	 * Each redirect datagram ends with the engine's null terminator, which has to
 	 * be stripped per chunk instead of ending up inside the returned string.
 	 */
-	#[Group('known-bug')]
 	public function testMultipleChunksDoNotLeakNullBytes( ) : void
 	{
 		$this->Authorize( );
@@ -155,7 +154,6 @@ class GoldSourceRconTest extends \PHPUnit\Framework\TestCase
 	 * Only the protocol's own null trailer may be stripped; trimming whitespace
 	 * eats the leading indentation of the command output.
 	 */
-	#[Group('known-bug')]
 	public function testLeadingWhitespaceIsPreserved( ) : void
 	{
 		$this->Authorize( );

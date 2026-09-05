@@ -84,8 +84,9 @@ class GoldSourceRcon extends BaseRcon
 				}
 
 				$Packet = $Buffer->Read( );
-				$StringBuffer .= $Packet;
-				//$StringBuffer .= SubStr( $Packet, 0, -2 );
+
+				// Each packet ends with the string terminator, and the engine adds one more null byte
+				$StringBuffer .= rtrim( $Packet, "\0" );
 
 				// Let's assume if this packet is not long enough, there are no more after this one
 				$ReadMore = strlen( $Packet ) > 1000; // use 1300?
@@ -98,7 +99,8 @@ class GoldSourceRcon extends BaseRcon
 		}
 		while( $ReadMore );
 
-		$Trimmed = trim( $StringBuffer );
+		// Only the end is trimmed, leading whitespace is part of the output
+		$Trimmed = rtrim( $StringBuffer );
 
 		// The engine appends the reason on a second line, e.g. "Bad rcon_password.\nBad challenge."
 		if( str_starts_with( $Trimmed, 'Bad rcon_password.' ) )
