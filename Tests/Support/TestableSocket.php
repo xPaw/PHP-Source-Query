@@ -24,16 +24,16 @@ class TestableSocket extends BaseSocket
 	public array $Written = [];
 
 	/**
-	 * When true (the default) reading an empty queue throws a \RuntimeException,
-	 * which surfaces as a test error. When false it behaves like a read timeout on
-	 * the real Socket: an empty string reaches ReadInternal( ), so the library
-	 * throws InvalidPacketException( BUFFER_EMPTY ).
+	 * @param bool $TimeoutOnEmptyQueue When true, reading an empty queue behaves like a read
+	 *                                  timeout on the real Socket: an empty string reaches
+	 *                                  ReadInternal( ), so the library throws
+	 *                                  InvalidPacketException( BUFFER_EMPTY ). When false, the
+	 *                                  default, a missing datagram is a mistake in the test and
+	 *                                  raises a \RuntimeException.
 	 */
-	public bool $ThrowOnEmptyQueue = true;
-
-	public function __construct( )
+	public function __construct( private readonly bool $TimeoutOnEmptyQueue = false )
 	{
-		$this->PacketQueue = new \SplQueue();
+		$this->PacketQueue = new \SplQueue( );
 		$this->PacketQueue->setIteratorMode( \SplDoublyLinkedList::IT_MODE_DELETE );
 	}
 
@@ -47,12 +47,6 @@ class TestableSocket extends BaseSocket
 	public function QueuedCount( ) : int
 	{
 		return $this->PacketQueue->count( );
-	}
-
-	/** True when every queued datagram has been consumed. */
-	public function IsQueueEmpty( ) : bool
-	{
-		return $this->PacketQueue->isEmpty( );
 	}
 
 	/**
@@ -106,23 +100,23 @@ class TestableSocket extends BaseSocket
 
 	public function Sherlock( Buffer $Buffer ) : bool
 	{
-		if( $this->PacketQueue->isEmpty() )
+		if( $this->PacketQueue->isEmpty( ) )
 		{
 			return false;
 		}
 
-		$Buffer->Set( $this->PacketQueue->shift() );
+		$Buffer->Set( $this->PacketQueue->shift( ) );
 
 		return $Buffer->ReadInt32( ) === -2;
 	}
 
 	private function Shift( ) : string
 	{
-		if( $this->PacketQueue->isEmpty( ) && !$this->ThrowOnEmptyQueue )
+		if( $this->PacketQueue->isEmpty( ) && $this->TimeoutOnEmptyQueue )
 		{
 			return '';
 		}
 
-		return $this->PacketQueue->shift();
+		return $this->PacketQueue->shift( );
 	}
 }

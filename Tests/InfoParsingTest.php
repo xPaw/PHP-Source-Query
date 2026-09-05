@@ -2,16 +2,19 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use xPaw\SourceQuery\Exception\AuthenticationException;
 use xPaw\SourceQuery\Exception\InvalidPacketException;
 use xPaw\SourceQuery\SourceQuery;
-use xPaw\SourceQuery\Tests\Support\TestableSocket;
+use xPaw\SourceQuery\Tests\Support\Packets;
+use xPaw\SourceQuery\Tests\Support\TestableSocketTestCase;
 
 /**
  * Field by field coverage of GetInfo( ) for both reply shapes: S2A_INFO_SRC
  * (0x49) with every extra data flag combination, and the GoldSource
  * S2A_INFO_DETAILED (0x6D) with and without a mod block.
  */
-class InfoParsingTest extends \PHPUnit\Framework\TestCase
+class InfoParsingTest extends TestableSocketTestCase
 {
 	/** S2A_EXTRA_DATA_HAS_GAME_PORT, next 2 bytes are the game port. */
 	private const FLAG_PORT = 0x80;
@@ -39,6 +42,8 @@ class InfoParsingTest extends \PHPUnit\Framework\TestCase
 	private const SteamIDUpper = 0x01100001;
 	private const SteamID      = ( self::SteamIDUpper << 32 ) | self::SteamIDLower;
 
+	private const HostName = 'Constructed Server';
+
 	/**
 	 * The keys every S2A_INFO_SRC reply produces, used to isolate the extra data
 	 * fields from the fixed part.
@@ -63,35 +68,18 @@ class InfoParsingTest extends \PHPUnit\Framework\TestCase
 		'Version'    => true,
 	];
 
-	private TestableSocket $Socket;
-	private SourceQuery $SourceQuery;
-
-	public function setUp( ) : void
-	{
-		$this->Socket = new TestableSocket( );
-		$this->SourceQuery = new SourceQuery( $this->Socket );
-		$this->SourceQuery->Connect( '', 2 );
-	}
-
-	public function tearDown( ) : void
-	{
-		$this->SourceQuery->Disconnect( );
-
-		unset( $this->Socket, $this->SourceQuery );
-	}
-
 	//
 	// S2A_INFO_SRC (0x49)
 	//
 
 	public function testFixedFieldsAreDecodedWithTheDocumentedTypes( ) : void
 	{
-		$this->Socket->Queue( self::InfoReply( self::InfoBody( ) ) );
+		$this->Socket->Queue( self::InfoReply( ) );
 
 		$Info = $this->SourceQuery->GetInfo( );
 
 		self::assertSame( 17, $Info[ 'Protocol' ] );
-		self::assertSame( 'Constructed Server', $Info[ 'HostName' ] );
+		self::assertSame( self::HostName, $Info[ 'HostName' ] );
 		self::assertSame( 'de_dust2', $Info[ 'Map' ] );
 		self::assertSame( 'cstrike', $Info[ 'ModDir' ] );
 		self::assertSame( 'Counter-Strike', $Info[ 'ModDesc' ] );
@@ -109,7 +97,7 @@ class InfoParsingTest extends \PHPUnit\Framework\TestCase
 	/** The AppID field is an unsigned 16 bit value. */
 	public function testAppIDAboveThirtyTwoThousandIsUnsigned( ) : void
 	{
-		$this->Socket->Queue( self::InfoReply( self::InfoBody( AppID: 40000 ) ) );
+		$this->Socket->Queue( self::InfoReply( AppID: 40000 ) );
 
 		self::assertSame( 40000, $this->SourceQuery->GetInfo( )[ 'AppID' ] ?? null );
 	}
@@ -117,7 +105,7 @@ class InfoParsingTest extends \PHPUnit\Framework\TestCase
 	/** Protocol 7 era servers stop after Version and send no extra data flags byte. */
 	public function testReplyWithoutAnExtraDataFlagsByte( ) : void
 	{
-		$this->Socket->Queue( self::InfoReply( self::InfoBody( Protocol: 7 ) ) );
+		$this->Socket->Queue( self::InfoReply( Protocol: 7 ) );
 
 		$Info = $this->SourceQuery->GetInfo( );
 
@@ -135,7 +123,7 @@ class InfoParsingTest extends \PHPUnit\Framework\TestCase
 	#[DataProvider( 'ExtraDataFlagsProvider' )]
 	public function testExtraDataFlagCombinations( int $Flags ) : void
 	{
-		$this->Socket->Queue( self::InfoReply( self::InfoBody( ) . self::ExtraData( $Flags ) ) );
+		$this->Socket->Queue( self::InfoReply( Extra: self::ExtraData( $Flags ) ) );
 
 		$Info = $this->SourceQuery->GetInfo( );
 
@@ -157,23 +145,13 @@ class InfoParsingTest extends \PHPUnit\Framework\TestCase
 		return $Provider;
 	}
 
-	/** The steamid is two little endian 32 bit words, the lower one first. */
-	public function testSteamIDIsComposedFromBothWords( ) : void
-	{
-		$this->Socket->Queue( self::InfoReply( self::InfoBody( ) . self::ExtraData( self::FLAG_STEAMID ) ) );
-
-		self::assertSame( self::SteamID, $this->SourceQuery->GetInfo( )[ 'SteamID' ] ?? null );
-	}
-
 	/**
 	 * The spectator port is followed by the spectator server name, and an empty
 	 * name is just the terminator.
 	 */
 	public function testEmptySpectatorNameIsAnEmptyString( ) : void
 	{
-		$this->Socket->Queue( self::InfoReply(
-			self::InfoBody( ) . chr( self::FLAG_SPECTATOR ) . pack( 'v', self::SpecPort ) . "\0"
-		) );
+		$this->Socket->Queue( self::InfoReply( Extra: chr( self::FLAG_SPECTATOR ) . pack( 'v', self::SpecPort ) . "\0" ) );
 
 		$Info = $this->SourceQuery->GetInfo( );
 
@@ -187,9 +165,7 @@ class InfoParsingTest extends \PHPUnit\Framework\TestCase
 	 */
 	public function testAppIDZeroWithGameIDAboveSixteenBits( ) : void
 	{
-		$this->Socket->Queue( self::InfoReply(
-			self::InfoBody( AppID: 0 ) . chr( self::FLAG_GAMEID ) . pack( 'VV', 107410, 0 )
-		) );
+		$this->Socket->Queue( self::InfoReply( AppID: 0, Extra: chr( self::FLAG_GAMEID ) . pack( 'VV', 107410, 0 ) ) );
 
 		$Info = $this->SourceQuery->GetInfo( );
 
@@ -203,9 +179,7 @@ class InfoParsingTest extends \PHPUnit\Framework\TestCase
 	 */
 	public function testTheShipTriple( ) : void
 	{
-		$this->Socket->Queue( self::InfoReply(
-			self::InfoBody( AppID: 2400, Ship: chr( 1 ) . chr( 3 ) . chr( 45 ) )
-		) );
+		$this->Socket->Queue( self::InfoReply( AppID: 2400, Ship: chr( 1 ) . chr( 3 ) . chr( 45 ) ) );
 
 		$Info = $this->SourceQuery->GetInfo( );
 
@@ -222,7 +196,7 @@ class InfoParsingTest extends \PHPUnit\Framework\TestCase
 	 */
 	public function testTheShipTripleIsNotAppliedToOtherAppIDs( ) : void
 	{
-		$this->Socket->Queue( self::InfoReply( self::InfoBody( AppID: 2401 ) ) );
+		$this->Socket->Queue( self::InfoReply( AppID: 2401 ) );
 
 		$Info = $this->SourceQuery->GetInfo( );
 
@@ -237,37 +211,25 @@ class InfoParsingTest extends \PHPUnit\Framework\TestCase
 	public function testUndescribedTrailingBytesAreRejected( ) : void
 	{
 		$this->Socket->Queue( self::InfoReply(
-			self::InfoBody( ) . chr( self::FLAG_PORT ) . pack( 'v', self::GamePort ) . str_repeat( "\x2A", 16 )
+			Extra: chr( self::FLAG_PORT ) . pack( 'v', self::GamePort ) . str_repeat( "\x2A", 16 )
 		) );
 
-		try
-		{
-			$this->SourceQuery->GetInfo( );
+		$this->expectException( InvalidPacketException::class );
+		$this->expectExceptionCode( InvalidPacketException::BUFFER_NOT_EMPTY );
+		$this->expectExceptionMessage( '16 bytes remaining' );
 
-			self::fail( 'Expected InvalidPacketException' );
-		}
-		catch( InvalidPacketException $Exception )
-		{
-			self::assertSame( InvalidPacketException::BUFFER_NOT_EMPTY, $Exception->getCode( ) );
-			self::assertStringContainsString( '16 bytes remaining', $Exception->getMessage( ) );
-		}
+		$this->SourceQuery->GetInfo( );
 	}
 
 	public function testUnknownReplyTypeIsRejected( ) : void
 	{
-		$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x6E" );
+		$this->Socket->Queue( Packets::A2SReply( 0x6E ) );
 
-		try
-		{
-			$this->SourceQuery->GetInfo( );
+		$this->expectException( InvalidPacketException::class );
+		$this->expectExceptionCode( InvalidPacketException::PACKET_HEADER_MISMATCH );
+		$this->expectExceptionMessage( '0x6e' );
 
-			self::fail( 'Expected InvalidPacketException' );
-		}
-		catch( InvalidPacketException $Exception )
-		{
-			self::assertSame( InvalidPacketException::PACKET_HEADER_MISMATCH, $Exception->getCode( ) );
-			self::assertStringContainsString( '0x6e', $Exception->getMessage( ) );
-		}
+		$this->SourceQuery->GetInfo( );
 	}
 
 	/**
@@ -276,16 +238,16 @@ class InfoParsingTest extends \PHPUnit\Framework\TestCase
 	 */
 	public function testChallengeFromAnEarlierQueryIsReusedByGetInfo( ) : void
 	{
-		$this->Socket->Queue( "\xFF\xFF\xFF\xFF" . chr( SourceQuery::S2C_CHALLENGE ) . "\x11\x22\x33\x44" );
-		$this->Socket->Queue( "\xFF\xFF\xFF\xFF" . chr( SourceQuery::S2A_PLAYER ) . chr( 0 ) );
+		$this->Socket->Queue( Packets::Challenge( ) );
+		$this->Socket->Queue( Packets::A2SReply( SourceQuery::S2A_PLAYER, Packets::PlayersPayload( ) ) );
 
 		self::assertSame( [], $this->SourceQuery->GetPlayers( ) );
 
-		$this->Socket->Queue( self::InfoReply( self::InfoBody( ) ) );
+		$this->Socket->Queue( self::InfoReply( ) );
 
-		self::assertSame( 'Constructed Server', $this->SourceQuery->GetInfo( )[ 'HostName' ] );
+		self::assertSame( self::HostName, $this->SourceQuery->GetInfo( )[ 'HostName' ] );
 		self::assertSame(
-			[ 'Header' => SourceQuery::A2S_INFO, 'String' => "Source Engine Query\0" . "\x11\x22\x33\x44" ],
+			[ 'Header' => SourceQuery::A2S_INFO, 'String' => "Source Engine Query\0" . Packets::ChallengeBytes ],
 			$this->Socket->LastWritten( )
 		);
 	}
@@ -297,9 +259,7 @@ class InfoParsingTest extends \PHPUnit\Framework\TestCase
 	public function testDetailedReplyWithoutAModBlock( ) : void
 	{
 		$this->Socket->Engine = SourceQuery::GOLDSOURCE;
-		$this->Socket->Queue( self::DetailedReply( self::DetailedBody( ) ) );
-
-		$Info = $this->SourceQuery->GetInfo( );
+		$this->Socket->Queue( Packets::A2SReply( SourceQuery::S2A_INFO_OLD, Packets::DetailedInfoPayload( ) ) );
 
 		self::assertSame(
 		[
@@ -317,20 +277,22 @@ class InfoParsingTest extends \PHPUnit\Framework\TestCase
 			'IsMod'      => false,
 			'Secure'     => true,
 			'Bots'       => 1,
-		], $Info );
+		], $this->SourceQuery->GetInfo( ) );
 	}
 
 	/**
-	 * The mod block sits between the IsMod flag and Secure: two strings, the mod
-	 * version, its download size, and two flag bytes.
+	 * The mod block sits between the IsMod flag and Secure: the two urls, the null
+	 * terminated engine version the mod was built against, the mod version, its
+	 * download size, and two flag bytes.
 	 */
-	public function testDetailedReplyWithAModBlock( ) : void
+	#[DataProvider( 'ModEngineVersionProvider' )]
+	public function testDetailedReplyWithAModBlock( string $EngineVersion ) : void
 	{
 		$this->Socket->Engine = SourceQuery::GOLDSOURCE;
-		$this->Socket->Queue( self::DetailedReply( self::DetailedBody( Mod:
+		$this->Socket->Queue( Packets::A2SReply( SourceQuery::S2A_INFO_OLD, Packets::DetailedInfoPayload( Mod:
 			"https://example.invalid/\0" .
 			"https://example.invalid/dl\0" .
-			"\0" .
+			$EngineVersion . "\0" .
 			pack( 'V', 4808 ) . pack( 'V', 184000000 ) .
 			chr( 1 ) . chr( 0 )
 		) ) );
@@ -351,52 +313,103 @@ class InfoParsingTest extends \PHPUnit\Framework\TestCase
 		self::assertSame( 1, $Info[ 'Bots' ] );
 	}
 
+	/**
+	 * @return array<string, array{string}>
+	 */
+	public static function ModEngineVersionProvider( ) : array
+	{
+		return
+		[
+			'empty as most servers send it' => [ '' ],
+			'filled in'                     => [ '1.1.2.0' ],
+		];
+	}
+
 	/** The password byte of the detailed reply is 1 or nothing. */
 	public function testDetailedReplyPasswordFlag( ) : void
 	{
 		$this->Socket->Engine = SourceQuery::GOLDSOURCE;
-		$this->Socket->Queue( self::DetailedReply( self::DetailedBody( Password: true ) ) );
+		$this->Socket->Queue( Packets::A2SReply( SourceQuery::S2A_INFO_OLD, Packets::DetailedInfoPayload( Password: true ) ) );
 
 		self::assertTrue( $this->SourceQuery->GetInfo( )[ 'Password' ] );
+	}
+
+	/**
+	 * A banned address gets an A2A_PRINT reply saying so instead of data, for
+	 * every query it sends. That is not a malformed packet.
+	 */
+	public function testBanReplyToInfoIsReportedAsBanned( ) : void
+	{
+		$this->Socket->Engine = SourceQuery::GOLDSOURCE;
+		$this->Socket->Queue( Packets::PrintReply( 'You have been banned from this server.' ) );
+
+		$this->expectException( AuthenticationException::class );
+		$this->expectExceptionCode( AuthenticationException::BANNED );
+
+		$this->SourceQuery->GetInfo( );
+	}
+
+	public function testBanReplyToPlayersIsReportedAsBanned( ) : void
+	{
+		$this->Socket->Engine = SourceQuery::GOLDSOURCE;
+		$this->Socket->Queue( Packets::PrintReply( 'You have been banned from this server.' ) );
+
+		$this->expectException( AuthenticationException::class );
+		$this->expectExceptionCode( AuthenticationException::BANNED );
+
+		$this->SourceQuery->GetPlayers( );
+	}
+
+	// Known bugs.
+
+	/**
+	 * A repeated A2S_INFO inside the server's de-duplication window is answered
+	 * with three datagrams: the detailed reply, an empty S2A_PLAYER, then
+	 * S2A_INFO_SRC. All three belong to the info request, so neither the stale
+	 * S2A_PLAYER nor the duplicate S2A_INFO_SRC may reach the next query.
+	 */
+	#[Group( 'known-bug' )]
+	public function testThreeDatagramInfoReplyDoesNotSwallowTheChallenge( ) : void
+	{
+		$this->Socket->Engine = SourceQuery::GOLDSOURCE;
+
+		$this->Socket->Queue( Packets::A2SReply( SourceQuery::S2A_INFO_OLD, Packets::DetailedInfoPayload( 'Fake Server' ) ) );
+		$this->Socket->Queue( Packets::A2SReply( SourceQuery::S2A_PLAYER, Packets::PlayersPayload( ) ) );
+		$this->Socket->Queue( Packets::A2SReply( SourceQuery::S2A_INFO_SRC, Packets::InfoPayload( 'Fake Server', 70, 47 ) ) );
+
+		self::assertSame( 'Fake Server', $this->SourceQuery->GetInfo( )[ 'HostName' ] );
+
+		$this->Socket->Queue( Packets::Challenge( ) );
+		$this->Socket->Queue( Packets::A2SReply( SourceQuery::S2A_PLAYER, Packets::PlayersPayload( Packets::PlayerRecord( 0, 'Player One' ) ) ) );
+
+		try
+		{
+			$Players = $this->SourceQuery->GetPlayers( );
+		}
+		catch( InvalidPacketException )
+		{
+			self::fail( 'The extra datagrams of the info reply poisoned GetPlayers.' );
+		}
+
+		self::assertSame( [ 'Player One' ], array_column( $Players, 'Name' ) );
+		self::assertSame( Packets::ChallengeBytes, $this->Socket->LastWritten( )[ 'String' ] ?? null );
+		self::assertSame( 0, $this->Socket->QueuedCount( ) );
 	}
 
 	//
 	// Helpers
 	//
 
-	private static function InfoReply( string $Body ) : string
-	{
-		return "\xFF\xFF\xFF\xFF" . chr( SourceQuery::S2A_INFO_SRC ) . $Body;
-	}
-
-	private static function DetailedReply( string $Body ) : string
-	{
-		return "\xFF\xFF\xFF\xFF" . chr( SourceQuery::S2A_INFO_OLD ) . $Body;
-	}
-
 	/**
-	 * An S2A_INFO_SRC body up to and including the version string.
+	 * An S2A_INFO_SRC datagram, with the extra data block appended when there is one.
 	 *
 	 * @param int<0, 255> $Protocol
 	 * @param int<0, 65535> $AppID
 	 */
-	private static function InfoBody( int $Protocol = 17, int $AppID = 440, string $Ship = '' ) : string
+	private static function InfoReply( int $Protocol = 17, int $AppID = 440, string $Ship = '', string $Extra = '' ) : string
 	{
-		return chr( $Protocol )
-			. "Constructed Server\0"
-			. "de_dust2\0"
-			. "cstrike\0"
-			. "Counter-Strike\0"
-			. pack( 'v', $AppID )
-			. chr( 4 )      // Players
-			. chr( 32 )     // MaxPlayers
-			. chr( 2 )      // Bots
-			. 'd'           // Dedicated
-			. 'l'           // Os
-			. chr( 0 )      // Password
-			. chr( 1 )      // Secure
-			. $Ship
-			. "1.0.0.0\0";
+		return Packets::A2SReply( SourceQuery::S2A_INFO_SRC,
+			Packets::InfoPayload( self::HostName, $AppID, $Protocol, 2, $Ship ) . $Extra );
 	}
 
 	/**
@@ -470,25 +483,5 @@ class InfoParsingTest extends \PHPUnit\Framework\TestCase
 		}
 
 		return $Expected;
-	}
-
-	/** An S2A_INFO_DETAILED body. $Mod follows the IsMod flag when it is set. */
-	private static function DetailedBody( bool $Password = false, string $Mod = '' ) : string
-	{
-		return "127.0.0.1:27015\0"
-			. "GoldSource Server\0"
-			. "crossfire\0"
-			. "valve\0"
-			. "Half-Life\0"
-			. chr( 5 )              // Players
-			. chr( 32 )             // MaxPlayers
-			. chr( 47 )             // Protocol
-			. 'd'                   // Dedicated
-			. 'l'                   // Os
-			. chr( $Password ? 1 : 0 )
-			. chr( $Mod === '' ? 0 : 1 )
-			. $Mod
-			. chr( 1 )              // Secure
-			. chr( 1 );             // Bots
 	}
 }

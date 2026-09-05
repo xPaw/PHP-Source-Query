@@ -1,150 +1,234 @@
 <?php
 declare(strict_types=1);
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use xPaw\SourceQuery\Exception\AuthenticationException;
 use xPaw\SourceQuery\Exception\InvalidPacketException;
 use xPaw\SourceQuery\Exception\SocketException;
-use xPaw\SourceQuery\Socket;
+use xPaw\SourceQuery\GoldSourceRcon;
 use xPaw\SourceQuery\SourceQuery;
-use xPaw\SourceQuery\Tests\Support\FakeUdpServer;
+use xPaw\SourceQuery\Tests\Support\Packets;
 use xPaw\SourceQuery\Tests\Support\TestableSocket;
+use xPaw\SourceQuery\Tests\Support\UdpServerFixture;
 
 /**
- * GoldSource RCON, which runs over the shared UDP query socket.
+ * GoldSource RCON, which runs over the shared UDP query socket: the challenge
+ * state machine, the console redirect chunks, and the rejection replies.
  *
  * GoldSourceRcon::Write( ) writes straight to the raw resource $Socket->Socket,
- * so every wire test here needs the real Socket plus a FakeUdpServer; only the
- * abstraction test uses TestableSocket.
- *
- * The known-bug group asserts the correct behaviour and fails until it is fixed.
+ * so every wire test here needs the real Socket plus a FakeUdpServer.
  */
 class GoldSourceRconTest extends \PHPUnit\Framework\TestCase
 {
+	use UdpServerFixture;
+
 	/** The challenge number the fake server hands out. */
-	private const Challenge = '12345';
+	private const Challenge = '2043988477';
+
+	/** The challenge number handed out on a second 'challenge rcon' request. */
+	private const NewChallenge = '1174404871';
 
 	private const Password = 'pass';
 
-	private ?FakeUdpServer $UdpServer = null;
-	private ?Socket $Socket = null;
-	private ?SourceQuery $Query = null;
+	//
+	// State machine
+	//
 
-	public function tearDown( ) : void
+	/**
+	 * The rcon line embeds the challenge, so there is nothing to send before the
+	 * 'challenge rcon' handshake completes.
+	 */
+	public function testCommandBeforeAuthorize( ) : void
 	{
-		$this->Query?->Disconnect( );
-		$this->UdpServer?->Close( );
+		$Rcon = new GoldSourceRcon( new TestableSocket( ) );
 
-		$this->Query     = null;
-		$this->Socket    = null;
-		$this->UdpServer = null;
+		$this->expectException( AuthenticationException::class );
+		$this->expectExceptionCode( AuthenticationException::BAD_PASSWORD );
+		$this->expectExceptionMessage( 'Tried to execute a RCON command before successful authorization.' );
+
+		$Rcon->Command( 'status' );
 	}
 
 	/**
-	 * Binds the fake server, connects a real GoldSource socket to it and completes
-	 * the 'challenge rcon' handshake.
+	 * The socket is shared with the query protocol, so writing without one is a
+	 * socket error, not an authentication error.
 	 */
-	private function Authorize( int $Timeout = 1 ) : void
+	public function testWriteWithoutAnOpenSocket( ) : void
 	{
-		$this->UdpServer = new FakeUdpServer( );
-		$this->Socket    = new Socket( );
-		$this->Query     = new SourceQuery( $this->Socket );
+		$Rcon = new GoldSourceRcon( new TestableSocket( ) );
 
-		$this->Query->Connect( $this->UdpServer->Host( ), $this->UdpServer->Port( ), $Timeout, SourceQuery::GOLDSOURCE );
-		$this->UdpServer->Attach( $this->Socket );
-		$this->UdpServer->Queue( self::ChallengeReply( ) );
+		$this->expectException( SocketException::class );
+		$this->expectExceptionCode( SocketException::NOT_CONNECTED );
 
-		$this->Query->SetRconPassword( self::Password );
+		$Rcon->Write( 0, 'challenge rcon' );
 	}
 
-	/**
-	 * The server answer to 'challenge rcon': 0xFFFFFFFF, the echoed request
-	 * and the challenge number, null terminated.
-	 */
-	private static function ChallengeReply( ) : string
+	/** Close( ) forgets the challenge and the password. */
+	public function testCloseResetsTheChallenge( ) : void
 	{
-		return "\xFF\xFF\xFF\xFF" . 'challenge rcon ' . self::Challenge . "\0";
+		$Socket = $this->OpenSocket( SourceQuery::GOLDSOURCE );
+
+		$this->Queue( Packets::RconChallengeReply( self::Challenge ) );
+
+		$Rcon = new GoldSourceRcon( $Socket );
+		$Rcon->Authorize( self::Password );
+		$Rcon->Close( );
+
+		$this->expectException( AuthenticationException::class );
+
+		$Rcon->Command( 'status' );
 	}
 
-	/**
-	 * One redirect datagram: 0xFFFFFFFF, the type byte, the console text, then the
-	 * two terminating null bytes the engine writes.
-	 */
-	private static function PrintReply( string $Text ) : string
-	{
-		return FakeUdpServer::A2SReply( SourceQuery::S2A_RCON, $Text . "\0\0" );
-	}
+	//
+	// Authorize
+	//
 
 	/** Baseline: a short single-datagram reply round trips over the real socket. */
 	public function testAuthorizeAndCommandRoundTrip( ) : void
 	{
-		$this->Authorize( );
+		$Query = $this->Authorize( );
 
-		$this->UdpServer?->Queue( self::PrintReply( 'hostname: Fake GoldSource' ) );
+		$this->Queue( Packets::PrintReply( 'hostname: Fake GoldSource' ) );
 
-		self::assertSame( 'hostname: Fake GoldSource', $this->Query?->Rcon( 'status' ) );
+		self::assertSame( 'hostname: Fake GoldSource', $Query->Rcon( 'status' ) );
 
-		$Requests = $this->UdpServer?->WaitForRequests( 2 ) ?? [];
+		self::assertSame(
+		[
+			"\xFF\xFF\xFF\xFF" . 'challenge rcon',
+			"\xFF\xFF\xFF\xFF" . 'rcon ' . self::Challenge . ' "' . self::Password . '" status' . "\0",
+		], $this->UdpServer->WaitForRequests( 2 ) );
+	}
 
-		self::assertCount( 2, $Requests );
-		self::assertSame( "\xFF\xFF\xFF\xFF" . 'challenge rcon', $Requests[ 0 ] );
-		self::assertSame( "\xFF\xFF\xFF\xFF" . 'rcon ' . self::Challenge . ' "' . self::Password . '" status' . "\0", $Requests[ 1 ] );
+	/** Anything that does not begin with the echoed request is not a challenge. */
+	public function testAuthorizeRejectsAReplyThatIsNotAChallenge( ) : void
+	{
+		$Query = $this->ConnectQuery( SourceQuery::GOLDSOURCE );
+
+		$this->Queue( Packets::PrintReply( 'Bad rcon_password.' ) );
+
+		$this->expectException( AuthenticationException::class );
+		$this->expectExceptionCode( AuthenticationException::BAD_PASSWORD );
+		$this->expectExceptionMessage( 'Failed to get RCON challenge.' );
+
+		$Query->SetRconPassword( self::Password );
 	}
 
 	/**
-	 * The engine sends its console redirect in chunks of up to ~1400 bytes, so a
-	 * final chunk of 1001-1399 bytes is normal and must not make the library wait
-	 * for a further chunk that never comes.
+	 * Challenges expire, are evicted and are reseeded by a restart, so
+	 * 'Bad challenge.' is the normal way a long lived connection is told to fetch
+	 * a new one. The command must be retried once with the fresh challenge.
 	 */
-	#[Group('known-bug')]
-	public function testLastChunkOverThousandBytesIsNotDiscarded( ) : void
+	public function testStaleChallengeIsRenewedAndTheCommandRetried( ) : void
 	{
-		$this->Authorize( 2 );
+		$Query = $this->Authorize( );
 
-		$First  = str_repeat( 'A', 1300 );
-		$Second = str_repeat( 'B', 1200 );
-
-		$this->UdpServer?->Queue( self::PrintReply( $First ) );
-		$this->UdpServer?->Queue( self::PrintReply( $Second ) );
-
-		$Start = microtime( true );
+		$this->Queue(
+			Packets::PrintReply( "Bad rcon_password.\nBad challenge.\n" ),
+			Packets::RconChallengeReply( self::NewChallenge ),
+			Packets::PrintReply( 'hostname: Fake Server' )
+		);
 
 		try
 		{
-			$Result = $this->Query?->Rcon( 'status' ) ?? '';
+			$Output = $Query->Rcon( 'status' );
 		}
-		catch( InvalidPacketException $Exception )
+		catch( AuthenticationException $Exception )
 		{
-			self::fail( sprintf(
-				'Rcon( ) threw %s( %d ): %s after %.2fs instead of returning the 2500 byte response; the 1200 byte last chunk is above the > 1000 heuristic, so it blocked on a third read that never comes.',
-				$Exception::class,
-				$Exception->getCode( ),
-				$Exception->getMessage( ),
-				microtime( true ) - $Start
-			) );
+			self::fail( 'The command was not retried with a fresh challenge: ' . $Exception->getMessage( ) );
 		}
 
-		$Elapsed = microtime( true ) - $Start;
+		self::assertSame( 'hostname: Fake Server', $Output );
 
-		self::assertLessThan( 1.0, $Elapsed, 'Rcon( ) must not block waiting for a chunk that will never arrive.' );
-		self::assertSame( $First . $Second, str_replace( "\0", '', $Result ) );
+		$Requests = $this->UdpServer->WaitForRequests( 4 );
+
+		self::assertCount( 4, $Requests );
+		self::assertSame( "\xFF\xFF\xFF\xFF" . 'challenge rcon', $Requests[ 2 ] );
+		self::assertSame( "\xFF\xFF\xFF\xFF" . 'rcon ' . self::NewChallenge . ' "' . self::Password . '" status' . "\0", $Requests[ 3 ] );
+	}
+
+	//
+	// Reply handling
+	//
+
+	/** Every RCON redirect datagram carries the S2A_RCON type byte. */
+	public function testReplyWithTheWrongTypeByte( ) : void
+	{
+		$Query = $this->Authorize( );
+
+		$this->Queue( Packets::A2SReply( 0x6E, "hostname: Fake Server\0\0" ) );
+
+		$this->expectException( InvalidPacketException::class );
+		$this->expectExceptionCode( InvalidPacketException::PACKET_HEADER_MISMATCH );
+		$this->expectExceptionMessage( 'Invalid rcon response.' );
+
+		$Query->Rcon( 'status' );
 	}
 
 	/**
-	 * Each redirect datagram ends with the engine's null terminator, which has to
-	 * be stripped per chunk instead of ending up inside the returned string.
+	 * Too many failed rcon attempts get the source address banned, and the ban is
+	 * reported instead of the command output.
+	 */
+	public function testBannedReply( ) : void
+	{
+		$Query = $this->Authorize( );
+
+		$this->Queue( Packets::PrintReply( 'You have been banned from this server.' ) );
+
+		$this->expectException( AuthenticationException::class );
+		$this->expectExceptionCode( AuthenticationException::BANNED );
+		$this->expectExceptionMessage( 'You have been banned from this server.' );
+
+		$Query->Rcon( 'status' );
+	}
+
+	/**
+	 * The engine prefixes several distinct rejections with 'Bad rcon_password.'
+	 * and puts the reason on the next line. All of them are authentication
+	 * failures, not command output. 'Bad challenge.' is handled by fetching a new
+	 * challenge instead.
+	 */
+	#[DataProvider( 'RejectionProvider' )]
+	public function testEveryBadPasswordRejectionIsAnAuthenticationFailure( string $Reply ) : void
+	{
+		$Query = $this->Authorize( );
+
+		$this->Queue( Packets::PrintReply( $Reply ) );
+
+		$this->expectException( AuthenticationException::class );
+		$this->expectExceptionCode( AuthenticationException::BAD_PASSWORD );
+
+		$Query->Rcon( 'status' );
+	}
+
+	/**
+	 * @return array<string, array{string}>
+	 */
+	public static function RejectionProvider( ) : array
+	{
+		return
+		[
+			'bare rejection'  => [ 'Bad rcon_password.' ],
+			'no password set' => [ "Bad rcon_password.\nNo password set for this server.\n" ],
+			'no privilege'    => [ "Bad rcon_password.\nNo privilege.\n" ],
+		];
+	}
+
+	/**
+	 * The engine flushes its console redirect in chunks, so a long reply arrives as
+	 * several datagrams. Each of them ends with the engine's null terminator, which
+	 * has to be stripped per chunk instead of ending up inside the returned string.
 	 */
 	public function testMultipleChunksDoNotLeakNullBytes( ) : void
 	{
-		$this->Authorize( );
+		$Query = $this->Authorize( );
 
 		$First  = str_repeat( 'A', 1100 );
 		$Second = str_repeat( 'B', 500 );
 
-		$this->UdpServer?->Queue( self::PrintReply( $First ) );
-		$this->UdpServer?->Queue( self::PrintReply( $Second ) );
+		$this->Queue( Packets::PrintReply( $First ), Packets::PrintReply( $Second ) );
 
-		$Result = $this->Query?->Rcon( 'status' ) ?? '';
+		$Result = $Query->Rcon( 'status' );
 
 		self::assertSame( 0, substr_count( $Result, "\0" ), 'The per-chunk null terminator must be stripped before the chunks are concatenated.' );
 		self::assertSame( $First . $Second, $Result );
@@ -156,68 +240,101 @@ class GoldSourceRconTest extends \PHPUnit\Framework\TestCase
 	 */
 	public function testLeadingWhitespaceIsPreserved( ) : void
 	{
-		$this->Authorize( );
+		$Query = $this->Authorize( );
 
-		$this->UdpServer?->Queue( self::PrintReply( " indented\n\n" ) );
-
-		$Result = $this->Query?->Rcon( 'status' ) ?? '';
+		$this->Queue( Packets::PrintReply( " indented\n\n" ) );
 
 		// A trailing newline may or may not be stripped, so only the leading part
 		// is asserted on.
-		self::assertStringStartsWith( ' indented', $Result, 'Leading whitespace of the server output must not be trimmed away.' );
+		self::assertStringStartsWith( ' indented', $Query->Rcon( 'status' ) );
+	}
+
+	// Known bugs.
+
+	/**
+	 * The engine sends its console redirect in chunks of up to ~1400 bytes, so a
+	 * final chunk of 1001-1399 bytes is normal and must not make the library wait
+	 * for a further chunk that never comes.
+	 */
+	#[Group( 'known-bug' )]
+	public function testLastChunkOverThousandBytesIsNotDiscarded( ) : void
+	{
+		$Query = $this->Authorize( );
+
+		$First  = str_repeat( 'A', 1300 );
+		$Second = str_repeat( 'B', 1200 );
+
+		$this->Queue( Packets::PrintReply( $First ), Packets::PrintReply( $Second ) );
+
+		try
+		{
+			$Result = $Query->Rcon( 'status' );
+		}
+		catch( InvalidPacketException )
+		{
+			self::fail( 'The 1200 byte last chunk is above the > 1000 heuristic, so Rcon( ) blocked on a third read that never comes.' );
+		}
+
+		self::assertSame( $First . $Second, str_replace( "\0", '', $Result ) );
+	}
+
+	/**
+	 * The challenge reply is the echoed request followed by the number. A reply
+	 * with no number leaves nothing to build an rcon line from, so it has to be
+	 * rejected here rather than surface later as a command sent before authorization.
+	 */
+	#[Group( 'known-bug' )]
+	public function testAuthorizeRejectsAChallengeReplyWithoutANumber( ) : void
+	{
+		$Query = $this->ConnectQuery( SourceQuery::GOLDSOURCE );
+
+		$this->Queue( "\xFF\xFF\xFF\xFF" . "challenge rcon\0" );
+
+		$this->expectException( AuthenticationException::class );
+		$this->expectExceptionCode( AuthenticationException::BAD_PASSWORD );
+
+		$Query->SetRconPassword( self::Password );
 	}
 
 	/**
 	 * GoldSource RCON must go through the BaseSocket abstraction rather than the
 	 * raw $Socket->Socket resource, so that an injected BaseSocket works.
 	 */
-	#[Group('known-bug')]
+	#[Group( 'known-bug' )]
 	public function testWorksWithAnInjectedBaseSocket( ) : void
 	{
 		$Socket = new TestableSocket( );
 		$Query  = new SourceQuery( $Socket );
 		$Query->Connect( '', 2, 1, SourceQuery::GOLDSOURCE );
 
-		$Socket->Queue( self::ChallengeReply( ) );
+		$Socket->Queue( Packets::RconChallengeReply( self::Challenge ) );
 
 		try
 		{
 			$Query->SetRconPassword( self::Password );
 		}
-		catch( SocketException $Exception )
+		catch( SocketException )
 		{
-			self::fail( sprintf(
-				'SetRconPassword( ) threw SocketException( %d ): %s - GoldSourceRcon must go through BaseSocket::Write( ) instead of writing to the raw $Socket->Socket resource.',
-				$Exception->getCode( ),
-				$Exception->getMessage( )
-			) );
+			self::fail( 'GoldSourceRcon writes to the raw $Socket->Socket resource instead of BaseSocket::Write( ).' );
 		}
 
 		self::assertNotSame( [], $Socket->Written, 'The challenge request must have gone through the socket abstraction.' );
-		self::assertTrue( $Socket->IsQueueEmpty( ), 'The challenge reply must have been consumed.' );
-
-		$Query->Disconnect( );
+		self::assertSame( 0, $Socket->QueuedCount( ), 'The challenge reply must have been consumed.' );
 	}
 
-	/**
-	 * Baseline: the engine's rejection is turned into an AuthenticationException.
-	 */
-	public function testBadPasswordThrows( ) : void
+	//
+	// Helpers
+	//
+
+	/** Connects a real GoldSource socket and completes the 'challenge rcon' handshake. */
+	private function Authorize( ) : SourceQuery
 	{
-		$this->Authorize( );
+		$Query = $this->ConnectQuery( SourceQuery::GOLDSOURCE );
 
-		$this->UdpServer?->Queue( self::PrintReply( 'Bad rcon_password.' ) );
+		$this->Queue( Packets::RconChallengeReply( self::Challenge ) );
 
-		try
-		{
-			$this->Query?->Rcon( 'status' );
+		$Query->SetRconPassword( self::Password );
 
-			self::fail( 'Expected AuthenticationException' );
-		}
-		catch( AuthenticationException $Exception )
-		{
-			self::assertSame( AuthenticationException::BAD_PASSWORD, $Exception->getCode( ) );
-			self::assertSame( 'Bad rcon_password.', $Exception->getMessage( ) );
-		}
+		return $Query;
 	}
 }

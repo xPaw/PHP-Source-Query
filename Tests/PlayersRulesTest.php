@@ -3,33 +3,15 @@ declare(strict_types=1);
 
 use xPaw\SourceQuery\Exception\InvalidPacketException;
 use xPaw\SourceQuery\SourceQuery;
-use xPaw\SourceQuery\Tests\Support\TestableSocket;
+use xPaw\SourceQuery\Tests\Support\Packets;
+use xPaw\SourceQuery\Tests\Support\TestableSocketTestCase;
 
 /**
  * Record level coverage of GetPlayers( ) and GetRules( ): empty lists, declared
  * counts that disagree with the records, and the value ranges a server may send.
  */
-class PlayersRulesTest extends \PHPUnit\Framework\TestCase
+class PlayersRulesTest extends TestableSocketTestCase
 {
-	private const Challenge = "\x11\x22\x33\x44";
-
-	private TestableSocket $Socket;
-	private SourceQuery $SourceQuery;
-
-	public function setUp( ) : void
-	{
-		$this->Socket = new TestableSocket( );
-		$this->SourceQuery = new SourceQuery( $this->Socket );
-		$this->SourceQuery->Connect( '', 2 );
-	}
-
-	public function tearDown( ) : void
-	{
-		$this->SourceQuery->Disconnect( );
-
-		unset( $this->Socket, $this->SourceQuery );
-	}
-
 	//
 	// A2S_PLAYER
 	//
@@ -45,10 +27,9 @@ class PlayersRulesTest extends \PHPUnit\Framework\TestCase
 	 */
 	public function testDeclaredCountAboveTheNumberOfRecords( ) : void
 	{
-		$Players = $this->Players( chr( 4 ) . self::PlayerRecord( 0, 'Only One', 1, 1.0 ) );
+		$Players = $this->Players( chr( 4 ) . Packets::PlayerRecord( 0, 'Only One', 1, 1.0 ) );
 
-		self::assertCount( 1, $Players );
-		self::assertSame( 'Only One', $Players[ 0 ][ 'Name' ] );
+		self::assertSame( [ 'Only One' ], array_column( $Players, 'Name' ) );
 	}
 
 	/** The declared count bounds the loop, so trailing records are left unparsed. */
@@ -56,8 +37,8 @@ class PlayersRulesTest extends \PHPUnit\Framework\TestCase
 	{
 		$Players = $this->Players(
 			chr( 1 ) .
-			self::PlayerRecord( 0, 'First', 1, 1.0 ) .
-			self::PlayerRecord( 1, 'Second', 2, 2.0 )
+			Packets::PlayerRecord( 0, 'First', 1, 1.0 ) .
+			Packets::PlayerRecord( 1, 'Second', 2, 2.0 )
 		);
 
 		self::assertSame( [ 'First' ], array_column( $Players, 'Name' ) );
@@ -65,7 +46,7 @@ class PlayersRulesTest extends \PHPUnit\Framework\TestCase
 
 	public function testEmptyPlayerName( ) : void
 	{
-		$Players = $this->Players( chr( 1 ) . self::PlayerRecord( 0, '', 0, 0.0 ) );
+		$Players = $this->Players( Packets::PlayersPayload( Packets::PlayerRecord( 0, '', 0, 0.0 ) ) );
 
 		self::assertSame( '', $Players[ 0 ][ 'Name' ] );
 		self::assertSame( 0, $Players[ 0 ][ 'Time' ] );
@@ -75,11 +56,10 @@ class PlayersRulesTest extends \PHPUnit\Framework\TestCase
 	/** The index is whatever the server sent; it need not start at zero. */
 	public function testPlayerIndexIsTakenFromTheWire( ) : void
 	{
-		$Players = $this->Players(
-			chr( 2 ) .
-			self::PlayerRecord( 128, 'High', 0, 0.0 ) .
-			self::PlayerRecord( 255, 'Higher', 0, 0.0 )
-		);
+		$Players = $this->Players( Packets::PlayersPayload(
+			Packets::PlayerRecord( 128, 'High', 0, 0.0 ),
+			Packets::PlayerRecord( 255, 'Higher', 0, 0.0 )
+		) );
 
 		self::assertSame( [ 128, 255 ], array_column( $Players, 'Id' ) );
 	}
@@ -87,7 +67,7 @@ class PlayersRulesTest extends \PHPUnit\Framework\TestCase
 	/** Frags are signed: team damage and suicides push them below zero. */
 	public function testNegativeFrags( ) : void
 	{
-		$Players = $this->Players( chr( 1 ) . self::PlayerRecord( 0, 'Negative', -7, 0.0 ) );
+		$Players = $this->Players( Packets::PlayersPayload( Packets::PlayerRecord( 0, 'Negative', -7, 0.0 ) ) );
 
 		self::assertSame( -7, $Players[ 0 ][ 'Frags' ] );
 	}
@@ -98,7 +78,7 @@ class PlayersRulesTest extends \PHPUnit\Framework\TestCase
 	 */
 	public function testNegativeTime( ) : void
 	{
-		$Players = $this->Players( chr( 1 ) . self::PlayerRecord( 0, 'Negative', 0, -1.0 ) );
+		$Players = $this->Players( Packets::PlayersPayload( Packets::PlayerRecord( 0, 'Negative', 0, -1.0 ) ) );
 
 		self::assertSame( -1, $Players[ 0 ][ 'Time' ] );
 		self::assertSame( '00:00', $Players[ 0 ][ 'TimeF' ] );
@@ -110,7 +90,7 @@ class PlayersRulesTest extends \PHPUnit\Framework\TestCase
 	 */
 	public function testTimeAboveTheIntegerRangeIsClampedToTheMaximum( ) : void
 	{
-		$Players = $this->Players( chr( 1 ) . self::PlayerRecord( 0, 'Huge', 0, 1.0e30 ) );
+		$Players = $this->Players( Packets::PlayersPayload( Packets::PlayerRecord( 0, 'Huge', 0, 1.0e30 ) ) );
 
 		self::assertSame( PHP_INT_MAX, $Players[ 0 ][ 'Time' ] );
 		self::assertSame( '2562047788015215:30:07', $Players[ 0 ][ 'TimeF' ] );
@@ -118,7 +98,7 @@ class PlayersRulesTest extends \PHPUnit\Framework\TestCase
 
 	public function testTimeBelowTheIntegerRangeIsClampedToTheMinimum( ) : void
 	{
-		$Players = $this->Players( chr( 1 ) . self::PlayerRecord( 0, 'Huge Negative', 0, -1.0e30 ) );
+		$Players = $this->Players( Packets::PlayersPayload( Packets::PlayerRecord( 0, 'Huge Negative', 0, -1.0e30 ) ) );
 
 		self::assertSame( PHP_INT_MIN, $Players[ 0 ][ 'Time' ] );
 		self::assertSame( '00:00', $Players[ 0 ][ 'TimeF' ] );
@@ -129,27 +109,21 @@ class PlayersRulesTest extends \PHPUnit\Framework\TestCase
 	{
 		$Name = "Игрок ✔";
 
-		$Players = $this->Players( chr( 1 ) . self::PlayerRecord( 0, $Name, 0, 0.0 ) );
+		$Players = $this->Players( Packets::PlayersPayload( Packets::PlayerRecord( 0, $Name, 0, 0.0 ) ) );
 
 		self::assertSame( $Name, $Players[ 0 ][ 'Name' ] );
 	}
 
 	public function testPlayersReplyWithWrongTypeIsRejected( ) : void
 	{
-		$this->Socket->Queue( self::ChallengeReply( ) );
-		$this->Socket->Queue( "\xFF\xFF\xFF\xFF" . chr( SourceQuery::S2A_RULES ) . pack( 'v', 0 ) );
+		$this->Socket->Queue( Packets::Challenge( ) );
+		$this->Socket->Queue( Packets::A2SReply( SourceQuery::S2A_RULES, Packets::RulesPayload( [] ) ) );
 
-		try
-		{
-			$this->SourceQuery->GetPlayers( );
+		$this->expectException( InvalidPacketException::class );
+		$this->expectExceptionCode( InvalidPacketException::PACKET_HEADER_MISMATCH );
+		$this->expectExceptionMessage( 'GetPlayers' );
 
-			self::fail( 'Expected InvalidPacketException' );
-		}
-		catch( InvalidPacketException $Exception )
-		{
-			self::assertSame( InvalidPacketException::PACKET_HEADER_MISMATCH, $Exception->getCode( ) );
-			self::assertStringContainsString( 'GetPlayers', $Exception->getMessage( ) );
-		}
+		$this->SourceQuery->GetPlayers( );
 	}
 
 	//
@@ -158,7 +132,7 @@ class PlayersRulesTest extends \PHPUnit\Framework\TestCase
 
 	public function testServerWithNoRules( ) : void
 	{
-		self::assertSame( [], $this->Rules( pack( 'v', 0 ) ) );
+		self::assertSame( [], $this->Rules( Packets::RulesPayload( [] ) ) );
 	}
 
 	public function testDeclaredRuleCountAboveTheNumberOfRecords( ) : void
@@ -185,7 +159,7 @@ class PlayersRulesTest extends \PHPUnit\Framework\TestCase
 
 	public function testRuleWithAnEmptyValue( ) : void
 	{
-		self::assertSame( [ 'sv_downloadurl' => '' ], $this->Rules( pack( 'v', 1 ) . "sv_downloadurl\0" . "\0" ) );
+		self::assertSame( [ 'sv_downloadurl' => '' ], $this->Rules( Packets::RulesPayload( [ 'sv_downloadurl' => '' ] ) ) );
 	}
 
 	/** Values are raw bytes up to the terminator, newlines included. */
@@ -193,7 +167,7 @@ class PlayersRulesTest extends \PHPUnit\Framework\TestCase
 	{
 		$Value = "first line\nsecond line\r\nтретья ✔";
 
-		self::assertSame( [ 'sv_motd' => $Value ], $this->Rules( pack( 'v', 1 ) . "sv_motd\0" . $Value . "\0" ) );
+		self::assertSame( [ 'sv_motd' => $Value ], $this->Rules( Packets::RulesPayload( [ 'sv_motd' => $Value ] ) ) );
 	}
 
 	/** The rule count is an unsigned 16 bit value. */
@@ -206,20 +180,14 @@ class PlayersRulesTest extends \PHPUnit\Framework\TestCase
 
 	public function testRulesReplyWithWrongTypeIsRejected( ) : void
 	{
-		$this->Socket->Queue( self::ChallengeReply( ) );
-		$this->Socket->Queue( "\xFF\xFF\xFF\xFF" . chr( SourceQuery::S2A_PLAYER ) . chr( 0 ) );
+		$this->Socket->Queue( Packets::Challenge( ) );
+		$this->Socket->Queue( Packets::A2SReply( SourceQuery::S2A_PLAYER, Packets::PlayersPayload( ) ) );
 
-		try
-		{
-			$this->SourceQuery->GetRules( );
+		$this->expectException( InvalidPacketException::class );
+		$this->expectExceptionCode( InvalidPacketException::PACKET_HEADER_MISMATCH );
+		$this->expectExceptionMessage( 'GetRules' );
 
-			self::fail( 'Expected InvalidPacketException' );
-		}
-		catch( InvalidPacketException $Exception )
-		{
-			self::assertSame( InvalidPacketException::PACKET_HEADER_MISMATCH, $Exception->getCode( ) );
-			self::assertStringContainsString( 'GetRules', $Exception->getMessage( ) );
-		}
+		$this->SourceQuery->GetRules( );
 	}
 
 	//
@@ -233,8 +201,8 @@ class PlayersRulesTest extends \PHPUnit\Framework\TestCase
 	 */
 	private function Players( string $Body ) : array
 	{
-		$this->Socket->Queue( self::ChallengeReply( ) );
-		$this->Socket->Queue( "\xFF\xFF\xFF\xFF" . chr( SourceQuery::S2A_PLAYER ) . $Body );
+		$this->Socket->Queue( Packets::Challenge( ) );
+		$this->Socket->Queue( Packets::A2SReply( SourceQuery::S2A_PLAYER, $Body ) );
 
 		return $this->SourceQuery->GetPlayers( );
 	}
@@ -246,24 +214,9 @@ class PlayersRulesTest extends \PHPUnit\Framework\TestCase
 	 */
 	private function Rules( string $Body ) : array
 	{
-		$this->Socket->Queue( self::ChallengeReply( ) );
-		$this->Socket->Queue( "\xFF\xFF\xFF\xFF" . chr( SourceQuery::S2A_RULES ) . $Body );
+		$this->Socket->Queue( Packets::Challenge( ) );
+		$this->Socket->Queue( Packets::A2SReply( SourceQuery::S2A_RULES, $Body ) );
 
 		return $this->SourceQuery->GetRules( );
-	}
-
-	private static function ChallengeReply( ) : string
-	{
-		return "\xFF\xFF\xFF\xFF" . chr( SourceQuery::S2C_CHALLENGE ) . self::Challenge;
-	}
-
-	/**
-	 * One A2S_PLAYER record: byte index, name, int32 frags, float32 seconds.
-	 *
-	 * @param int<0, 255> $Index
-	 */
-	private static function PlayerRecord( int $Index, string $Name, int $Frags, float $Time ) : string
-	{
-		return chr( $Index ) . $Name . "\0" . pack( 'l', $Frags ) . pack( 'f', $Time );
 	}
 }

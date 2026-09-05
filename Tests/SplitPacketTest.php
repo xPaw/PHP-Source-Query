@@ -1,72 +1,116 @@
 <?php
 declare(strict_types=1);
 
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use xPaw\SourceQuery\Exception\InvalidPacketException;
+use xPaw\SourceQuery\Exception\SocketException;
 use xPaw\SourceQuery\SourceQuery;
-use xPaw\SourceQuery\Tests\Support\TestableSocket;
+use xPaw\SourceQuery\Tests\Support\Packets;
+use xPaw\SourceQuery\Tests\Support\TestableSocketTestCase;
 
 /**
- * Split-packet reassembly in BaseSocket::ReadInternal( ), driven through
- * TestableSocket so no real sockets are involved. $ThrowOnEmptyQueue is false
- * throughout, so a lost datagram looks like a read timeout.
- *
- * The known-bug group asserts the correct behaviour and fails until it is fixed.
+ * The datagram framing in BaseSocket::ReadInternal( ): the 0xFFFFFFFF single
+ * packet header, the 0xFFFFFFFE split header and the bzip2 compressed form.
+ * An unanswered read stands for a lost datagram throughout.
  */
-class SplitPacketTest extends \PHPUnit\Framework\TestCase
+class SplitPacketTest extends TestableSocketTestCase
 {
-	/** A valid S2C_CHALLENGE datagram, consumed by GetRules( )/GetPlayers( ). */
-	private const Challenge = "\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11";
+	protected const bool TimeoutOnEmptyQueue = true;
 
-	/** 16 MiB, the decompressed size of the bz2 bomb below. */
-	private const BombSize = 16 * 1024 * 1024;
+	//
+	// Single packets
+	//
 
-	private TestableSocket $Socket;
-	private SourceQuery $SourceQuery;
-
-	public function setUp( ) : void
+	/** Only 0xFFFFFFFF and 0xFFFFFFFE are valid datagram headers. */
+	public function testUnknownRawHeaderIsRejected( ) : void
 	{
-		$this->Socket = new TestableSocket( );
-		$this->Socket->ThrowOnEmptyQueue = false;
+		$this->Socket->Queue( "\x11\x11\x11\x11rest of the datagram" );
 
-		$this->SourceQuery = new SourceQuery( $this->Socket );
-		$this->SourceQuery->Connect( '', 2 );
+		$this->expectException( InvalidPacketException::class );
+		$this->expectExceptionCode( InvalidPacketException::PACKET_HEADER_MISMATCH );
+		$this->expectExceptionMessage( '0x11111111' );
+
+		$this->SourceQuery->GetInfo( );
 	}
 
-	public function tearDown( ) : void
+	public function testEmptyReadIsReported( ) : void
 	{
-		$this->SourceQuery->Disconnect( );
+		$this->expectException( InvalidPacketException::class );
+		$this->expectExceptionCode( InvalidPacketException::BUFFER_EMPTY );
+		$this->expectExceptionMessage( 'Failed to read any data from socket' );
 
-		unset( $this->Socket, $this->SourceQuery );
+		$this->SourceQuery->GetInfo( );
 	}
 
-	// Baseline: behaviour that must keep working.
+	/** A datagram shorter than the 4 byte header cannot be framed at all. */
+	public function testTruncatedHeaderIsReported( ) : void
+	{
+		$this->Socket->Queue( "\xFF\xFF" );
+
+		$this->expectException( InvalidPacketException::class );
+		$this->expectExceptionCode( InvalidPacketException::BUFFER_EMPTY );
+
+		$this->SourceQuery->GetInfo( );
+	}
+
+	//
+	// Split packets
+	//
 
 	public function testCompleteSplitPacketIsReassembled( ) : void
 	{
-		$Rules = self::Rules( 12 );
+		$Rules = Packets::GeneratedRules( 12 );
 
-		$this->Socket->Queue( self::Challenge );
+		$this->Socket->Queue( Packets::Challenge( ) );
 
-		foreach( self::SourceFragments( self::RulesPayload( $Rules ), 3 ) as $Fragment )
+		foreach( Packets::SplitPacketsByCount( self::RulesDatagram( $Rules ), 3 ) as $Fragment )
 		{
 			$this->Socket->Queue( $Fragment );
 		}
 
 		self::assertSame( $Rules, $this->SourceQuery->GetRules( ) );
-		self::assertTrue( $this->Socket->IsQueueEmpty( ) );
+		self::assertSame( 0, $this->Socket->QueuedCount( ) );
 	}
 
 	/** UDP datagrams can arrive in any order, see commit 8af3be6. */
 	public function testOutOfOrderFragmentsAreReassembled( ) : void
 	{
-		$Rules     = self::Rules( 12 );
-		$Fragments = self::SourceFragments( self::RulesPayload( $Rules ), 3 );
+		$Rules     = Packets::GeneratedRules( 12 );
+		$Fragments = Packets::SplitPacketsByCount( self::RulesDatagram( $Rules ), 3 );
 
-		$this->Socket->Queue( self::Challenge );
+		$this->Socket->Queue( Packets::Challenge( ) );
 		$this->Socket->Queue( $Fragments[ 2 ] );
 		$this->Socket->Queue( $Fragments[ 0 ] );
 		$this->Socket->Queue( $Fragments[ 1 ] );
+
+		self::assertSame( $Rules, $this->SourceQuery->GetRules( ) );
+	}
+
+	/** A split reply of one fragment is complete on arrival, nothing more is read. */
+	public function testSplitReplyOfOneFragment( ) : void
+	{
+		$Datagram = self::RulesDatagram( [ 'sv_gravity' => '800' ] );
+
+		$this->Socket->Queue( Packets::Challenge( ) );
+		$this->Socket->Queue( Packets::SplitHeader( 0x0BADF00D, 1, 0, strlen( $Datagram ) ) . $Datagram );
+
+		self::assertSame( [ 'sv_gravity' => '800' ], $this->SourceQuery->GetRules( ) );
+	}
+
+	/**
+	 * Source 2006 era servers split without the int16 size field: 0xFFFFFFFE, int32
+	 * request id, byte total, byte number, payload. Reading a size field there eats
+	 * the first two bytes of every fragment.
+	 */
+	public function testSplitPacketWithoutSizeFieldIsReassembled( ) : void
+	{
+		$Rules    = Packets::GeneratedRules( 12 );
+		$Datagram = self::RulesDatagram( $Rules );
+		$Half     = intdiv( strlen( $Datagram ), 2 );
+
+		$this->Socket->Queue( Packets::Challenge( ) );
+		$this->Socket->Queue( Packets::SplitHeader( 0x0002B206, 2, 0 ) . substr( $Datagram, 0, $Half ) );
+		$this->Socket->Queue( Packets::SplitHeader( 0x0002B206, 2, 1 ) . substr( $Datagram, $Half ) );
 
 		self::assertSame( $Rules, $this->SourceQuery->GetRules( ) );
 	}
@@ -79,11 +123,11 @@ class SplitPacketTest extends \PHPUnit\Framework\TestCase
 	{
 		$this->Socket->Engine = SourceQuery::GOLDSOURCE;
 
-		$Rules = self::Rules( 12 );
+		$Rules = Packets::GeneratedRules( 12 );
 
-		$this->Socket->Queue( self::Challenge );
+		$this->Socket->Queue( Packets::Challenge( ) );
 
-		foreach( self::GoldSourceFragments( self::RulesPayload( $Rules ), 3 ) as $Fragment )
+		foreach( Packets::SplitPacketsGoldSourceByCount( self::RulesDatagram( $Rules ), 3 ) as $Fragment )
 		{
 			$this->Socket->Queue( $Fragment );
 		}
@@ -95,10 +139,10 @@ class SplitPacketTest extends \PHPUnit\Framework\TestCase
 	{
 		$this->Socket->Engine = SourceQuery::GOLDSOURCE;
 
-		$Rules     = self::Rules( 12 );
-		$Fragments = self::GoldSourceFragments( self::RulesPayload( $Rules ), 3 );
+		$Rules     = Packets::GeneratedRules( 12 );
+		$Fragments = Packets::SplitPacketsGoldSourceByCount( self::RulesDatagram( $Rules ), 3 );
 
-		$this->Socket->Queue( self::Challenge );
+		$this->Socket->Queue( Packets::Challenge( ) );
 		$this->Socket->Queue( $Fragments[ 1 ] );
 		$this->Socket->Queue( $Fragments[ 2 ] );
 		$this->Socket->Queue( $Fragments[ 0 ] );
@@ -106,7 +150,21 @@ class SplitPacketTest extends \PHPUnit\Framework\TestCase
 		self::assertSame( $Rules, $this->SourceQuery->GetRules( ) );
 	}
 
-	// Known bugs.
+	/**
+	 * The split header layout depends on the engine, so a value that is neither
+	 * GoldSource nor Source cannot be decoded.
+	 */
+	public function testSplitReplyWithAnUnknownEngine( ) : void
+	{
+		$this->Socket->Engine = 42;
+		$this->Socket->Queue( Packets::SplitHeader( 0x0BADF00D, 1, 0, 4 ) . 'data' );
+
+		$this->expectException( SocketException::class );
+		$this->expectExceptionCode( SocketException::INVALID_ENGINE );
+		$this->expectExceptionMessage( 'Unknown engine.' );
+
+		$this->SourceQuery->GetInfo( );
+	}
 
 	/**
 	 * A missing final fragment must throw instead of returning a truncated result
@@ -114,24 +172,16 @@ class SplitPacketTest extends \PHPUnit\Framework\TestCase
 	 */
 	public function testMissingLastFragmentMustThrow( ) : void
 	{
-		$Rules     = self::Rules( 12 );
-		$Fragments = self::SourceFragments( self::RulesPayload( $Rules ), 3 );
+		$Fragments = Packets::SplitPacketsByCount( self::RulesDatagram( Packets::GeneratedRules( 12 ) ), 3 );
 
-		$this->Socket->Queue( self::Challenge );
+		$this->Socket->Queue( Packets::Challenge( ) );
 		$this->Socket->Queue( $Fragments[ 0 ] );
 		$this->Socket->Queue( $Fragments[ 1 ] );
 		// Fragment 2 was lost, the next read times out.
 
-		try
-		{
-			$Actual = $this->SourceQuery->GetRules( );
+		$this->expectException( InvalidPacketException::class );
 
-			self::fail( 'Expected InvalidPacketException for 2 of 3 fragments, got ' . count( $Actual ) . ' of ' . count( $Rules ) . ' rules: ' . json_encode( $Actual ) );
-		}
-		catch( InvalidPacketException $Exception )
-		{
-			self::assertNotSame( '', $Exception->getMessage( ) );
-		}
+		$this->SourceQuery->GetRules( );
 	}
 
 	/**
@@ -140,24 +190,16 @@ class SplitPacketTest extends \PHPUnit\Framework\TestCase
 	 */
 	public function testMissingMiddleFragmentMustThrow( ) : void
 	{
-		$Rules     = self::Rules( 12 );
-		$Fragments = self::SourceFragments( self::RulesPayload( $Rules ), 3 );
+		$Fragments = Packets::SplitPacketsByCount( self::RulesDatagram( Packets::GeneratedRules( 12 ) ), 3 );
 
-		$this->Socket->Queue( self::Challenge );
+		$this->Socket->Queue( Packets::Challenge( ) );
 		$this->Socket->Queue( $Fragments[ 0 ] );
 		// Fragment 1 was lost.
 		$this->Socket->Queue( $Fragments[ 2 ] );
 
-		try
-		{
-			$Actual = $this->SourceQuery->GetRules( );
+		$this->expectException( InvalidPacketException::class );
 
-			self::fail( 'Expected InvalidPacketException for a lost middle fragment, got ' . count( $Actual ) . ' rules: ' . json_encode( $Actual ) );
-		}
-		catch( InvalidPacketException $Exception )
-		{
-			self::assertNotSame( '', $Exception->getMessage( ) );
-		}
+		$this->SourceQuery->GetRules( );
 	}
 
 	/**
@@ -166,22 +208,21 @@ class SplitPacketTest extends \PHPUnit\Framework\TestCase
 	 */
 	public function testStraySinglePacketDuringReassemblyMustThrow( ) : void
 	{
-		$Rules     = self::Rules( 12 );
-		$Fragments = self::SourceFragments( self::RulesPayload( $Rules ), 3 );
+		$Fragments = Packets::SplitPacketsByCount( self::RulesDatagram( Packets::GeneratedRules( 12 ) ), 3 );
 
-		$this->Socket->Queue( self::Challenge );
+		$this->Socket->Queue( Packets::Challenge( ) );
 		$this->Socket->Queue( $Fragments[ 0 ] );
-		$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x49" ); // Stray single packet reply for an earlier request.
+		$this->Socket->Queue( Packets::A2SReply( SourceQuery::S2A_INFO_SRC ) ); // Reply to an earlier request.
 		$this->Socket->Queue( $Fragments[ 1 ] );
 		$this->Socket->Queue( $Fragments[ 2 ] );
 
 		try
 		{
-			$Actual = $this->SourceQuery->GetRules( );
+			$this->SourceQuery->GetRules( );
 
-			self::fail( 'Expected InvalidPacketException when a stray datagram interrupts reassembly, got ' . count( $Actual ) . ' rules: ' . json_encode( $Actual ) );
+			self::fail( 'A stray datagram interrupting reassembly went unnoticed.' );
 		}
-		catch( InvalidPacketException $Exception )
+		catch( InvalidPacketException )
 		{
 			// The two unread fragments must survive the failed reassembly.
 			self::assertSame( 2, $this->Socket->QueuedCount( ) );
@@ -194,65 +235,34 @@ class SplitPacketTest extends \PHPUnit\Framework\TestCase
 	 */
 	public function testMismatchedRequestIdMustThrow( ) : void
 	{
-		$Rules  = self::Rules( 8 );
-		$Chunks = self::Chunks( self::RulesPayload( $Rules ), 2 );
+		$Datagram = self::RulesDatagram( Packets::GeneratedRules( 8 ) );
+		$Half     = intdiv( strlen( $Datagram ), 2 );
 
-		$this->Socket->Queue( self::Challenge );
-		$this->Socket->Queue( self::SourceFragment( 0x11223344, 2, 0, $Chunks[ 0 ] ) );
-		$this->Socket->Queue( self::SourceFragment( 0x55667788, 2, 1, $Chunks[ 1 ] ) );
+		$this->Socket->Queue( Packets::Challenge( ) );
+		$this->Socket->Queue( Packets::SplitHeader( 0x11223344, 2, 0, $Half ) . substr( $Datagram, 0, $Half ) );
+		$this->Socket->Queue( Packets::SplitHeader( 0x55667788, 2, 1, strlen( $Datagram ) - $Half ) . substr( $Datagram, $Half ) );
 
-		try
-		{
-			$Actual = $this->SourceQuery->GetRules( );
+		$this->expectException( InvalidPacketException::class );
 
-			self::fail( 'Expected InvalidPacketException for fragments from two different responses, got ' . count( $Actual ) . ' rules: ' . json_encode( $Actual ) );
-		}
-		catch( InvalidPacketException $Exception )
-		{
-			self::assertNotSame( '', $Exception->getMessage( ) );
-		}
+		$this->SourceQuery->GetRules( );
 	}
 
-	/**
-	 * Source 2006 era servers split without the int16 size field: 0xFFFFFFFE, int32
-	 * request id, byte total, byte number, payload. Reading a size field there eats
-	 * the first two bytes of every fragment.
-	 */
-	public function testSplitPacketWithoutSizeFieldIsReassembled( ) : void
-	{
-		$Rules = self::Rules( 12 );
-
-		$this->Socket->Queue( self::Challenge );
-
-		foreach( self::Chunks( self::RulesPayload( $Rules ), 2 ) as $Number => $Chunk )
-		{
-			$this->Socket->Queue( "\xFE\xFF\xFF\xFF" . pack( 'V', 0x0002B206 ) . pack( 'C', 2 ) . pack( 'C', $Number ) . $Chunk );
-		}
-
-		try
-		{
-			$Actual = $this->SourceQuery->GetRules( );
-		}
-		catch( InvalidPacketException $Exception )
-		{
-			self::fail( 'A split reply without the int16 size field was rejected: ' . $Exception->getMessage( ) );
-		}
-
-		self::assertSame( $Rules, $Actual );
-	}
+	//
+	// Compressed split packets
+	//
 
 	/**
 	 * Pre-Orange-Box Source servers bzip2 their split replies and flag it with bit
 	 * 31 of the request id. Fragment 0 then carries an int32 decompressed size and
 	 * a uint32 crc32, and there is no int16 size field at all.
 	 */
+	#[RequiresPhpExtension( 'bz2' )]
 	public function testCompressedSingleFragmentIsDecoded( ) : void
 	{
-		$Rules     = self::Rules( 8 );
-		$Fragments = self::CompressedFragments( self::RulesPayload( $Rules ), 1 );
+		$Rules = Packets::GeneratedRules( 8 );
 
-		$this->Socket->Queue( self::Challenge );
-		$this->Socket->Queue( $Fragments[ 0 ] );
+		$this->Socket->Queue( Packets::Challenge( ) );
+		$this->Socket->Queue( Packets::CompressedSplitPackets( self::RulesDatagram( $Rules ) )[ 0 ] );
 
 		self::assertSame( $Rules, $this->SourceQuery->GetRules( ) );
 	}
@@ -262,213 +272,62 @@ class SplitPacketTest extends \PHPUnit\Framework\TestCase
 	 * just the request id, total and number in front of their share of the bzip2
 	 * stream. Reading the 8 byte trailer on every fragment corrupts the stream.
 	 */
+	#[RequiresPhpExtension( 'bz2' )]
 	public function testCompressedMultiFragmentIsDecoded( ) : void
 	{
-		$Rules     = self::Rules( 8 );
-		$Fragments = self::CompressedFragments( self::RulesPayload( $Rules ), 2 );
+		$Rules = Packets::GeneratedRules( 8 );
 
-		$this->Socket->Queue( self::Challenge );
-		$this->Socket->Queue( $Fragments[ 0 ] );
-		$this->Socket->Queue( $Fragments[ 1 ] );
+		$this->Socket->Queue( Packets::Challenge( ) );
 
-		try
+		foreach( Packets::CompressedSplitPackets( self::RulesDatagram( $Rules ), 2 ) as $Fragment )
 		{
-			$Actual = $this->SourceQuery->GetRules( );
-		}
-		catch( InvalidPacketException $Exception )
-		{
-			self::fail( 'A compressed reply split over two fragments was rejected: ' . $Exception->getMessage( ) );
+			$this->Socket->Queue( $Fragment );
 		}
 
-		self::assertSame( $Rules, $Actual );
+		self::assertSame( $Rules, $this->SourceQuery->GetRules( ) );
 	}
 
 	/**
-	 * A tiny datagram that expands to 16 MiB must be refused on its declared
-	 * decompressed size, not decompressed first and rejected afterwards.
+	 * The uint32 after the decompressed size is a crc32 of the whole decompressed
+	 * datagram.
 	 */
-	#[Group( 'known-bug' )]
-	public function testCompressedSplitPacketBombIsRefusedBeforeDecompressing( ) : void
+	#[RequiresPhpExtension( 'bz2' )]
+	public function testCompressedFragmentWithAWrongChecksum( ) : void
 	{
-		self::RequireBz2( );
+		$Datagram = self::RulesDatagram( [ 'sv_gravity' => '800' ] );
 
-		$Payload    = str_repeat( "\x00", self::BombSize );
-		$Checksum   = crc32( $Payload );
-		$Compressed = bzcompress( $Payload );
+		$this->Socket->Queue( Packets::Challenge( ) );
+		$this->Socket->Queue( Packets::CompressedSplitPacket(
+			0x80001650, 1, 0, strlen( $Datagram ), crc32( $Datagram ) ^ 0xFFFF, Packets::Compress( $Datagram )
+		) );
 
-		unset( $Payload );
+		$this->expectException( InvalidPacketException::class );
+		$this->expectExceptionCode( InvalidPacketException::CHECKSUM_MISMATCH );
 
-		if( !is_string( $Compressed ) )
-		{
-			self::fail( 'bzcompress( ) failed with error ' . var_export( $Compressed, true ) );
-		}
-
-		$this->Socket->Queue(
-			"\xFE\xFF\xFF\xFF" . pack( 'V', 0x80000001 ) . chr( 1 ) . chr( 0 ) .
-			pack( 'V', self::BombSize ) . pack( 'V', $Checksum ) . $Compressed
-		);
-
-		$Datagram = strlen( $Compressed ) + 18;
-
-		gc_collect_cycles( );
-		memory_reset_peak_usage( );
-
-		$Baseline = memory_get_usage( );
-		$Thrown   = null;
-
-		try
-		{
-			$this->SourceQuery->GetInfo( );
-		}
-		catch( InvalidPacketException $Exception )
-		{
-			$Thrown = $Exception;
-		}
-
-		$Allocated = memory_get_peak_usage( ) - $Baseline;
-
-		self::assertLessThan(
-			4 * 1024 * 1024,
-			$Allocated,
-			'A ' . $Datagram . ' byte datagram declaring ' . self::BombSize . ' decompressed bytes allocated ' . $Allocated . ' bytes; the declared size must be refused before bzdecompress( ) runs'
-		);
-		self::assertInstanceOf( InvalidPacketException::class, $Thrown );
+		$this->SourceQuery->GetRules( );
 	}
 
-	// Helpers.
-
-	/**
-	 * @return array<string, string>
-	 */
-	private static function Rules( int $Count ) : array
+	/** Data flagged as compressed but not bzip2 fails like a corrupted stream. */
+	#[RequiresPhpExtension( 'bz2' )]
+	public function testCompressedFragmentThatIsNotBzip2( ) : void
 	{
-		$Rules = [];
+		$this->Socket->Queue( Packets::Challenge( ) );
+		$this->Socket->Queue( Packets::CompressedSplitPacket( 0x80001650, 1, 0, 16, 0, 'this is not bzip2' ) );
 
-		for( $i = 1; $i <= $Count; $i++ )
-		{
-			$Rules[ sprintf( 'rule_%02d', $i ) ] = sprintf( 'value_%02d', $i );
-		}
+		$this->expectException( InvalidPacketException::class );
+		$this->expectExceptionCode( InvalidPacketException::CHECKSUM_MISMATCH );
 
-		return $Rules;
+		$this->SourceQuery->GetRules( );
 	}
 
 	/**
-	 * A complete S2A_RULES datagram, 0xFFFFFFFF header included.
+	 * A complete S2A_RULES datagram, 0xFFFFFFFF header included, as it looks before
+	 * a server splits it up.
 	 *
 	 * @param array<string, string> $Rules
 	 */
-	private static function RulesPayload( array $Rules ) : string
+	private static function RulesDatagram( array $Rules ) : string
 	{
-		$Payload = "\xFF\xFF\xFF\xFF" . chr( SourceQuery::S2A_RULES ) . pack( 'v', count( $Rules ) );
-
-		foreach( $Rules as $Key => $Value )
-		{
-			$Payload .= $Key . "\x00" . $Value . "\x00";
-		}
-
-		return $Payload;
-	}
-
-	/**
-	 * Splits a string into exactly $Count pieces.
-	 *
-	 * @return array<int, string>
-	 */
-	private static function Chunks( string $Payload, int $Count ) : array
-	{
-		$Size   = intdiv( strlen( $Payload ), $Count );
-		$Chunks = [];
-
-		for( $i = 0; $i < $Count; $i++ )
-		{
-			$Chunks[] = $i === $Count - 1 ? substr( $Payload, $i * $Size ) : substr( $Payload, $i * $Size, $Size );
-		}
-
-		return $Chunks;
-	}
-
-	/**
-	 * Source split header: 0xFFFFFFFE, int32 request id, byte total, byte number
-	 * (0 based), int16 size, payload.
-	 */
-	private static function SourceFragment( int $RequestID, int $Total, int $Number, string $Chunk ) : string
-	{
-		return "\xFE\xFF\xFF\xFF" . pack( 'V', $RequestID ) . pack( 'C', $Total ) . pack( 'C', $Number ) . pack( 'v', strlen( $Chunk ) ) . $Chunk;
-	}
-
-	/**
-	 * @return array<int, string>
-	 */
-	private static function SourceFragments( string $Payload, int $Count, int $RequestID = 0x11223344 ) : array
-	{
-		$Fragments = [];
-
-		foreach( self::Chunks( $Payload, $Count ) as $Number => $Chunk )
-		{
-			$Fragments[] = self::SourceFragment( $RequestID, $Count, $Number, $Chunk );
-		}
-
-		return $Fragments;
-	}
-
-	private static function RequireBz2( ) : void
-	{
-		if( !extension_loaded( 'bz2' ) )
-		{
-			self::markTestSkipped( 'The bz2 extension is required to build a compressed split packet.' );
-		}
-	}
-
-	/**
-	 * Compressed split reply as sent by Source 2006 era servers: 0xFFFFFFFE, int32
-	 * request id with bit 31 set, byte total, byte number, and on fragment 0 the
-	 * int32 decompressed size plus uint32 crc32. No int16 size field anywhere.
-	 *
-	 * @return array<int, string>
-	 */
-	private static function CompressedFragments( string $Payload, int $Count, int $RequestID = 0x80001650 ) : array
-	{
-		self::RequireBz2( );
-
-		$Compressed = bzcompress( $Payload );
-
-		if( !is_string( $Compressed ) )
-		{
-			self::fail( 'bzcompress( ) failed with error ' . var_export( $Compressed, true ) );
-		}
-
-		$Fragments = [];
-
-		foreach( self::Chunks( $Compressed, $Count ) as $Number => $Chunk )
-		{
-			$Fragment = "\xFE\xFF\xFF\xFF" . pack( 'V', $RequestID ) . pack( 'C', $Count ) . pack( 'C', $Number );
-
-			if( $Number === 0 )
-			{
-				$Fragment .= pack( 'V', strlen( $Payload ) ) . pack( 'V', crc32( $Payload ) );
-			}
-
-			$Fragments[] = $Fragment . $Chunk;
-		}
-
-		return $Fragments;
-	}
-
-	/**
-	 * GoldSource split header: 0xFFFFFFFE, int32 request id, one byte holding
-	 * ( number << 4 ) | count, payload. No size field.
-	 *
-	 * @return array<int, string>
-	 */
-	private static function GoldSourceFragments( string $Payload, int $Count, int $RequestID = 0x11223344 ) : array
-	{
-		$Fragments = [];
-
-		foreach( self::Chunks( $Payload, $Count ) as $Number => $Chunk )
-		{
-			$Fragments[] = "\xFE\xFF\xFF\xFF" . pack( 'V', $RequestID ) . pack( 'C', ( $Number << 4 ) | $Count ) . $Chunk;
-		}
-
-		return $Fragments;
+		return Packets::A2SReply( SourceQuery::S2A_RULES, Packets::RulesPayload( $Rules ) );
 	}
 }

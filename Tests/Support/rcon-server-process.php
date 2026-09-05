@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Scripted Source RCON TCP server, meant to be launched as a CHILD PROCESS by
  * {@see \xPaw\SourceQuery\Tests\Support\FakeRconServer}. Never require( ) this file.
  *
- * Usage: php rcon-server-process.php <script.json> <requests.jsonl> <port.txt> [lifetimeSeconds]
+ * Usage: php rcon-server-process.php <script.json> <requests.jsonl> <port.txt>
  *
  * It binds tcp://127.0.0.1:0, reports the chosen port on stdout and in
  * <port.txt>, accepts a single connection, then loops: read one framed request,
@@ -14,13 +14,8 @@ declare(strict_types=1);
 
 namespace xPaw\SourceQuery\Tests\Support;
 
-// Safety net: this file is a script, not a library.
-$Argv = $_SERVER[ 'argv' ] ?? null;
-
-if( !is_array( $Argv ) || !isset( $Argv[ 0 ] ) || !is_string( $Argv[ 0 ] ) || realpath( $Argv[ 0 ] ) !== realpath( __FILE__ ) )
-{
-	return;
-}
+/** The child gives up on an idle test rather than outliving the suite. */
+const Lifetime = 20.0;
 
 /**
  * @param array<mixed> $Values
@@ -49,22 +44,7 @@ function SpecInt( array $Spec, string $Key ) : ?int
 {
 	$Value = $Spec[ $Key ] ?? null;
 
-	if( is_int( $Value ) )
-	{
-		return $Value;
-	}
-
-	if( is_float( $Value ) )
-	{
-		return (int)$Value;
-	}
-
-	if( is_string( $Value ) && preg_match( '/^-?\d+$/', $Value ) === 1 )
-	{
-		return (int)$Value;
-	}
-
-	return null;
+	return is_int( $Value ) ? $Value : null;
 }
 
 /**
@@ -81,81 +61,6 @@ function Bail( string $Message ) : never
 
 	exit( 1 );
 }
-
-$ScriptFile   = ArgAsString( $Argv, 1 );
-$RequestsFile = ArgAsString( $Argv, 2 );
-$PortFile     = ArgAsString( $Argv, 3 );
-$Lifetime     = (float)ArgAsString( $Argv, 4 );
-
-if( $Lifetime <= 0.0 )
-{
-	$Lifetime = 20.0;
-}
-
-$ScriptRaw = @file_get_contents( $ScriptFile );
-
-if( $ScriptRaw === false )
-{
-	Bail( 'could not read script file "' . $ScriptFile . '"' );
-}
-
-$ScriptData = json_decode( $ScriptRaw, true );
-
-if( !is_array( $ScriptData ) )
-{
-	Bail( 'script file is not valid JSON' );
-}
-
-$Steps = $ScriptData[ 'steps' ] ?? [];
-$Steps = is_array( $Steps ) ? array_values( $Steps ) : [];
-
-$Fallback = $ScriptData[ 'fallback' ] ?? null;
-$Fallback = is_array( $Fallback ) ? $Fallback : null;
-
-$Greeting = $ScriptData[ 'greeting' ] ?? null;
-$Greeting = is_array( $Greeting ) ? $Greeting : null;
-
-// A request whose type has an entry here is answered from it and does not
-// consume a positional step.
-$ByType = $ScriptData[ 'byType' ] ?? null;
-$ByType = is_array( $ByType ) ? $ByType : [];
-
-$ErrNo  = 0;
-$ErrStr = '';
-$Server = @stream_socket_server( 'tcp://127.0.0.1:0', $ErrNo, $ErrStr );
-
-if( $Server === false )
-{
-	Bail( 'could not bind tcp://127.0.0.1:0 - ' . $ErrStr );
-}
-
-$Name = stream_socket_get_name( $Server, false );
-
-if( $Name === false )
-{
-	Bail( 'could not resolve the bound address' );
-}
-
-$Colon = strrpos( $Name, ':' );
-$Port  = $Colon === false ? 0 : (int)substr( $Name, $Colon + 1 );
-
-echo $Port, PHP_EOL;
-
-if( $PortFile !== '' )
-{
-	file_put_contents( $PortFile, $Port . PHP_EOL );
-}
-
-$Deadline = microtime( true ) + $Lifetime;
-$Client   = @stream_socket_accept( $Server, $Lifetime );
-
-if( $Client === false )
-{
-	Bail( 'no client connected within ' . $Lifetime . 's' );
-}
-
-stream_set_blocking( $Client, true );
-stream_set_timeout( $Client, 5 );
 
 /**
  * Reads exactly $Length bytes, or null on EOF / timeout.
@@ -278,29 +183,76 @@ function EmitAll( $Client, array $Responses, int $RequestID ) : bool
 	return true;
 }
 
-/**
- * @param array<mixed> $Step
- * @return array<mixed>
- */
-function StepResponses( array $Step ) : array
+$Argv = $_SERVER[ 'argv' ] ?? null;
+$Argv = is_array( $Argv ) ? $Argv : [];
+
+$ScriptFile   = ArgAsString( $Argv, 1 );
+$RequestsFile = ArgAsString( $Argv, 2 );
+$PortFile     = ArgAsString( $Argv, 3 );
+
+$ScriptRaw = @file_get_contents( $ScriptFile );
+
+if( $ScriptRaw === false )
 {
-	$Responses = $Step[ 'responses' ] ?? null;
-
-	if( is_array( $Responses ) )
-	{
-		return $Responses;
-	}
-
-	return $Step;
+	Bail( 'could not read script file "' . $ScriptFile . '"' );
 }
 
-$Open = true;
+$ScriptData = json_decode( $ScriptRaw, true );
 
-if( $Greeting !== null )
+if( !is_array( $ScriptData ) )
 {
-	$Open = EmitAll( $Client, $Greeting, 0 );
+	Bail( 'script file is not valid JSON' );
 }
 
+$Steps = $ScriptData[ 'steps' ] ?? [];
+$Steps = is_array( $Steps ) ? array_values( $Steps ) : [];
+
+// A request whose type has an entry here is answered from it and does not
+// consume a positional step.
+$ByType = $ScriptData[ 'byType' ] ?? null;
+$ByType = is_array( $ByType ) ? $ByType : [];
+
+$Fallback = $ScriptData[ 'fallback' ] ?? null;
+$Fallback = is_array( $Fallback ) ? $Fallback : null;
+
+$ErrNo  = 0;
+$ErrStr = '';
+$Server = @stream_socket_server( 'tcp://127.0.0.1:0', $ErrNo, $ErrStr );
+
+if( $Server === false )
+{
+	Bail( 'could not bind tcp://127.0.0.1:0 - ' . $ErrStr );
+}
+
+$Name = stream_socket_get_name( $Server, false );
+
+if( $Name === false )
+{
+	Bail( 'could not resolve the bound address' );
+}
+
+$Colon = strrpos( $Name, ':' );
+$Port  = $Colon === false ? 0 : (int)substr( $Name, $Colon + 1 );
+
+echo $Port, PHP_EOL;
+
+if( $PortFile !== '' )
+{
+	file_put_contents( $PortFile, $Port . PHP_EOL );
+}
+
+$Deadline = microtime( true ) + Lifetime;
+$Client   = @stream_socket_accept( $Server, Lifetime );
+
+if( $Client === false )
+{
+	Bail( 'no client connected within ' . Lifetime . 's' );
+}
+
+stream_set_blocking( $Client, true );
+stream_set_timeout( $Client, 5 );
+
+$Open      = true;
 $StepIndex = 0;
 
 while( $Open && microtime( true ) < $Deadline )
@@ -378,7 +330,7 @@ while( $Open && microtime( true ) < $Deadline )
 
 	if( is_array( $TypeStep ) )
 	{
-		$Open = EmitAll( $Client, StepResponses( $TypeStep ), $RequestID );
+		$Open = EmitAll( $Client, $TypeStep, $RequestID );
 
 		continue;
 	}
@@ -388,11 +340,11 @@ while( $Open && microtime( true ) < $Deadline )
 
 	if( is_array( $Step ) )
 	{
-		$Open = EmitAll( $Client, StepResponses( $Step ), $RequestID );
+		$Open = EmitAll( $Client, $Step, $RequestID );
 	}
 	else if( $Fallback !== null )
 	{
-		$Open = EmitAll( $Client, StepResponses( $Fallback ), $RequestID );
+		$Open = EmitAll( $Client, $Fallback, $RequestID );
 	}
 }
 

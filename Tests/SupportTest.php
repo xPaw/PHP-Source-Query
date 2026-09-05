@@ -5,11 +5,10 @@ use xPaw\SourceQuery\Socket;
 use xPaw\SourceQuery\SourceQuery;
 use xPaw\SourceQuery\Tests\Support\FakeRconServer;
 use xPaw\SourceQuery\Tests\Support\FakeUdpServer;
-use xPaw\SourceQuery\Tests\Support\TestableSocket;
 
 /**
- * The shared infrastructure in Tests/Support: the fake servers and the socket
- * double behave the way the other test files rely on.
+ * The fake servers in Tests/Support: that a scripted RCON session reaches the
+ * library, and the failure modes the other files rely on to fail loudly.
  */
 class SupportTest extends \PHPUnit\Framework\TestCase
 {
@@ -25,75 +24,72 @@ class SupportTest extends \PHPUnit\Framework\TestCase
 		$this->RconServer = null;
 	}
 
-	public function testFakeUdpServerSinglePacket( ) : void
+	//
+	// FakeUdpServer
+	//
+
+	/**
+	 * Without Attach( ) the server learns the client from its first datagram, so a
+	 * request has to arrive before anything can be sent back.
+	 */
+	public function testQueueBeforeTheClientIsKnown( ) : void
 	{
 		$this->UdpServer = new FakeUdpServer( );
 
-		$Socket = new Socket( );
-		$Query  = new SourceQuery( $Socket );
-		$Query->Connect( $this->UdpServer->Host( ), $this->UdpServer->Port( ), 1 );
+		$this->expectException( \RuntimeException::class );
+		$this->expectExceptionMessage( 'no client attached' );
 
-		$this->UdpServer->Attach( $Socket );
-		$this->UdpServer->Queue( FakeUdpServer::A2SReply( SourceQuery::S2A_INFO_SRC, FakeUdpServer::InfoPayload( 'Single Datagram Server' ) ) );
-
-		$Info = $Query->GetInfo( );
-
-		self::assertSame( 'Single Datagram Server', $Info[ 'HostName' ] );
-		self::assertSame( 'de_dust2', $Info[ 'Map' ] );
-
-		$Requests = $this->UdpServer->WaitForRequests( 1 );
-
-		self::assertCount( 1, $Requests );
-		self::assertSame( "\xFF\xFF\xFF\xFF\x54Source Engine Query\x00", $Requests[ 0 ] );
-
-		$Query->Disconnect( );
+		$this->UdpServer->Queue( 'anything' );
 	}
 
-	public function testFakeUdpServerSplitPacket( ) : void
+	public function testAttachRequiresAnOpenSocket( ) : void
 	{
 		$this->UdpServer = new FakeUdpServer( );
 
-		$Socket = new Socket( );
-		$Query  = new SourceQuery( $Socket );
-		$Query->Connect( $this->UdpServer->Host( ), $this->UdpServer->Port( ), 1 );
+		$this->expectException( \RuntimeException::class );
+		$this->expectExceptionMessage( 'the socket is not open' );
 
-		$this->UdpServer->Attach( $Socket );
-
-		$Datagram  = FakeUdpServer::A2SReply( SourceQuery::S2A_INFO_SRC, FakeUdpServer::InfoPayload( 'Split Across Fragments' ) );
-		$Fragments = FakeUdpServer::SplitPackets( $Datagram, 24 );
-
-		self::assertGreaterThan( 1, count( $Fragments ) );
-
-		$this->UdpServer->QueueMany( $Fragments );
-
-		$Info = $Query->GetInfo( );
-
-		self::assertSame( 'Split Across Fragments', $Info[ 'HostName' ] );
-
-		$Query->Disconnect( );
+		$this->UdpServer->Attach( new Socket( ) );
 	}
 
-	public function testFakeRconServer( ) : void
+	public function testCloseIsIdempotentAndQueueingAfterwardsFails( ) : void
+	{
+		$this->UdpServer = new FakeUdpServer( );
+		$this->UdpServer->Close( );
+		$this->UdpServer->Close( );
+
+		$this->expectException( \RuntimeException::class );
+		$this->expectExceptionMessage( 'server is closed' );
+
+		$this->UdpServer->Queue( 'anything' );
+	}
+
+	public function testWaitForRequestsGivesUp( ) : void
+	{
+		$this->UdpServer = new FakeUdpServer( );
+
+		self::assertSame( [], $this->UdpServer->WaitForRequests( 1, 0.05 ) );
+	}
+
+	//
+	// FakeRconServer
+	//
+
+	/** A scripted session, with the fallback answering the sentinel request. */
+	public function testScriptedRconSessionReachesTheLibrary( ) : void
 	{
 		$this->RconServer = new FakeRconServer( );
 
 		$Port = $this->RconServer->Start(
 		[
-			// Step 0: the SERVERDATA_AUTH request.
-			[
-				[ 'type' => SourceQuery::SERVERDATA_RESPONSE_VALUE, 'id' => 'same' ],
-				[ 'type' => SourceQuery::SERVERDATA_AUTH_RESPONSE, 'id' => 'same' ],
-			],
-			// Step 1: the SERVERDATA_EXECCOMMAND request.
+			FakeRconServer::AuthOk( ),
 			[
 				[ 'type' => SourceQuery::SERVERDATA_RESPONSE_VALUE, 'id' => 'same', 'body' => 'hostname: Scripted' ],
 			],
-		],
+		], null,
 		[
 			[ 'type' => SourceQuery::SERVERDATA_RESPONSE_VALUE, 'id' => 'same', 'body' => 'Unknown request' ],
 		] );
-
-		self::assertGreaterThan( 0, $Port );
 
 		$Query = new SourceQuery( );
 		$Query->Connect( '127.0.0.1', $Port, 2 );
@@ -109,46 +105,27 @@ class SupportTest extends \PHPUnit\Framework\TestCase
 		self::assertSame( SourceQuery::SERVERDATA_EXECCOMMAND, $Requests[ 1 ][ 'type' ] );
 		self::assertSame( 'status', $Requests[ 1 ][ 'body' ] );
 		self::assertSame( SourceQuery::SERVERDATA_REQUESTVALUE, $Requests[ 2 ][ 'type' ] ); // Answered by the fallback
-
-		$Query->Disconnect( );
 	}
 
-	public function testTestableSocketRecordsWrites( ) : void
+	public function testStartTwiceIsRejected( ) : void
 	{
-		$Socket = new TestableSocket( );
-		$Query  = new SourceQuery( $Socket );
-		$Query->Connect( '', 2 );
+		$this->RconServer = new FakeRconServer( );
+		$this->RconServer->Start( [] );
 
-		$Socket->Queue( "\xFF\xFF\xFF\xFF\x6A\x00" );
+		$this->expectException( \RuntimeException::class );
+		$this->expectExceptionMessage( 'already started' );
 
-		self::assertTrue( $Query->Ping( ) );
-
-		self::assertSame( [ [ 'Header' => SourceQuery::A2A_PING, 'String' => '' ] ], $Socket->Written );
-		self::assertSame( [ 'Header' => SourceQuery::A2A_PING, 'String' => '' ], $Socket->LastWritten( ) );
-		self::assertTrue( $Socket->IsQueueEmpty( ) );
-
-		$Query->Disconnect( );
+		$this->RconServer->Start( [] );
 	}
 
-	public function testTestableSocketEmptyQueueBehavesLikeTimeout( ) : void
+	public function testStopTwice( ) : void
 	{
-		$Socket = new TestableSocket( );
-		$Socket->ThrowOnEmptyQueue = false;
+		$Server = new FakeRconServer( );
+		$Server->Start( [] );
 
-		$Query = new SourceQuery( $Socket );
-		$Query->Connect( '', 2 );
+		$Server->Stop( );
+		$Server->Stop( );
 
-		try
-		{
-			$Query->GetInfo( );
-
-			self::fail( 'Expected InvalidPacketException' );
-		}
-		catch( xPaw\SourceQuery\Exception\InvalidPacketException $Exception )
-		{
-			self::assertSame( xPaw\SourceQuery\Exception\InvalidPacketException::BUFFER_EMPTY, $Exception->getCode( ) );
-		}
-
-		$Query->Disconnect( );
+		self::assertSame( 0, $Server->Port( ) );
 	}
 }

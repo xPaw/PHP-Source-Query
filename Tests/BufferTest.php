@@ -4,45 +4,100 @@ declare(strict_types=1);
 use PHPUnit\Framework\Attributes\Group;
 use xPaw\SourceQuery\Buffer;
 use xPaw\SourceQuery\Exception\InvalidPacketException;
-use xPaw\SourceQuery\SourceQuery;
-use xPaw\SourceQuery\Tests\Support\TestableSocket;
 
 /**
- * Buffer readers, and the places where SourceQuery reads fixed width fields
- * without checking that anything was read.
- *
- * The known-bug group asserts the correct behaviour and fails until it is fixed.
+ * The Buffer readers on their own: byte order, signedness, and what each of
+ * them does at the end of the data.
  */
 class BufferTest extends \PHPUnit\Framework\TestCase
 {
-	/** S2C_CHALLENGE with only 2 of the 4 challenge bytes. */
-	private const ShortChallenge = "\xFF\xFF\xFF\xFF\x41\x11\x11";
-
-	private TestableSocket $Socket;
-	private SourceQuery $SourceQuery;
-
-	public function setUp( ) : void
-	{
-		$this->Socket = new TestableSocket( );
-		$this->Socket->ThrowOnEmptyQueue = false;
-
-		$this->SourceQuery = new SourceQuery( $this->Socket );
-		$this->SourceQuery->Connect( '', 2 );
-	}
-
-	public function tearDown( ) : void
-	{
-		$this->SourceQuery->Disconnect( );
-
-		unset( $this->Socket, $this->SourceQuery );
-	}
-
-	// Baseline: the wire format is little endian regardless of the host.
-
-	public function testReadInt32IsLittleEndian( ) : void
+	private static function Buffer( string $Data ) : Buffer
 	{
 		$Buffer = new Buffer( );
-		$Buffer->Set( "\xFE\xFF\xFF\xFF\x0A\x00\x00\x00\x00\x00\x00\x80" );
+		$Buffer->Set( $Data );
+
+		return $Buffer;
+	}
+
+	//
+	// Read
+	//
+
+	public function testReadWithoutALengthTakesEverythingThatIsLeft( ) : void
+	{
+		$Buffer = self::Buffer( 'abcdef' );
+
+		self::assertSame( 'ab', $Buffer->Read( 2 ) );
+		self::assertSame( 'cdef', $Buffer->Read( ) );
+		self::assertSame( 0, $Buffer->Remaining( ) );
+		self::assertSame( '', $Buffer->Read( ) );
+	}
+
+	public function testReadOfZeroBytesConsumesNothing( ) : void
+	{
+		$Buffer = self::Buffer( 'abcdef' );
+
+		self::assertSame( '', $Buffer->Read( 0 ) );
+		self::assertSame( 6, $Buffer->Remaining( ) );
+	}
+
+	/** -1 is the "read the rest" length, and it stays valid on an empty buffer. */
+	public function testReadOfMinusOneOnAnExhaustedBuffer( ) : void
+	{
+		$Buffer = self::Buffer( '' );
+
+		self::assertSame( '', $Buffer->Read( -1 ) );
+		self::assertSame( 0, $Buffer->Remaining( ) );
+	}
+
+	public function testReadBeyondTheEndConsumesNothing( ) : void
+	{
+		$Buffer = self::Buffer( 'abc' );
+
+		self::assertSame( '', $Buffer->Read( 4 ) );
+		self::assertSame( 3, $Buffer->Remaining( ) );
+		self::assertSame( 'abc', $Buffer->Read( 3 ) );
+	}
+
+	//
+	// ReadByte
+	//
+
+	public function testReadByteReturnsTheAsciiValue( ) : void
+	{
+		$Buffer = self::Buffer( "\x00\x7F\x80\xFF" );
+
+		self::assertSame( 0, $Buffer->ReadByte( ) );
+		self::assertSame( 127, $Buffer->ReadByte( ) );
+		self::assertSame( 128, $Buffer->ReadByte( ) );
+		self::assertSame( 255, $Buffer->ReadByte( ) );
+	}
+
+	/**
+	 * ReadByte reports 0 past the end instead of throwing, so a reply that stops
+	 * early still produces a value for the missing field.
+	 */
+	public function testReadByteAtTheEndIsZero( ) : void
+	{
+		$Buffer = self::Buffer( '' );
+
+		self::assertSame( 0, $Buffer->ReadByte( ) );
+		self::assertSame( 0, $Buffer->Remaining( ) );
+	}
+
+	//
+	// Fixed width readers, the wire format is little endian regardless of the host
+	//
+
+	public function testReadInt16IsUnsigned( ) : void
+	{
+		self::assertSame( 65535, self::Buffer( "\xFF\xFF" )->ReadInt16( ) );
+		self::assertSame( 40000, self::Buffer( pack( 'v', 40000 ) )->ReadInt16( ) );
+	}
+
+	public function testReadInt32IsSignedLittleEndian( ) : void
+	{
+		$Buffer = self::Buffer( "\xFE\xFF\xFF\xFF\x0A\x00\x00\x00\x00\x00\x00\x80" );
 
 		self::assertSame( -2, $Buffer->ReadInt32( ) );
 		self::assertSame( 10, $Buffer->ReadInt32( ) );
@@ -50,10 +105,17 @@ class BufferTest extends \PHPUnit\Framework\TestCase
 		self::assertSame( 0, $Buffer->Remaining( ) );
 	}
 
+	public function testReadUInt32IsUnsignedLittleEndian( ) : void
+	{
+		$Buffer = self::Buffer( "\xFE\xFF\xFF\xFF\xFF\xFF\xFF\xFF" );
+
+		self::assertSame( 4294967294, $Buffer->ReadUInt32( ) );
+		self::assertSame( 4294967295, $Buffer->ReadUInt32( ) );
+	}
+
 	public function testReadFloat32IsLittleEndian( ) : void
 	{
-		$Buffer = new Buffer( );
-		$Buffer->Set( "\x00\x00\x80\x3F\x00\x00\x00\x00\x00\x00\x80\xBF" );
+		$Buffer = self::Buffer( "\x00\x00\x80\x3F\x00\x00\x00\x00\x00\x00\x80\xBF" );
 
 		self::assertSame( 1.0, $Buffer->ReadFloat32( ) );
 		self::assertSame( 0.0, $Buffer->ReadFloat32( ) );
@@ -61,21 +123,101 @@ class BufferTest extends \PHPUnit\Framework\TestCase
 		self::assertSame( 0, $Buffer->Remaining( ) );
 	}
 
-	public function testReadUInt32IsLittleEndian( ) : void
+	public function testReadFloat32DecodesSpecialValues( ) : void
 	{
-		$Buffer = new Buffer( );
-		$Buffer->Set( "\xFE\xFF\xFF\xFF" );
-
-		self::assertSame( 4294967294, $Buffer->ReadUInt32( ) );
+		self::assertNan( self::Buffer( "\x00\x00\xC0\x7F" )->ReadFloat32( ) );
+		self::assertSame( INF, self::Buffer( "\x00\x00\x80\x7F" )->ReadFloat32( ) );
+		self::assertSame( -INF, self::Buffer( "\x00\x00\x80\xFF" )->ReadFloat32( ) );
 	}
+
+	public function testReadInt16WithoutEnoughData( ) : void
+	{
+		$this->expectException( InvalidPacketException::class );
+		$this->expectExceptionCode( InvalidPacketException::BUFFER_EMPTY );
+		$this->expectExceptionMessage( 'Not enough data to unpack.' );
+
+		self::Buffer( "\x01" )->ReadInt16( );
+	}
+
+	public function testReadInt32WithoutEnoughData( ) : void
+	{
+		$this->expectException( InvalidPacketException::class );
+		$this->expectExceptionCode( InvalidPacketException::BUFFER_EMPTY );
+		$this->expectExceptionMessage( 'Not enough data to unpack.' );
+
+		self::Buffer( "\x01\x02\x03" )->ReadInt32( );
+	}
+
+	public function testReadUInt32WithoutEnoughData( ) : void
+	{
+		$this->expectException( InvalidPacketException::class );
+		$this->expectExceptionCode( InvalidPacketException::BUFFER_EMPTY );
+		$this->expectExceptionMessage( 'Not enough data to unpack.' );
+
+		self::Buffer( "\x01\x02\x03" )->ReadUInt32( );
+	}
+
+	public function testReadFloat32WithoutEnoughData( ) : void
+	{
+		$this->expectException( InvalidPacketException::class );
+		$this->expectExceptionCode( InvalidPacketException::BUFFER_EMPTY );
+		$this->expectExceptionMessage( 'Not enough data to unpack.' );
+
+		self::Buffer( "\x01\x02\x03" )->ReadFloat32( );
+	}
+
+	//
+	// ReadNullTermString
+	//
 
 	public function testReadNullTermStringConsumesTheTerminator( ) : void
 	{
-		$Buffer = new Buffer( );
-		$Buffer->Set( "ayy\x00lmao\x00" );
+		$Buffer = self::Buffer( "ayy\x00lmao\x00" );
 
 		self::assertSame( 'ayy', $Buffer->ReadNullTermString( ) );
 		self::assertSame( 'lmao', $Buffer->ReadNullTermString( ) );
+		self::assertSame( 0, $Buffer->Remaining( ) );
+	}
+
+	public function testReadNullTermStringOnAnEmptyString( ) : void
+	{
+		$Buffer = self::Buffer( "\0rest" );
+
+		self::assertSame( '', $Buffer->ReadNullTermString( ) );
+		self::assertSame( 4, $Buffer->Remaining( ) );
+	}
+
+	public function testReadNullTermStringAtTheEndOfTheBuffer( ) : void
+	{
+		$Buffer = self::Buffer( "done\0" );
+
+		self::assertSame( 'done', $Buffer->ReadNullTermString( ) );
+		self::assertSame( 0, $Buffer->Remaining( ) );
+		self::assertSame( '', $Buffer->ReadNullTermString( ) );
+		self::assertSame( 0, $Buffer->Remaining( ) );
+	}
+
+	//
+	// Set
+	//
+
+	public function testSetRewindsThePosition( ) : void
+	{
+		$Buffer = self::Buffer( 'abcdef' );
+
+		self::assertSame( 'abc', $Buffer->Read( 3 ) );
+
+		$Buffer->Set( 'xy' );
+
+		self::assertSame( 2, $Buffer->Remaining( ) );
+		self::assertSame( 'xy', $Buffer->Read( ) );
+	}
+
+	public function testSetToAnEmptyString( ) : void
+	{
+		$Buffer = self::Buffer( 'abcdef' );
+		$Buffer->Set( '' );
+
 		self::assertSame( 0, $Buffer->Remaining( ) );
 	}
 
@@ -88,103 +230,11 @@ class BufferTest extends \PHPUnit\Framework\TestCase
 	#[Group( 'known-bug' )]
 	public function testReadNullTermStringOnUnterminatedStringMustThrow( ) : void
 	{
-		$Buffer = new Buffer( );
-		$Buffer->Set( "AliceXYZ" );
+		$Buffer = self::Buffer( 'AliceXYZ' );
 
-		try
-		{
-			$String = $Buffer->ReadNullTermString( );
+		$this->expectException( InvalidPacketException::class );
+		$this->expectExceptionCode( InvalidPacketException::BUFFER_EMPTY );
 
-			self::fail( 'Expected InvalidPacketException, got ' . var_export( $String, true ) . ' with ' . $Buffer->Remaining( ) . ' bytes still unconsumed' );
-		}
-		catch( InvalidPacketException $Exception )
-		{
-			self::assertSame( InvalidPacketException::BUFFER_EMPTY, $Exception->getCode( ) );
-		}
-	}
-
-	/**
-	 * The same unterminated string through GetPlayers( ): the truncated player must
-	 * not come back with an empty name and Frags/Time read from its leftover bytes.
-	 */
-	#[Group( 'known-bug' )]
-	public function testTruncatedPlayerNameMustNotProduceGarbagePlayer( ) : void
-	{
-		$Payload =
-			"\xFF\xFF\xFF\xFF" . chr( SourceQuery::S2A_PLAYER ) . chr( 2 ) .
-			chr( 0 ) . "Bob\x00" . pack( 'V', 5 ) . pack( 'g', 4.0 ) .
-			chr( 0 ) . 'AliceXYZ'; // No null terminator, the rest of the reply was lost.
-
-		$this->Socket->Queue( "\xFF\xFF\xFF\xFF\x41\x11\x11\x11\x11" );
-		$this->Socket->Queue( $Payload );
-
-		try
-		{
-			$Players = $this->SourceQuery->GetPlayers( );
-
-			self::fail( 'Expected InvalidPacketException for an unterminated player name, got ' . json_encode( $Players ) );
-		}
-		catch( InvalidPacketException $Exception )
-		{
-			self::assertNotSame( '', $Exception->getMessage( ) );
-		}
-	}
-
-	/**
-	 * An S2C_CHALLENGE with fewer than 4 challenge bytes must make GetInfo( ) fail,
-	 * not store the short challenge as '' and repeat the request with it.
-	 */
-	#[Group( 'known-bug' )]
-	public function testShortChallengeInGetInfoMustThrow( ) : void
-	{
-		$this->Socket->Queue( self::ShortChallenge );
-		$this->Socket->Queue( "\xFF\xFF\xFF\xFF" . chr( SourceQuery::S2A_INFO_SRC ) . self::InfoPayload( ) );
-
-		try
-		{
-			$Info = $this->SourceQuery->GetInfo( );
-
-			self::fail( 'Expected InvalidPacketException for a 2 byte challenge, got HostName ' . var_export( $Info[ 'HostName' ], true ) . ' after ' . count( $this->Socket->Written ) . ' writes' );
-		}
-		catch( InvalidPacketException $Exception )
-		{
-			// The request must not be repeated with an empty challenge.
-			self::assertCount( 1, $this->Socket->Written );
-		}
-	}
-
-	/**
-	 * The same short challenge through the GetChallenge( ) path used by
-	 * GetPlayers( ): A2S_PLAYER must not be sent with an empty challenge.
-	 */
-	#[Group( 'known-bug' )]
-	public function testShortChallengeInGetPlayersMustThrow( ) : void
-	{
-		$this->Socket->Queue( self::ShortChallenge );
-		$this->Socket->Queue(
-			"\xFF\xFF\xFF\xFF" . chr( SourceQuery::S2A_PLAYER ) . chr( 1 ) .
-			chr( 0 ) . "Bob\x00" . pack( 'V', 5 ) . pack( 'g', 4.0 )
-		);
-
-		try
-		{
-			$Players = $this->SourceQuery->GetPlayers( );
-
-			self::fail( 'Expected InvalidPacketException for a 2 byte challenge, got ' . json_encode( $Players ) );
-		}
-		catch( InvalidPacketException $Exception )
-		{
-			// The A2S_PLAYER request must not be sent with an empty challenge.
-			self::assertCount( 1, $this->Socket->Written );
-		}
-	}
-
-	/** A complete S2A_INFO_SRC body without any extra data flags. */
-	private static function InfoPayload( ) : string
-	{
-		return
-			chr( 17 ) . "Fake Server\x00" . "de_dust2\x00" . "cstrike\x00" . "Counter-Strike\x00" .
-			pack( 'v', 440 ) . chr( 4 ) . chr( 32 ) . chr( 0 ) . 'd' . 'l' . chr( 0 ) . chr( 1 ) .
-			"1.0.0.0\x00";
+		$Buffer->ReadNullTermString( );
 	}
 }

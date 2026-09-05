@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" colors="true" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/12.0/phpunit.xsd" cacheDirectory=".phpunit.cache" bootstrap="bootstrap.php">
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" colors="true" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/12.0/phpunit.xsd" cacheDirectory=".phpunit.cache" bootstrap="bootstrap.php" failOnWarning="true" failOnNotice="true" failOnDeprecation="true">
   <testsuites>
     <testsuite name="Tests">
       <file>./Tests.php</file>
@@ -7,6 +7,7 @@
     </testsuite>
   </testsuites>
   <groups>
+    <!-- The known-bug group asserts the behaviour the library should have, so it fails until the bug is fixed. Run that group on its own to see them. -->
     <exclude>
       <group>known-bug</group>
     </exclude>

@@ -11,10 +11,10 @@ declare(strict_types=1);
  *     $Socket = new \xPaw\SourceQuery\Socket( );
  *     $Query  = new \xPaw\SourceQuery\SourceQuery( $Socket );
  *     $Query->Connect( $Server->Host( ), $Server->Port( ), 1 );
- *     $Server->Attach( $Socket );                       // learns the client port
- *     $Server->Queue( FakeUdpServer::A2SReply( ... ) ); // lands in the client's rx buffer
+ *     $Server->Attach( $Socket );                  // learns the client port
+ *     $Server->Queue( Packets::A2SReply( ... ) );  // lands in the client's rx buffer
  *     $Info = $Query->GetInfo( );
- *     $Requests = $Server->Requests( );                 // what the library wrote
+ *     $Requests = $Server->WaitForRequests( 1 );   // what the library wrote
  */
 
 namespace xPaw\SourceQuery\Tests\Support;
@@ -141,35 +141,9 @@ class FakeUdpServer
 	}
 
 	/**
-	 * Sends several datagrams in order.
-	 *
-	 * @param array<int, string> $Datagrams
-	 */
-	public function QueueMany( array $Datagrams ) : void
-	{
-		foreach( $Datagrams as $Datagram )
-		{
-			$this->Queue( $Datagram );
-		}
-	}
-
-	/**
-	 * Every datagram the client has sent so far, non blocking and accumulating
-	 * across calls.
-	 *
-	 * @return array<int, string> Raw datagrams, oldest first.
-	 */
-	public function Requests( ) : array
-	{
-		$this->Drain( );
-
-		return $this->Received;
-	}
-
-	/**
 	 * Blocks until at least $Count datagrams have been received, or the timeout expires.
 	 *
-	 * @return array<int, string> Everything received so far.
+	 * @return array<int, string> Everything received so far, oldest first.
 	 */
 	public function WaitForRequests( int $Count, float $TimeoutSeconds = 2.0 ) : array
 	{
@@ -198,104 +172,6 @@ class FakeUdpServer
 		}
 
 		$this->Server = null;
-	}
-
-	/**
-	 * A single A2S datagram: 0xFFFFFFFF, the type byte, then the payload.
-	 *
-	 * @param int $Type Response type byte, e.g. SourceQuery::S2A_INFO_SRC.
-	 */
-	public static function A2SReply( int $Type, string $Payload = '' ) : string
-	{
-		return "\xFF\xFF\xFF\xFF" . chr( $Type & 0xFF ) . $Payload;
-	}
-
-	/**
-	 * An S2A_INFO_SRC (0x49) body without the header and type byte, to be wrapped
-	 * with A2SReply( ).
-	 */
-	public static function InfoPayload( string $HostName = 'Fake Server', int $AppID = 440 ) : string
-	{
-		return chr( 17 )                    // Protocol
-			. $HostName . "\0"              // HostName
-			. "de_dust2\0"                  // Map
-			. "cstrike\0"                   // ModDir
-			. "Counter-Strike\0"            // ModDesc
-			. pack( 'v', $AppID )           // AppID
-			. chr( 4 )                      // Players
-			. chr( 32 )                     // MaxPlayers
-			. chr( 0 )                      // Bots
-			. 'd'                           // Dedicated
-			. 'l'                           // Os
-			. chr( 0 )                      // Password
-			. chr( 1 )                      // Secure
-			. "1.0.0.0\0";                  // Version
-	}
-
-	/**
-	 * Splits a complete datagram into Source engine fragments: FE FF FF FF, int32
-	 * request id, byte total, byte number (0 based), int16 size, fragment bytes.
-	 *
-	 * @return array<int, string> Fragments in ascending packet-number order.
-	 */
-	public static function SplitPackets( string $Payload, int $FragmentSize = 32, int $RequestID = 0x11223344 ) : array
-	{
-		$Chunks = self::Chunk( $Payload, $FragmentSize );
-		$Total  = count( $Chunks );
-		$Result = [];
-
-		foreach( $Chunks as $Number => $Chunk )
-		{
-			$Result[] = "\xFE\xFF\xFF\xFF"
-				. pack( 'V', $RequestID )
-				. chr( $Total & 0xFF )
-				. chr( $Number & 0xFF )
-				. pack( 'v', strlen( $Chunk ) )
-				. $Chunk;
-		}
-
-		return $Result;
-	}
-
-	/**
-	 * GoldSource fragments: FE FF FF FF, int32 request id, one byte holding
-	 * ( number << 4 ) | total, then the fragment bytes.
-	 *
-	 * @return array<int, string> Fragments in ascending packet-number order.
-	 */
-	public static function SplitPacketsGoldSource( string $Payload, int $FragmentSize = 32, int $RequestID = 0x11223344 ) : array
-	{
-		$Chunks = self::Chunk( $Payload, $FragmentSize );
-		$Total  = count( $Chunks );
-		$Result = [];
-
-		foreach( $Chunks as $Number => $Chunk )
-		{
-			$Result[] = "\xFE\xFF\xFF\xFF"
-				. pack( 'V', $RequestID )
-				. chr( ( ( $Number << 4 ) & 0xF0 ) | ( $Total & 0x0F ) )
-				. $Chunk;
-		}
-
-		return $Result;
-	}
-
-	/**
-	 * @return array<int, string>
-	 */
-	private static function Chunk( string $Payload, int $FragmentSize ) : array
-	{
-		if( $FragmentSize < 1 )
-		{
-			throw new \InvalidArgumentException( 'FragmentSize must be at least 1.' );
-		}
-
-		if( $Payload === '' )
-		{
-			return [ '' ];
-		}
-
-		return str_split( $Payload, $FragmentSize );
 	}
 
 	private function Drain( ) : void

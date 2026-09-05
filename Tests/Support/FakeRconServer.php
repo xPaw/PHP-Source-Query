@@ -13,7 +13,7 @@ declare(strict_types=1);
  *     $Server = new FakeRconServer( );
  *     $Port   = $Server->Start(
  *     [
- *         [ [ 'type' => 2, 'id' => 'same' ] ],                          // step 0: the AUTH request
+ *         FakeRconServer::AuthOk( ),                                    // step 0: the AUTH request
  *         [ [ 'type' => 0, 'id' => 'same', 'body' => 'hello world' ] ], // step 1: the first command
  *     ] );
  *
@@ -26,6 +26,8 @@ declare(strict_types=1);
  */
 
 namespace xPaw\SourceQuery\Tests\Support;
+
+use xPaw\SourceQuery\SourceQuery;
 
 class FakeRconServer
 {
@@ -45,20 +47,54 @@ class FakeRconServer
 	}
 
 	/**
+	 * The two responses a real engine sends for a successful SERVERDATA_AUTH: an
+	 * empty SERVERDATA_RESPONSE_VALUE, then SERVERDATA_AUTH_RESPONSE.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	public static function AuthOk( ) : array
+	{
+		return
+		[
+			[ 'type' => SourceQuery::SERVERDATA_RESPONSE_VALUE, 'id' => 'same' ],
+			[ 'type' => SourceQuery::SERVERDATA_AUTH_RESPONSE, 'id' => 'same' ],
+		];
+	}
+
+	/**
+	 * What the engine sends for a wrong password: an empty RESPONSE_VALUE, then an
+	 * AUTH_RESPONSE carrying request id -1.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	public static function AuthFail( ) : array
+	{
+		return
+		[
+			[ 'type' => SourceQuery::SERVERDATA_RESPONSE_VALUE, 'id' => 'same' ],
+			[ 'type' => SourceQuery::SERVERDATA_AUTH_RESPONSE, 'id' => -1 ],
+		];
+	}
+
+	/**
 	 * Boots the child process and waits until it reports its listening port.
 	 *
-	 * @param array<int, array<int, array<string, mixed>>> $Script   One entry per received request; each entry is a list of response specs.
-	 * @param ?array<int, array<string, mixed>>            $Fallback Responses used for any request beyond the end of $Script.
-	 * @param ?array<int, array<string, mixed>>            $Greeting Responses written immediately after the client connects, before any request.
-	 * @param ?array<int, array<int, array<string, mixed>>> $ByType  Responses keyed by request type; a matching request is answered from here and does not consume a positional step.
+	 * @param array<int, array<int, array<string, mixed>>>  $Script   One entry per received request; each entry is a list of response specs.
+	 * @param ?array<int, array<int, array<string, mixed>>> $ByType   Responses keyed by request type; a matching request is answered from here and does not consume a positional step. Defaults to the engine's answer to the sentinel that ends a multi-packet response.
+	 * @param ?array<int, array<string, mixed>>             $Fallback Responses used for any request beyond the end of $Script.
 	 *
 	 * @return int The TCP port the fake server listens on.
 	 */
-	public function Start( array $Script, ?array $Fallback = null, ?array $Greeting = null, float $Lifetime = 20.0, ?array $ByType = null ) : int
+	public function Start( array $Script, ?array $ByType = null, ?array $Fallback = null ) : int
 	{
 		if( $this->Process !== null )
 		{
 			throw new \RuntimeException( 'FakeRconServer: already started.' );
+		}
+
+		if( $ByType === null && $Fallback === null )
+		{
+			$ByType = [ SourceQuery::SERVERDATA_REQUESTVALUE => self::SentinelReply( ) ];
 		}
 
 		$Directory = sys_get_temp_dir( ) . DIRECTORY_SEPARATOR . 'php-source-query-rcon-' . bin2hex( random_bytes( 8 ) );
@@ -81,9 +117,8 @@ class FakeRconServer
 		$Json = json_encode(
 		[
 			'steps'    => $Script,
-			'fallback' => $Fallback,
-			'greeting' => $Greeting,
 			'byType'   => $ByType,
+			'fallback' => $Fallback,
 		] );
 
 		if( $Json === false )
@@ -105,11 +140,11 @@ class FakeRconServer
 		$Process = proc_open(
 		[
 			PHP_BINARY,
+			'-n',
 			__DIR__ . DIRECTORY_SEPARATOR . 'rcon-server-process.php',
 			$ScriptFile,
 			$RequestsFile,
 			$PortFile,
-			(string)$Lifetime,
 		], $Descriptors, $Pipes );
 
 		if( $Process === false )
@@ -224,19 +259,6 @@ class FakeRconServer
 		return $Requests;
 	}
 
-	/** Whatever the child wrote to stderr. */
-	public function StdErr( ) : string
-	{
-		if( $this->Directory === '' )
-		{
-			return '';
-		}
-
-		$Contents = @file_get_contents( $this->Directory . DIRECTORY_SEPARATOR . 'stderr.txt' );
-
-		return is_string( $Contents ) ? $Contents : '';
-	}
-
 	/** Terminates the child and removes its temporary directory, twice is fine. */
 	public function Stop( ) : void
 	{
@@ -287,6 +309,22 @@ class FakeRconServer
 		$Packet = pack( 'VV', $Id, $Type ) . $Body . "\x00\x00";
 
 		return pack( 'V', strlen( $Packet ) ) . $Packet;
+	}
+
+	/**
+	 * What the engine sends for the empty SERVERDATA_REQUESTVALUE that marks the
+	 * end of a multi-packet response: an empty RESPONSE_VALUE, then one whose body
+	 * is 00 01 00 00 00 00.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function SentinelReply( ) : array
+	{
+		return
+		[
+			[ 'type' => SourceQuery::SERVERDATA_RESPONSE_VALUE, 'id' => 'same' ],
+			[ 'type' => SourceQuery::SERVERDATA_RESPONSE_VALUE, 'id' => 'same', 'bodyHex' => '000100000000', 'raw' => true ],
+		];
 	}
 
 	/**
