@@ -218,7 +218,6 @@ class SplitPacketTest extends \PHPUnit\Framework\TestCase
 	 * request id, byte total, byte number, payload. Reading a size field there eats
 	 * the first two bytes of every fragment.
 	 */
-	#[Group( 'known-bug' )]
 	public function testSplitPacketWithoutSizeFieldIsReassembled( ) : void
 	{
 		$Rules = self::Rules( 12 );

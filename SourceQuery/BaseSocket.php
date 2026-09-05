@@ -92,19 +92,12 @@ abstract class BaseSocket
 						$PacketCount          = $Buffer->ReadByte( );
 						$PacketNumber         = $Buffer->ReadByte( ) + 1;
 
-						if( $IsCompressed )
+						// Only the first packet carries the decompressed size and checksum
+						if( $IsCompressed && $PacketNumber === 1 )
 						{
-							// Only the first packet carries the decompressed size and checksum
-							if( $PacketNumber === 1 )
-							{
-								$Buffer->ReadInt32( ); // Decompressed size
+							$Buffer->ReadInt32( ); // Decompressed size
 
-								$PacketChecksum = $Buffer->ReadUInt32( );
-							}
-						}
-						else
-						{
-							$Buffer->ReadInt16( ); // Split size
+							$PacketChecksum = $Buffer->ReadUInt32( );
 						}
 
 						break;
@@ -128,6 +121,18 @@ abstract class BaseSocket
 
 			// UDP Packets can arrive in wrong order
 			ksort($Packets, SORT_NUMERIC);
+
+			// Since the Orange Box the split header also carries the uncompressed packet size (2 bytes), Source 2006 servers omit it.
+			// The first packet's payload starts with the 0xFFFFFFFF header, so anything else there is the size field.
+			if( $this->Engine === SourceQuery::SOURCE && !$IsCompressed && !str_starts_with( $Packets[ 1 ], "\xFF\xFF\xFF\xFF" ) )
+			{
+				foreach( $Packets as &$Packet )
+				{
+					$Packet = substr( $Packet, 2 );
+				}
+
+				unset( $Packet );
+			}
 
 			$Data = implode( $Packets );
 
