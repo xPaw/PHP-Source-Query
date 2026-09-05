@@ -154,7 +154,6 @@ class SourceRconTest extends \PHPUnit\Framework\TestCase
 	 * segments. A short read of it must be reassembled instead of being treated as
 	 * end-of-stream, which desynchronises every following command.
 	 */
-	#[\PHPUnit\Framework\Attributes\Group('known-bug')]
 	public function testShortReadOfLengthPrefixIsReassembled( ) : void
 	{
 		$Body  = 'hostname: Split Prefix Server';

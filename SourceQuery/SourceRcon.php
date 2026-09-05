@@ -92,14 +92,8 @@ class SourceRcon extends BaseRcon
 			throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
 		}
 
-		$Data = fread( $this->RconSocket, 4 );
 		$Buffer = new Buffer( );
-		$Buffer->Set( $Data === false ? '' : $Data );
-
-		if( $Buffer->Remaining( ) < 4 )
-		{
-			throw new InvalidPacketException( 'Rcon read: Failed to read any data from socket', InvalidPacketException::BUFFER_EMPTY );
-		}
+		$Buffer->Set( $this->ReadExactly( 4 ) );
 
 		$PacketSize = $Buffer->ReadInt32( );
 
@@ -114,29 +108,41 @@ class SourceRcon extends BaseRcon
 			throw new InvalidPacketException( 'Rcon read: Packet size ' . $PacketSize . ' is too large', InvalidPacketException::PACKET_HEADER_MISMATCH );
 		}
 
-		$Data = fread( $this->RconSocket, $PacketSize );
-		$Buffer->Set( $Data === false ? '' : $Data );
-
-		$Data = $Buffer->Read( );
-
-		$Remaining = $PacketSize - strlen( $Data );
-
-		while( $Remaining > 0 )
-		{
-			$Data2 = fread( $this->RconSocket, $Remaining );
-
-			if( $Data2 === false || strlen( $Data2 ) === 0 )
-			{
-				throw new InvalidPacketException( 'Read ' . strlen( $Data ) . ' bytes from socket, ' . $Remaining . ' remaining', InvalidPacketException::BUFFER_EMPTY );
-			}
-
-			$Data .= $Data2;
-			$Remaining -= strlen( $Data2 );
-		}
-
-		$Buffer->Set( $Data );
+		$Buffer->Set( $this->ReadExactly( $PacketSize ) );
 
 		return $Buffer;
+	}
+
+	/**
+	 * TCP is a stream, a single read may return fewer bytes than asked for.
+	 */
+	private function ReadExactly( int $Length ) : string
+	{
+		if( $this->RconSocket === null )
+		{
+			throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
+		}
+
+		$Data = '';
+
+		while( strlen( $Data ) < $Length )
+		{
+			$Chunk = fread( $this->RconSocket, max( 1, $Length - strlen( $Data ) ) );
+
+			if( $Chunk === false || $Chunk === '' )
+			{
+				if( $Data === '' )
+				{
+					throw new InvalidPacketException( 'Rcon read: Failed to read any data from socket', InvalidPacketException::BUFFER_EMPTY );
+				}
+
+				throw new InvalidPacketException( 'Read ' . strlen( $Data ) . ' bytes from socket, ' . ( $Length - strlen( $Data ) ) . ' remaining', InvalidPacketException::BUFFER_EMPTY );
+			}
+
+			$Data .= $Chunk;
+		}
+
+		return $Data;
 	}
 
 	public function Command( string $Command ) : string
