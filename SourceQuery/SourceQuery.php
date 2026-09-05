@@ -600,8 +600,19 @@ class SourceQuery
 			throw new SocketException( 'Something went wrong.', SocketException::INVALID_ENGINE );
 		}
 
-		$this->Rcon->Open( );
-		$this->Rcon->Authorize( $Password );
+		try
+		{
+			$this->Rcon->Open( );
+			$this->Rcon->Authorize( $Password );
+		}
+		catch( \Throwable $Exception )
+		{
+			// Do not keep an unauthorized connection around for Rcon() to use
+			$this->Rcon->Close( );
+			$this->Rcon = null;
+
+			throw $Exception;
+		}
 	}
 
 	/**

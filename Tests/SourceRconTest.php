@@ -335,7 +335,6 @@ class SourceRconTest extends \PHPUnit\Framework\TestCase
 	 * socket in place lets Rcon( ) send the command anyway and return the engine's
 	 * empty RESPONSE_VALUE as if it had succeeded.
 	 */
-	#[\PHPUnit\Framework\Attributes\Group('known-bug')]
 	public function testCommandAfterFailedAuthorizationThrows( ) : void
 	{
 		$this->RconServer = new FakeRconServer( );
