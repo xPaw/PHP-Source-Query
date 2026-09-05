@@ -229,34 +229,18 @@ class SourceQuery
 			throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
 		}
 
-		if( $this->Challenge )
-		{
-			$this->Socket->Write( self::A2S_INFO, "Source Engine Query\0" . $this->Challenge );
-		}
-		else
-		{
-			$this->Socket->Write( self::A2S_INFO, "Source Engine Query\0" );
-		}
-
-		$Buffer = $this->Socket->Read( );
-		$Type = $Buffer->ReadByte( );
-		$Server = [];
-
-		$this->ThrowIfBanned( $Type, $Buffer );
-
-		if( $Type === self::S2C_CHALLENGE )
-		{
-			$this->Challenge = $Buffer->Read( 4 );
-
-			$this->Socket->Write( self::A2S_INFO, "Source Engine Query\0" . $this->Challenge );
-			$Buffer = $this->Socket->Read( );
-			$Type = $Buffer->ReadByte( );
-
-			$this->ThrowIfBanned( $Type, $Buffer );
-		}
+		$ExpectedTypes = [ self::S2A_INFO_SRC ];
 
 		// Old GoldSource protocol, HLTV still uses it
-		if( $Type === self::S2A_INFO_OLD && $this->Socket->Engine === self::GOLDSOURCE )
+		if( $this->Socket->Engine === self::GOLDSOURCE )
+		{
+			$ExpectedTypes[] = self::S2A_INFO_OLD;
+		}
+
+		[ $Type, $Buffer ] = $this->Request( 'GetInfo', self::A2S_INFO, $ExpectedTypes, "Source Engine Query\0" );
+		$Server = [];
+
+		if( $Type === self::S2A_INFO_OLD )
 		{
 			/**
 			 * If we try to read data again, and we get the result with type S2A_INFO (0x49)
@@ -294,11 +278,6 @@ class SourceQuery
 			$Server[ 'Bots' ]     = $Buffer->ReadByte( );
 
 			return $Server;
-		}
-
-		if( $Type !== self::S2A_INFO_SRC )
-		{
-			throw new InvalidPacketException( 'GetInfo: Packet header mismatch. (0x' . dechex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 		}
 
 		$Server[ 'Protocol' ]   = $Buffer->ReadByte( );
@@ -414,7 +393,7 @@ class SourceQuery
 
 		$this->GetChallenge( self::A2S_PLAYER, self::S2A_PLAYER );
 
-		$Buffer = $this->Request( 'GetPlayers', self::A2S_PLAYER, self::S2A_PLAYER );
+		[ , $Buffer ] = $this->Request( 'GetPlayers', self::A2S_PLAYER, [ self::S2A_PLAYER ] );
 
 		$Players = [];
 		$Count   = $Buffer->ReadByte( );
@@ -429,34 +408,32 @@ class SourceQuery
 			// Some servers return a bugged or intentionally huge float way above the php min/max int value
 			// Causes a php warning since php 8.5 in addition to the cast overflow to PHP_INT_MIN
 			// Versions below 8.5 would also return the overflow, but no error
-			$time = $Buffer->ReadFloat32( );
+			$Time = $Buffer->ReadFloat32( );
 
-			if( is_nan( $time ) )
+			if( is_nan( $Time ) )
 			{
 				$Player[ 'Time' ] = 0;
 			}
-			else if( $time >= PHP_INT_MAX ) // PHP_INT_MAX becomes 2^63 as a float, which is itself out of range
+			else if( $Time >= PHP_INT_MAX ) // PHP_INT_MAX becomes 2^63 as a float, which is itself out of range
 			{
 				$Player[ 'Time' ] = PHP_INT_MAX;
 			}
-			else if( $time <= PHP_INT_MIN )
+			else if( $Time <= PHP_INT_MIN )
 			{
 				$Player[ 'Time' ] = PHP_INT_MIN;
 			}
 			else
 			{
-				$Player[ 'Time' ] = (int)$time;
+				$Player[ 'Time' ] = (int)$Time;
 			}
 
 			$Seconds = max( 0, $Player[ 'Time' ] );
 			$Hours   = intdiv( $Seconds, 3600 );
+			$Minutes = intdiv( $Seconds % 3600, 60 );
 
-			$Player[ 'TimeF' ] = sprintf( '%02d:%02d', intdiv( $Seconds % 3600, 60 ), $Seconds % 60 );
-
-			if( $Hours > 0 )
-			{
-				$Player[ 'TimeF' ] = sprintf( '%02d:', $Hours ) . $Player[ 'TimeF' ];
-			}
+			$Player[ 'TimeF' ] = $Hours > 0
+				? sprintf( '%02d:%02d:%02d', $Hours, $Minutes, $Seconds % 60 )
+				: sprintf( '%02d:%02d', $Minutes, $Seconds % 60 );
 
 			$Players[ ] = $Player;
 		}
@@ -481,7 +458,7 @@ class SourceQuery
 
 		$this->GetChallenge( self::A2S_RULES, self::S2A_RULES );
 
-		$Buffer = $this->Request( 'GetRules', self::A2S_RULES, self::S2A_RULES );
+		[ , $Buffer ] = $this->Request( 'GetRules', self::A2S_RULES, [ self::S2A_RULES ] );
 
 		$Rules = [];
 		$Count = $Buffer->ReadInt16( );
@@ -501,51 +478,53 @@ class SourceQuery
 	}
 
 	/**
-	 * Sends a request with the current challenge and reads its reply.
+	 * Sends a request with the current challenge appended and reads its reply.
 	 * Servers rotate challenges, when ours is rejected the request is repeated once with the new one.
+	 *
+	 * @param array<int> $ExpectedTypes
+	 *
+	 * @return array{int, Buffer} Reply type and the buffer positioned after it
 	 *
 	 * @throws InvalidPacketException
 	 */
-	private function Request( string $Method, int $Header, int $ExpectedResult ) : Buffer
+	private function Request( string $Method, int $Header, array $ExpectedTypes, string $Payload = '' ) : array
 	{
-		$this->Socket->Write( $Header, $this->Challenge );
+		$this->Socket->Write( $Header, $Payload . $this->Challenge );
 		$Buffer = $this->Socket->Read( );
-
-		$Type = $Buffer->ReadByte( );
-
-		$this->ThrowIfBanned( $Type, $Buffer );
+		$Type = $this->ReadReplyType( $Buffer );
 
 		if( $Type === self::S2C_CHALLENGE )
 		{
 			$this->Challenge = $Buffer->Read( 4 );
 
-			$this->Socket->Write( $Header, $this->Challenge );
+			$this->Socket->Write( $Header, $Payload . $this->Challenge );
 			$Buffer = $this->Socket->Read( );
-
-			$Type = $Buffer->ReadByte( );
-
-			$this->ThrowIfBanned( $Type, $Buffer );
+			$Type = $this->ReadReplyType( $Buffer );
 		}
 
-		if( $Type !== $ExpectedResult )
+		if( !in_array( $Type, $ExpectedTypes, true ) )
 		{
 			throw new InvalidPacketException( $Method . ': Packet header mismatch. (0x' . dechex( $Type ) . ')', InvalidPacketException::PACKET_HEADER_MISMATCH );
 		}
 
-		return $Buffer;
+		return [ $Type, $Buffer ];
 	}
 
 	/**
-	 * A banned address gets a printed message (A2A_PRINT) instead of an answer to any query
+	 * Reads the reply type. A banned address gets a printed message (A2A_PRINT) instead of an answer to any query.
 	 *
 	 * @throws AuthenticationException
 	 */
-	private function ThrowIfBanned( int $Type, Buffer $Buffer ) : void
+	private function ReadReplyType( Buffer $Buffer ) : int
 	{
+		$Type = $Buffer->ReadByte( );
+
 		if( $Type === self::S2A_RCON )
 		{
 			throw new AuthenticationException( trim( $Buffer->Read( ) ), AuthenticationException::BANNED );
 		}
+
+		return $Type;
 	}
 
 	/**
@@ -567,10 +546,7 @@ class SourceQuery
 
 		$this->Socket->Write( $Header, "\xFF\xFF\xFF\xFF" );
 		$Buffer = $this->Socket->Read( );
-
-		$Type = $Buffer->ReadByte( );
-
-		$this->ThrowIfBanned( $Type, $Buffer );
+		$Type = $this->ReadReplyType( $Buffer );
 
 		switch( $Type )
 		{
@@ -613,44 +589,27 @@ class SourceQuery
 			throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
 		}
 
-		switch( $this->Socket->Engine )
+		$Rcon = match( $this->Socket->Engine )
 		{
-			case SourceQuery::GOLDSOURCE:
-			{
-				$this->Rcon = new GoldSourceRcon( $this->Socket );
-
-				break;
-			}
-			case SourceQuery::SOURCE:
-			{
-				$this->Rcon = new SourceRcon( $this->Socket );
-
-				break;
-			}
-			default:
-			{
-				throw new SocketException( 'Unknown engine.', SocketException::INVALID_ENGINE );
-			}
-		}
-
-		if( $this->Rcon === null ) // This should not happen, but makes phpstan happy.
-		{
-			throw new SocketException( 'Something went wrong.', SocketException::INVALID_ENGINE );
-		}
+			self::GOLDSOURCE => new GoldSourceRcon( $this->Socket ),
+			self::SOURCE => new SourceRcon( $this->Socket ),
+			default => throw new SocketException( 'Unknown engine.', SocketException::INVALID_ENGINE ),
+		};
 
 		try
 		{
-			$this->Rcon->Open( );
-			$this->Rcon->Authorize( $Password );
+			$Rcon->Open( );
+			$Rcon->Authorize( $Password );
 		}
 		catch( \Throwable $Exception )
 		{
-			// Do not keep an unauthorized connection around for Rcon() to use
-			$this->Rcon->Close( );
-			$this->Rcon = null;
+			$Rcon->Close( );
 
 			throw $Exception;
 		}
+
+		// Only an authorized connection is kept for Rcon() to use
+		$this->Rcon = $Rcon;
 	}
 
 	/**

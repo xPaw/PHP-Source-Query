@@ -105,7 +105,9 @@ class GoldSourceRcon extends BaseRcon
 		// The engine appends the reason on a second line, e.g. "Bad rcon_password.\nBad challenge."
 		if( str_starts_with( $Trimmed, 'Bad rcon_password.' ) )
 		{
-			throw new AuthenticationException( $Trimmed, AuthenticationException::BAD_PASSWORD );
+			$Code = str_contains( $Trimmed, 'Bad challenge.' ) ? AuthenticationException::BAD_CHALLENGE : AuthenticationException::BAD_PASSWORD;
+
+			throw new AuthenticationException( $Trimmed, $Code );
 		}
 		else if( str_starts_with( $Trimmed, 'You have been banned from this server.' ) )
 		{
@@ -131,7 +133,7 @@ class GoldSourceRcon extends BaseRcon
 		catch( AuthenticationException $Exception )
 		{
 			// The server forgot our challenge (restart, eviction), get a new one and try once more
-			if( !str_contains( $Exception->getMessage( ), 'Bad challenge.' ) )
+			if( $Exception->getCode( ) !== AuthenticationException::BAD_CHALLENGE )
 			{
 				throw $Exception;
 			}

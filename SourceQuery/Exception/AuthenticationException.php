@@ -18,4 +18,5 @@ class AuthenticationException extends SourceQueryException
 {
 	const BAD_PASSWORD = 1;
 	const BANNED = 2;
+	const BAD_CHALLENGE = 3;
 }

@@ -129,7 +129,7 @@ class SourceRconEdgeTest extends \PHPUnit\Framework\TestCase
 		catch( InvalidPacketException $Exception )
 		{
 			self::assertSame( InvalidPacketException::BUFFER_EMPTY, $Exception->getCode( ) );
-			self::assertSame( 'Rcon read: Failed to read any data from socket', $Exception->getMessage( ) );
+			self::assertSame( 'Rcon read: Read 0 of 4 bytes', $Exception->getMessage( ) );
 		}
 	}
 
@@ -203,7 +203,7 @@ class SourceRconEdgeTest extends \PHPUnit\Framework\TestCase
 		catch( InvalidPacketException $Exception )
 		{
 			self::assertSame( InvalidPacketException::BUFFER_EMPTY, $Exception->getCode( ) );
-			self::assertSame( 'Read 20 bytes from socket, 80 remaining', $Exception->getMessage( ) );
+			self::assertSame( 'Rcon read: Read 20 of 100 bytes', $Exception->getMessage( ) );
 		}
 	}
 

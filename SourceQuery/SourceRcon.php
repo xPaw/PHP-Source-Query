@@ -70,19 +70,29 @@ class SourceRcon extends BaseRcon
 
 	public function Write( int $Header, string $String = '' ) : bool
 	{
+		return $this->WriteRaw( self::Pack( ++$this->RconRequestId, $Header, $String ) );
+	}
+
+	/**
+	 * Packet length, request id, type, the string, and an empty second string
+	 */
+	private static function Pack( int $RequestID, int $Header, string $String ) : string
+	{
+		$Packet = pack( 'VV', $RequestID, $Header ) . $String . "\x00\x00";
+
+		return pack( 'V', strlen( $Packet ) ) . $Packet;
+	}
+
+	private function WriteRaw( string $Data ) : bool
+	{
 		if( $this->RconSocket === null )
 		{
 			throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
 		}
 
-		// Pack the packet together
-		$Command = pack( 'VV', ++$this->RconRequestId, $Header ) . $String . "\x00\x00";
+		$Length = strlen( $Data );
 
-		// Prepend packet length
-		$Command = pack( 'V', strlen( $Command ) ) . $Command;
-		$Length  = strlen( $Command );
-
-		return $Length === fwrite( $this->RconSocket, $Command, $Length );
+		return $Length === fwrite( $this->RconSocket, $Data, $Length );
 	}
 
 	public function Read( ) : Buffer
@@ -93,7 +103,7 @@ class SourceRcon extends BaseRcon
 		}
 
 		$Buffer = new Buffer( );
-		$Buffer->Set( $this->ReadExactly( 4 ) );
+		$Buffer->Set( self::ReadExactly( $this->RconSocket, 4 ) );
 
 		$PacketSize = $Buffer->ReadInt32( );
 
@@ -108,35 +118,27 @@ class SourceRcon extends BaseRcon
 			throw new InvalidPacketException( 'Rcon read: Packet size ' . $PacketSize . ' is too large', InvalidPacketException::PACKET_HEADER_MISMATCH );
 		}
 
-		$Buffer->Set( $this->ReadExactly( $PacketSize ) );
+		$Buffer->Set( self::ReadExactly( $this->RconSocket, $PacketSize ) );
 
 		return $Buffer;
 	}
 
 	/**
 	 * TCP is a stream, a single read may return fewer bytes than asked for.
+	 *
+	 * @param resource $Socket
 	 */
-	private function ReadExactly( int $Length ) : string
+	private static function ReadExactly( $Socket, int $Length ) : string
 	{
-		if( $this->RconSocket === null )
-		{
-			throw new SocketException( 'Not connected.', SocketException::NOT_CONNECTED );
-		}
-
 		$Data = '';
 
-		while( strlen( $Data ) < $Length )
+		while( ( $Remaining = $Length - strlen( $Data ) ) > 0 )
 		{
-			$Chunk = fread( $this->RconSocket, max( 1, $Length - strlen( $Data ) ) );
+			$Chunk = fread( $Socket, $Remaining );
 
 			if( $Chunk === false || $Chunk === '' )
 			{
-				if( $Data === '' )
-				{
-					throw new InvalidPacketException( 'Rcon read: Failed to read any data from socket', InvalidPacketException::BUFFER_EMPTY );
-				}
-
-				throw new InvalidPacketException( 'Read ' . strlen( $Data ) . ' bytes from socket, ' . ( $Length - strlen( $Data ) ) . ' remaining', InvalidPacketException::BUFFER_EMPTY );
+				throw new InvalidPacketException( 'Rcon read: Read ' . strlen( $Data ) . ' of ' . $Length . ' bytes', InvalidPacketException::BUFFER_EMPTY );
 			}
 
 			$Data .= $Chunk;
@@ -147,15 +149,18 @@ class SourceRcon extends BaseRcon
 
 	public function Command( string $Command ) : string
 	{
-		$this->Write( SourceQuery::SERVERDATA_EXECCOMMAND, $Command );
-
 		// A response can span several packets and nothing marks the last one.
-		// The server answers requests in order, so an empty SERVERDATA_REQUESTVALUE sent right after the command
+		// The server answers requests in order, so an empty SERVERDATA_REQUESTVALUE sent right behind the command
 		// is answered only once the whole response is out, and its request id tells us where the response ends.
 		// See https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Multiple-packet_Responses
-		$this->Write( SourceQuery::SERVERDATA_REQUESTVALUE );
+		$CommandID  = ++$this->RconRequestId;
+		$SentinelID = ++$this->RconRequestId;
 
-		$SentinelID = $this->RconRequestId;
+		$this->WriteRaw(
+			self::Pack( $CommandID, SourceQuery::SERVERDATA_EXECCOMMAND, $Command ) .
+			self::Pack( $SentinelID, SourceQuery::SERVERDATA_REQUESTVALUE, '' )
+		);
+
 		$Data = '';
 
 		do
@@ -182,20 +187,13 @@ class SourceRcon extends BaseRcon
 				$Packet = substr( $Packet, 0, -2 );
 			}
 
-			if( $RequestID === $SentinelID )
+			if( $RequestID !== $SentinelID )
 			{
-				// The Source engine first flushes an empty packet for the sentinel, its real reply follows
-				if( $Packet === '' )
-				{
-					continue;
-				}
-
-				break;
+				$Data .= $Packet;
 			}
-
-			$Data .= $Packet;
 		}
-		while( true );
+		// The Source engine first flushes an empty packet for the sentinel, its real reply follows
+		while( $RequestID !== $SentinelID || $Packet === '' );
 
 		return $Data;
 	}

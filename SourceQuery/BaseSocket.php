@@ -67,11 +67,9 @@ abstract class BaseSocket
 				$PacketCount = 0;
 				$PacketNumber = 0;
 
-				if( $ExpectedRequestID === null )
-				{
-					$ExpectedRequestID = $RequestID;
-				}
-				else if( $RequestID !== $ExpectedRequestID )
+				$ExpectedRequestID ??= $RequestID;
+
+				if( $RequestID !== $ExpectedRequestID )
 				{
 					throw new InvalidPacketException( 'Split packet request id mismatch.', InvalidPacketException::INVALID_SPLIT_PACKET );
 				}
@@ -126,17 +124,11 @@ abstract class BaseSocket
 			// The first packet's payload starts with the 0xFFFFFFFF header, so anything else there is the size field.
 			if( $this->Engine === SourceQuery::SOURCE && !$IsCompressed && !str_starts_with( $Packets[ 1 ], "\xFF\xFF\xFF\xFF" ) )
 			{
-				foreach( $Packets as &$Packet )
-				{
-					$Packet = substr( $Packet, 2 );
-				}
-
-				unset( $Packet );
+				$Packets = array_map( static fn( string $Packet ) : string => substr( $Packet, 2 ), $Packets );
 			}
 
 			$Data = implode( $Packets );
 
-			// TODO: Test this
 			if( $IsCompressed )
 			{
 				// Let's make sure this function exists, it's not included in PHP by default
