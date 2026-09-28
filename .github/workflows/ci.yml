@@ -19,7 +19,7 @@ jobs:
         php-version: ${{ matrix.php }}
 
     - name: Checkout
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Install dependencies
       run: composer install --no-interaction --no-progress
